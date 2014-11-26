@@ -1,0 +1,47 @@
+Raspberry PI board configuration:
+
+Raspberry PI Image:
+2014-09-09-wheezy-raspbian.img
+Upons setup all settings are left at default
+
+Cofinure ALSA
+ sudo nano /etc/modprobe.d/alsa-base.conf
+Now change this
+   # Keep snd-usb-audio from being loaded as first soundcard 
+   options snd-usb-audio index=-2
+To
+   options snd-usb-audio index=0
+
+================  TEST ALSA installation ============
+pi@raspberrypi ~ $ cat /proc/asound/cards 
+ 0 [DSP            ]: USB-Audio - Plantronics .Audio 400 DSP
+                      Plantronics Plantronics .Audio 400 DSP at usb-bcm2708_usb-1.3, full speed
+ 1 [ALSA           ]: bcm2835 - bcm2835 ALSA
+                      bcm2835 ALSA
+
+pi@raspberrypi ~ $ arecord  -f  S16_LE -c 2 -r 44100 -vv test.wav
+<Say something to microphone> 
+
+pi@raspberrypi ~ $ aplay  test.wav
+<Should hear what you've said>
+
+== Install SPHINX ==
+# Install prerequsites 
+sudo apt-get install bison
+sudo apt-get install libasound2-dev
+
+# 
+tar xvzf sphinxbase-0.8.tar.gz
+cd sphinxbase-0.8
+./configure --enable-fixed
+make
+sudo make install
+
+#
+tar xvzf pocketsphinx-0.8.tar.gz 
+cd pocketsphinx-0.8
+./configure 
+make
+sudo make install
+
+

@@ -1,0 +1,114 @@
+Language model created by QuickLM on Tue Nov 18 21:42:59 EST 2014
+Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
+
+The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
+
+The code that was used to produce this language model is available in Open Source.
+Please visit http://www.speech.cs.cmu.edu/tools/ for more information
+
+The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
+This model based on a corpus of 19 sentences and 19 words
+
+\data\
+ngram 1=19
+ngram 2=36
+ngram 3=36
+
+\1-grams:
+-0.9144 </s> -0.3010
+-0.9144 <s> -0.2382
+-2.1931 A -0.2982
+-2.1931 ABOUT -0.2446
+-1.5911 DOWN -0.2602
+-1.5911 FIVE -0.2446
+-1.8921 HELM -0.2414
+-2.1931 HO -0.2446
+-1.8921 JIBE -0.2414
+-2.1931 LEE -0.2446
+-1.7160 LEFT -0.2602
+-2.1931 MY -0.2954
+-1.4150 ONE -0.2446
+-2.1931 READY -0.2982
+-1.7160 RIGHT -0.2602
+-2.1931 STANDBY -0.2982
+-1.5911 TEN -0.2446
+-2.1931 TO -0.2954
+-1.5911 UP -0.2602
+
+\2-grams:
+-0.9777 <s> DOWN 0.0000
+-1.5798 <s> HELM -0.1761
+-1.5798 <s> JIBE -0.1761
+-1.1027 <s> LEFT 0.0000
+-1.5798 <s> MY 0.0000
+-1.5798 <s> READY 0.0000
+-1.1027 <s> RIGHT 0.0000
+-1.5798 <s> STANDBY 0.0000
+-0.9777 <s> UP 0.0000
+-0.3010 A LEE 0.0000
+-0.3010 ABOUT </s> -0.3010
+-0.9031 DOWN FIVE 0.0000
+-0.6021 DOWN ONE 0.0000
+-0.9031 DOWN TEN 0.0000
+-0.3010 FIVE </s> -0.3010
+-0.6021 HELM </s> -0.3010
+-0.6021 HELM A 0.0000
+-0.3010 HO </s> -0.3010
+-0.6021 JIBE </s> -0.3010
+-0.6021 JIBE HO 0.0000
+-0.3010 LEE </s> -0.3010
+-0.7782 LEFT FIVE 0.0000
+-0.7782 LEFT ONE 0.0000
+-0.7782 LEFT TEN 0.0000
+-0.3010 MY HELM -0.1761
+-0.3010 ONE </s> -0.3010
+-0.3010 READY ABOUT 0.0000
+-0.7782 RIGHT FIVE 0.0000
+-0.7782 RIGHT ONE 0.0000
+-0.7782 RIGHT TEN 0.0000
+-0.3010 STANDBY TO 0.0000
+-0.3010 TEN </s> -0.3010
+-0.3010 TO JIBE -0.1761
+-0.9031 UP FIVE 0.0000
+-0.6021 UP ONE 0.0000
+-0.9031 UP TEN 0.0000
+
+\3-grams:
+-0.9031 <s> DOWN FIVE
+-0.6021 <s> DOWN ONE
+-0.9031 <s> DOWN TEN
+-0.3010 <s> HELM A
+-0.3010 <s> JIBE HO
+-0.7782 <s> LEFT FIVE
+-0.7782 <s> LEFT ONE
+-0.7782 <s> LEFT TEN
+-0.3010 <s> MY HELM
+-0.3010 <s> READY ABOUT
+-0.7782 <s> RIGHT FIVE
+-0.7782 <s> RIGHT ONE
+-0.7782 <s> RIGHT TEN
+-0.3010 <s> STANDBY TO
+-0.9031 <s> UP FIVE
+-0.6021 <s> UP ONE
+-0.9031 <s> UP TEN
+-0.3010 A LEE </s>
+-0.3010 DOWN FIVE </s>
+-0.3010 DOWN ONE </s>
+-0.3010 DOWN TEN </s>
+-0.3010 HELM A LEE
+-0.3010 JIBE HO </s>
+-0.3010 LEFT FIVE </s>
+-0.3010 LEFT ONE </s>
+-0.3010 LEFT TEN </s>
+-0.3010 MY HELM </s>
+-0.3010 READY ABOUT </s>
+-0.3010 RIGHT FIVE </s>
+-0.3010 RIGHT ONE </s>
+-0.3010 RIGHT TEN </s>
+-0.3010 STANDBY TO JIBE
+-0.3010 TO JIBE </s>
+-0.3010 UP FIVE </s>
+-0.3010 UP ONE </s>
+-0.3010 UP TEN </s>
+
+\end\
