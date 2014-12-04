@@ -45,3 +45,16 @@ make
 sudo make install
 
 
+== Test sphinx 
+export LD_LIBRARY_PATH=/usr/local/lib 
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+pocketsphinx_continuous
+ 
+== INSTALL flite 
+sudo apt-get install flite
+sudo apt-get install flite1-dev
+
+#Test filei 
+flite -lv
+Voices available: kal awb_time kal16 awb rms slt 
+flite -voice kal "Yes sir"
