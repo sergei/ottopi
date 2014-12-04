@@ -49,27 +49,29 @@
  *   - Each utterance is ended when a silence segment of at least 1 sec is recognized.
  *   - Single-threaded implementation for portability.
  *   - Uses audio library; can be replaced with an equivalent custom library.
+ *
+ */
+
+/**
+ * Suggested comamnd lines
+ * -jsgf data/sentences.jsgf -dict data/model/8388.dic -fwdflat no -bestpath no
  */
 
 #include <stdio.h>
 #include <string.h>
 
-#if !defined(_WIN32_WCE)
 #include <signal.h>
 #include <setjmp.h>
-#endif
-#if defined(WIN32) && !defined(GNUWINCE)
-#include <time.h>
-#else
 #include <sys/types.h>
 #include <sys/time.h>
-#endif
 
 #include <sphinxbase/err.h>
 #include <sphinxbase/ad.h>
 #include <sphinxbase/cont_ad.h>
 
 #include "pocketsphinx.h"
+
+#include "sendnmea.h"
 
 static const arg_t cont_args_def[] = {
     POCKETSPHINX_OPTIONS,
@@ -78,140 +80,25 @@ static const arg_t cont_args_def[] = {
       ARG_STRING,
       NULL,
       "Argument file giving extra arguments." },
-    { "-adcdev", 
-      ARG_STRING, 
-      NULL, 
+    { "-adcdev",
+      ARG_STRING,
+      NULL,
       "Name of audio device to use for input." },
-    { "-infile", 
-      ARG_STRING, 
-      NULL, 
-      "Audio file to transcribe." },
-    { "-time", 
-      ARG_BOOLEAN, 
-      "no", 
-      "Print word times in file transcription." },
+	{ "-nmeaout",
+	      ARG_STRING,
+	      NULL,
+	      "Name of output NMEA file" },
     CMDLN_EMPTY_OPTION
 };
 
 static ps_decoder_t *ps;
 static cmd_ln_t *config;
-static FILE* rawfd;
 
-static int32
-ad_file_read(ad_rec_t * ad, int16 * buf, int32 max)
-{
-    size_t nread;
-    
-    nread = fread(buf, sizeof(int16), max, rawfd);
-    
-    return (nread > 0 ? nread : -1);
-}
-
-static void
-print_word_times(int32 start)
-{
-	ps_seg_t *iter = ps_seg_iter(ps, NULL);
-	while (iter != NULL) {
-		int32 sf, ef, pprob;
-		float conf;
-		
-		ps_seg_frames (iter, &sf, &ef);
-		pprob = ps_seg_prob (iter, NULL, NULL, NULL);
-		conf = logmath_exp(ps_get_logmath(ps), pprob);
-		printf ("%s %f %f %f\n", ps_seg_word (iter), (sf + start) / 100.0, (ef + start) / 100.0, conf);
-		iter = ps_seg_next (iter);
-	}
-}
-
-/*
- * Continuous recognition from a file
- */
-static void
-recognize_from_file() {
-    cont_ad_t *cont;
-    ad_rec_t file_ad = {0};
-    int16 adbuf[4096];
-    const char* hyp;
-    const char* uttid;
-    int32 k, ts, start;
-
-    char waveheader[44];
-    if ((rawfd = fopen(cmd_ln_str_r(config, "-infile"), "rb")) == NULL) {
-	E_FATAL_SYSTEM("Failed to open file '%s' for reading", 
-			cmd_ln_str_r(config, "-infile"));
-    }
-    
-    fread(waveheader, 1, 44, rawfd);
-
-    file_ad.sps = (int32)cmd_ln_float32_r(config, "-samprate");
-    file_ad.bps = sizeof(int16);
-
-    if ((cont = cont_ad_init(&file_ad, ad_file_read)) == NULL) {
-        E_FATAL("Failed to initialize voice activity detection");
-    }
-    if (cont_ad_calib(cont) < 0)
-        E_FATAL("Failed to calibrate voice activity detection\n");
-    rewind (rawfd);
-
-    for (;;) {
-
-	while ((k = cont_ad_read(cont, adbuf, 4096)) == 0);
-	
-        if (k < 0) {
-    	    break;
-    	}
-
-        if (ps_start_utt(ps, NULL) < 0)
-            E_FATAL("ps_start_utt() failed\n");
-
-        ps_process_raw(ps, adbuf, k, FALSE, FALSE);
-        
-        ts = cont->read_ts;
-        start = ((ts - k) * 100.0) / file_ad.sps;
-        
-        for (;;) {
-            if ((k = cont_ad_read(cont, adbuf, 4096)) < 0)
-            	break;
-
-            if (k == 0) {
-                /*
-                 * No speech data available; check current timestamp with most recent
-                 * speech to see if more than 1 sec elapsed.  If so, end of utterance.
-                 */
-                if ((cont->read_ts - ts) > DEFAULT_SAMPLES_PER_SEC)
-                    break;
-            }
-            else {
-                /* New speech data received; note current timestamp */
-                ts = cont->read_ts;
-            }
-
-
-            ps_process_raw(ps, adbuf, k, FALSE, FALSE);
-        }
-
-        ps_end_utt(ps);
-        
-        if (cmd_ln_boolean_r(config, "-time")) {
-	    print_word_times(start);
-	} else {
-	    hyp = ps_get_hyp(ps, NULL, &uttid);
-            printf("%s: %s\n", uttid, hyp);
-        }
-        fflush(stdout);	
-    }
-
-    cont_ad_close(cont);
-    fclose(rawfd);
-}
 
 /* Sleep for specified msec */
 static void
 sleep_msec(int32 ms)
 {
-#if (defined(WIN32) && !defined(GNUWINCE)) || defined(_WIN32_WCE)
-    Sleep(ms);
-#else
     /* ------------------- Unix ------------------ */
     struct timeval tmo;
 
@@ -219,7 +106,6 @@ sleep_msec(int32 ms)
     tmo.tv_usec = ms * 1000;
 
     select(0, NULL, NULL, NULL, &tmo);
-#endif
 }
 
 /*
@@ -237,9 +123,7 @@ recognize_from_microphone()
     int16 adbuf[4096];
     int32 k, ts, rem;
     char const *hyp;
-    char const *uttid;
     cont_ad_t *cont;
-    char word[256];
 
     if ((ad = ad_open_dev(cmd_ln_str_r(config, "-adcdev"),
                           (int)cmd_ln_float32_r(config, "-samprate"))) == NULL)
@@ -253,11 +137,11 @@ recognize_from_microphone()
     if (cont_ad_calib(cont) < 0)
         E_FATAL("Failed to calibrate voice activity detection\n");
 
+    openNmea( cmd_ln_str_r(config, "-nmeaout") );
+
     for (;;) {
         /* Indicate listening for next utterance */
-        printf("READY....\n");
-        fflush(stdout);
-        fflush(stderr);
+    	sendNmea("READY");
 
         /* Wait data for next utterance */
         while ((k = cont_ad_read(cont, adbuf, 4096)) == 0)
@@ -273,8 +157,9 @@ recognize_from_microphone()
         if (ps_start_utt(ps, NULL) < 0)
             E_FATAL("Failed to start utterance\n");
         ps_process_raw(ps, adbuf, k, FALSE, FALSE);
-        printf("Listening...\n");
-        fflush(stdout);
+
+
+    	sendNmea("STARTED TO LISTEN");
 
         /* Note timestamp for this first block of data */
         ts = cont->read_ts;
@@ -315,19 +200,16 @@ recognize_from_microphone()
         while (ad_read(ad, adbuf, 4096) >= 0);
         cont_ad_reset(cont);
 
-        printf("Stopped listening, please wait...\n");
-        fflush(stdout);
-        /* Finish decoding, obtain and print result */
-        ps_end_utt(ps);
-        hyp = ps_get_hyp(ps, NULL, &uttid);
-        printf("%s: %s\n", uttid, hyp);
-        fflush(stdout);
+    	sendNmea("PROCESSING");
 
-        /* Exit if the first word spoken was GOODBYE */
-        if (hyp) {
-            sscanf(hyp, "%s", word);
-            if (strcmp(word, "goodbye") == 0)
-                break;
+        /* Finish decoding, obtain result */
+        ps_end_utt(ps);
+        int32 out_is_final;
+        hyp = ps_get_hyp_final(ps, &out_is_final);
+
+        if ( hyp && out_is_final ) {
+        	printf("[%s]\n", hyp);
+        	sendNmea(hyp);
         }
 
         /* Resume A/D recording for next utterance */
@@ -337,6 +219,7 @@ recognize_from_microphone()
 
     cont_ad_close(cont);
     ad_close(ad);
+    closeNmea();
 }
 
 static jmp_buf jbuf;
@@ -370,46 +253,14 @@ main(int argc, char *argv[])
 
     E_INFO("%s COMPILED ON: %s, AT: %s\n\n", argv[0], __DATE__, __TIME__);
 
-    if (cmd_ln_str_r(config, "-infile") != NULL) {
-	recognize_from_file();
-    } else {
-
         /* Make sure we exit cleanly (needed for profiling among other things) */
-	/* Signals seem to be broken in arm-wince-pe. */
-#if !defined(GNUWINCE) && !defined(_WIN32_WCE) && !defined(__SYMBIAN32__)
-	signal(SIGINT, &sighandler);
-#endif
+    signal(SIGINT, &sighandler);
 
-        if (setjmp(jbuf) == 0) {
+    if (setjmp(jbuf) == 0) {
 	    recognize_from_microphone();
 	}
-    }
 
     ps_free(ps);
     return 0;
 }
 
-/** Silvio Moioli: Windows CE/Mobile entry point added. */
-#if defined(_WIN32_WCE)
-#pragma comment(linker,"/entry:mainWCRTStartup")
-#include <windows.h>
-
-//Windows Mobile has the Unicode main only
-int wmain(int32 argc, wchar_t *wargv[]) {
-    char** argv;
-    size_t wlen;
-    size_t len;
-    int i;
-
-    argv = malloc(argc*sizeof(char*));
-    for (i=0; i<argc; i++){
-        wlen = lstrlenW(wargv[i]);
-        len = wcstombs(NULL, wargv[i], wlen);
-        argv[i] = malloc(len+1);
-        wcstombs(argv[i], wargv[i], wlen);
-    }
-
-    //assuming ASCII parameters
-    return main(argc, argv);
-}
-#endif

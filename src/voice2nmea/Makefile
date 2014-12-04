@@ -12,7 +12,7 @@ LIBS = -L$(CROSS_INC)/local/lib -lpocketsphinx -lsphinxbase -lsphinxad -lasound 
 CFLAGS =	-O2 -Wall $(INCS)
 CXXFLAGS =	-O2 -Wall $(INCS)
 
-OBJS =	voice2nmea.o
+OBJS =	voice2nmea.o sendnmea.o
 
 TARGET = voice2nmea
 
