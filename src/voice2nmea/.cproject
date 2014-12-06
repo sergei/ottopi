@@ -24,6 +24,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1110566692" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/include/pocketsphinx"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/sphinxbase"/>
+									<listOptionValue builtIn="false" value="/home/spodshivalov/github/ottopi/cross/usr/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.788687756" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -31,6 +32,7 @@
 								<option id="gnu.c.compiler.option.include.paths.932535915" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/include/pocketsphinx"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/sphinxbase"/>
+									<listOptionValue builtIn="false" value="/home/spodshivalov/github/ottopi/cross/usr/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1847343973" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -45,6 +47,7 @@
 								<option id="gnu.both.asm.option.include.paths.1681493413" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/include/pocketsphinx"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/sphinxbase"/>
+									<listOptionValue builtIn="false" value="/home/spodshivalov/github/ottopi/cross/usr/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.776720234" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -68,4 +71,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope"/>
 </cproject>
