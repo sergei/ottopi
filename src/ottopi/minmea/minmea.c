@@ -363,6 +363,10 @@ enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict)
         return MINMEA_SENTENCE_GST;
     if (!strcmp(type+2, "GSV"))
         return MINMEA_SENTENCE_GSV;
+    if (!strcmp(type+2, "VWR"))
+        return MINMEA_SENTENCE_VWR;
+    if (!strcmp(type, "POTOR"))
+        return MINMEA_SENTENCE_LSN;
 
     return MINMEA_UNKNOWN;
 }

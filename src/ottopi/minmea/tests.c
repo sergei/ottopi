@@ -958,6 +958,9 @@ START_TEST(test_minmea_usage1)
         "$GNGSA,A,3,04,05,,09,12,,,24,,,,,2.5,1.3,2.1",
         "$GPGLL,3723.2475,N,12158.3416,W,161229.487,A,A*41",
         "$GPGST,024603.00,3.2,6.6,4.7,47.3,5.8,5.6,22.0*58",
+        "$GPGST,024603.00,3.2,6.6,4.7,47.3,5.8,5.6,22.0*58",
+        "$POTOR,LSN,TRN,DOWN,10",
+		"$IIVWR,023,R,08.8,N,04.5,M,016.2,K*52",
         NULL,
     };
 
@@ -986,6 +989,16 @@ START_TEST(test_minmea_usage1)
             case MINMEA_SENTENCE_GST: {
                 struct minmea_sentence_gst frame;
                 ck_assert(minmea_parse_gst(&frame, *sentence) == true);
+            } break;
+
+            case MINMEA_SENTENCE_VWR: {
+                struct minmea_sentence_vwr frame;
+                ck_assert(minmea_parse_vwr(&frame, *sentence) == true);
+            } break;
+
+            case MINMEA_SENTENCE_LSN: {
+                struct minmea_sentence_lsn frame;
+                ck_assert(minmea_parse_lsn(&frame, *sentence) == true);
             } break;
 
             default: {

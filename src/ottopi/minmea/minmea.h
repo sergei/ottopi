@@ -31,6 +31,8 @@ enum minmea_sentence_id {
     MINMEA_SENTENCE_GLL,
     MINMEA_SENTENCE_GST,
     MINMEA_SENTENCE_GSV,
+    MINMEA_SENTENCE_VWR,
+    MINMEA_SENTENCE_LSN,
 };
 
 struct minmea_float {
