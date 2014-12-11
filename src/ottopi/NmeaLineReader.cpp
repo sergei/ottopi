@@ -7,6 +7,8 @@
 
 #include "log.h"
 
+#include "minmea.h"
+
 #include "NmeaLineReader.h"
 #include "NmeaListener.h"
 
@@ -57,7 +59,25 @@ void NmeaLineReader::onDataReceived(char *pcBuff, int size)
 
 void NmeaLineReader::parseNmeaString( const char *pcBuff)
 {
+	 switch (minmea_sentence_id(pcBuff, false)) {
+     case MINMEA_SENTENCE_VWR: {
+         struct minmea_sentence_vwr frame;
+         if ( minmea_parse_vwr(&frame, pcBuff) ) {
+        	 lineListener.onVwr( frame );
+         }
+     } break;
 
+     case MINMEA_SENTENCE_LSN: {
+         struct minmea_sentence_lsn frame;
+         if ( minmea_parse_lsn(&frame, pcBuff) ) {
+        	 lineListener.onLsn( frame );
+         }
+     } break;
+
+     default: {
+     } break;
+
+	 }
 }
 
 NmeaLineReader::~NmeaLineReader()

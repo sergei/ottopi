@@ -22,6 +22,10 @@ extern "C" {
 
 #define MINMEA_MAX_LENGTH 80
 
+#ifndef INT_LEAST32_MAX
+	# define INT_LEAST32_MAX	(2147483647)
+#endif
+
 enum minmea_sentence_id {
     MINMEA_INVALID = -1,
     MINMEA_UNKNOWN = 0,

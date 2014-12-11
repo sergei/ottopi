@@ -14,6 +14,8 @@ class Controller: public NmeaListener {
 public:
 	Controller();
 	virtual void onTimerTick();
+	virtual void onVwr( struct minmea_sentence_vwr &vwr );
+	virtual void onLsn( struct minmea_sentence_lsn &lsn );
 	virtual ~Controller();
 };
 

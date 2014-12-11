@@ -13,6 +13,8 @@
 class NmeaListener {
 public:
 	virtual void onTimerTick() = 0;
+	virtual void onVwr( struct minmea_sentence_vwr &vwr ){};
+	virtual void onLsn( struct minmea_sentence_lsn &lsn ){};
 	virtual ~NmeaListener(){};
 };
 

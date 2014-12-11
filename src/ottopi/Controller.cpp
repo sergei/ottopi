@@ -20,3 +20,12 @@ void Controller::onTimerTick()
 {
 
 }
+void Controller::onVwr( struct minmea_sentence_vwr &vwr )
+{
+
+}
+
+void Controller::onLsn( struct minmea_sentence_lsn &lsn )
+{
+
+}

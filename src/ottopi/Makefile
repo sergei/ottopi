@@ -11,13 +11,16 @@ OBJ_DIR=obj
 BIN_DIR=bin
 
 SRCS = $(wildcard *.cpp)
-OBJS = $(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:.cpp=.o))) ../piutils/log.o
+OBJS = $(addprefix $(OBJ_DIR)/, $(notdir $(SRCS:.cpp=.o))) ../piutils/log.o $(OBJ_DIR)/minmea.o
 
 BIN  = $(BIN_DIR)/ottopi
 
 $(OBJ_DIR)/%.o: %.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
- 
+
+ $(OBJ_DIR)/minmea.o: minmea/minmea.c
+	$(CXX) $(CFLAGS) -c $< -o $@
+  
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
 	  
