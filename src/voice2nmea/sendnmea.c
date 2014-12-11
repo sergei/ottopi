@@ -13,7 +13,7 @@
  *
  * $POTOR,LSN,JBE,[RDY|NOW] - Jibe command
  *
- * $POTOR,LSN,CTL,[ON|OFF]  - Help control command
+ * $POTOR,LSN,CTL,[ON|OFF]  - Helm control command
  *     ON - Controlled by autopilot
  *     OFF - Controlled by human
  */
