@@ -1,64 +1,78 @@
 import argparse
 import selectors
 import socket
+import threading
 import serial
-
 import connexion
-from wsgiref.simple_server import make_server
+
+from nmeaparser import NmeaParser
+from data_registry import DataRegistry
+from flask_cors import CORS
 
 
-class Interface:
+class NmeaInterface:
     SERIAL = 0
     INCOMING_TCP = 1
     OUTGOING_TCP = 2
+    NMEA_STATE_WAIT_SOP = 1
+    NMEA_STATE_WAIT_EOP = 2
 
-    def __init__(self, file, interface_type):
+    def __init__(self, file, interface_type, nmea_parser):
         self.file = file
         self.interface_type = interface_type
+        self.nmea_parser = nmea_parser
+        self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_SOP
+        self.nmea_sentence = ""
 
     def read(self):
         if self.interface_type == self.SERIAL:
             data = self.file.read(1000)  # Should be ready
             if data:
                 print('received', repr(data), 'from', self.file)
+                self.set_nmea_data(data)
                 return data
             else:
                 print('Lost connection to ', self.file)
                 return None
         else:
-            data = self.file.recv(1000)  # Should be ready
+            data = self.file.recv(10)  # Should be ready
             if data:
-                print('received', repr(data), 'from', self.file)
+                self.set_nmea_data(data)
                 return data
             else:
                 print('Lost connection to ', self.file)
                 return None
 
+    def set_nmea_data(self, data):
+        for c in data.decode('ascii'):
+            if self.nmea_state == NmeaInterface.NMEA_STATE_WAIT_SOP:
+                if c == '$':
+                    self.nmea_sentence += c
+                    self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_EOP
+            else:
+                if c == '\r' or c == '\n':
+                    self.nmea_parser.set_nmea_sentence(self.nmea_sentence)
+                    self.nmea_sentence = ''
+                    self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_SOP
+                else:
+                    self.nmea_sentence += c
 
-def read_tcp(port, sel):
-    pass
 
-
-def accept_nmea_tcp(sock, sel, interfaces):
+def accept_nmea_tcp(sock, sel, interfaces, nmea_parser):
     conn, addr = sock.accept()  # Should be ready
     print('accepted', conn, 'from', addr)
     conn.setblocking(False)
     conn.send(bytes('Hello', 'utf-8'))
-    interface = Interface(conn, Interface.INCOMING_TCP)
+    interface = NmeaInterface(conn, NmeaInterface.INCOMING_TCP, nmea_parser)
     sel.register(conn, selectors.EVENT_READ, interface)
     interfaces.append(interface)
-
-
-def accept_http_request(sock, http_server):
-    request, client_address = sock.accept()  # Should be ready
-    http_server.process_request(request, client_address)
 
 
 def read_serial(port, sel):
     pass
 
 
-def add_serial_port(sel, inp, interfaces):
+def add_serial_port(sel, inp, interfaces, nmea_parser):
     print('Adding input {} ...'.format(inp))
     t = inp.split(':')
     if len(t) != 2:
@@ -70,7 +84,7 @@ def add_serial_port(sel, inp, interfaces):
     baud_rate = int(t[1])
     try:
         ser = serial.Serial(port_name, baud_rate, timeout=None)
-        interface = Interface(ser, Interface.SERIAL)
+        interface = NmeaInterface(ser, NmeaInterface.SERIAL, nmea_parser)
         sel.register(ser, selectors.EVENT_READ, interface)
         interfaces.append(interface)
     except serial.serialutil.SerialException:
@@ -78,7 +92,7 @@ def add_serial_port(sel, inp, interfaces):
         return
 
 
-def add_tcp_client(sel, inp, interfaces):
+def add_tcp_client(sel, inp, interfaces, nmea_parser):
     print('Adding input {} ...'.format(inp))
     t = inp.split(':')
     if len(t) != 3:
@@ -90,7 +104,7 @@ def add_tcp_client(sel, inp, interfaces):
     port = int(t[2])
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host_name, port))
-    interface = Interface(sock, Interface.OUTGOING_TCP)
+    interface = NmeaInterface(sock, NmeaInterface.OUTGOING_TCP, nmea_parser)
     sel.register(sock, selectors.EVENT_READ, interface)
     interfaces.append(interface)
 
@@ -104,48 +118,47 @@ def add_tcp_server(sel, tcp_port):
     print('Listening on port {} for NMEA TCP connections ...'.format(tcp_port))
 
 
-def add_http_port(sel, http_port):
-    sock = socket.socket()
-    sock.bind(('localhost', http_port))
-    sock.listen(100)
-    sock.setblocking(False)
-    sel.register(sock, selectors.EVENT_READ, accept_http_request)
-    print('Listening on port {} for HTTP connections ...'.format(http_port))
+def flask_server(http_port):
+    app = connexion.App(__name__, specification_dir='openapi/')
+    app.add_api('ottopi.yaml')
+    CORS(app.app)
+
+    # Use FLASK development server to host connexion app
+    app.run(port=http_port)
 
 
-def nmea_bridge(args):
+def start_flask_server(http_port):
+    # noinspection PyRedundantParentheses
+    t = threading.Thread(target=flask_server, name='flask_server', args=[http_port])
+    t.start()
+
+
+def main(args):
     print('Inputs', args.inputs)
 
     sel = selectors.DefaultSelector()
     interfaces = []
+    nmea_parser = NmeaParser(DataRegistry.get_instance())
 
     # Add TCP server
     add_tcp_server(sel, int(args.tcp_server_port))
 
-    # Create connexion App to serve REST APIs
-    app = connexion.App(__name__, specification_dir='openapi/')
-    app.add_api('ottopi.yaml')
-
-    # Add HTTP server
-    add_http_port(sel, int(args.http_server_port))
-    http_server = make_server('', int(args.http_server_port), app)
-
     # Open and register specified inputs
     for inp in args.inputs:
         if inp.startswith('tcp'):
-            add_tcp_client(sel, inp, interfaces)
+            add_tcp_client(sel, inp, interfaces, nmea_parser)
         elif inp.startswith('/dev/tty'):
-            add_serial_port(sel, inp, interfaces)
+            add_serial_port(sel, inp, interfaces, nmea_parser)
+
+    # Start FLASK server
+    start_flask_server(int(args.http_server_port))
 
     # Start polling the inputs
-
     while True:
         events = sel.select(timeout=1)
         for key, mask in events:
             if key.data == accept_nmea_tcp:
-                accept_nmea_tcp(key.fileobj, sel, interfaces)
-            elif key.data == accept_http_request:
-                accept_http_request(key.fileobj, http_server)
+                accept_nmea_tcp(key.fileobj, sel, interfaces, nmea_parser)
             else:
                 read_interface = key.data
                 received_data = read_interface.read()
@@ -160,4 +173,4 @@ if __name__ == '__main__':
     parser.add_argument("--inputs", help="List of inputs ", nargs='*',  required=True)
     parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=True)
     parser.add_argument("--http-server-port", help="HTTP server port", required=True)
-    nmea_bridge(parser.parse_args())
+    main(parser.parse_args())

@@ -1,15 +1,10 @@
 import connexion
-from wsgiref.simple_server import make_server
+from flask_cors import CORS
 
 app = connexion.App(__name__, specification_dir='openapi/')
 app.add_api('ottopi.yaml')
+CORS(app.app)
 
 # Use FLASK development server to host connexion app
-# app.run(port=8080)
+app.run(port=5555)
 
-# Use builtin simple WSGI HTTP server to host connexion app
-httpd = make_server('', 8080, app)
-print("Serving on port 8000...")
-
-# Serve until process is killed
-httpd.serve_forever()

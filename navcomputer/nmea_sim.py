@@ -16,10 +16,19 @@ def accept(sock, mask):
 
 
 def read(conn, mask):
-    data = conn.recv(1000)  # Should be ready
-    if data:
-        print('received', repr(data), 'from', conn)
-    else:
+    still_connected = True
+    try:
+        data = conn.recv(1000)  # Should be ready
+        if data:
+            print('received', repr(data), 'from', conn)
+        else:
+            print('closing', conn)
+            still_connected = False
+    except ConnectionResetError as e:
+        print(e)
+        still_connected = False
+
+    if not still_connected:
         print('closing', conn)
         sel.unregister(conn)
         conn.close()
@@ -27,7 +36,7 @@ def read(conn, mask):
 
 
 def nmea_sim(args):
-    with open(args.nmea_file, 'r') as nmea_file:
+    with open(args.nmea_file, 'rb') as nmea_file:
         sock = socket.socket()
         sock.bind(('localhost', args.tcp_port))
         sock.listen(100)
@@ -42,9 +51,14 @@ def nmea_sim(args):
 
             # Read and send NMEA epoch
             for line in nmea_file:
-                for conn in connections:
-                    conn.send(bytes(line, 'utf-8'))
-                if '$GPRMC' in line:
+                chunk_size = 10
+                for i in range(0, len(line), chunk_size):
+                    chunk_end = i + chunk_size
+                    if chunk_end > len(line):
+                        chunk_end = len(line)
+                    for conn in connections:
+                        conn.send(line[i:chunk_end])
+                if b'$GPRMC' in line:
                     break
 
 

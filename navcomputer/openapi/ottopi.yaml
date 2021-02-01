@@ -15,27 +15,97 @@ info:
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 
 tags:
-  - name: navigation
-    description: Navigation control APIs
+  - name: nav
+    description: Navigation control REST APIs
+  - name: web
+    description: Paths to acess the builtin Web application
 
 paths:
 ########################################################################################################################
-#  /navigation
+#  Static web page hosting REACT app
 ########################################################################################################################
-  /wpts:
+  /web:
     get:
-      operationId: nav.get_wpts
+      operationId: rest_api.root_page
       tags:
-        - navigation
-      summary: Get list of WPTs
-      description: Get list of WPTs
+        - web
+      summary: Serves index.html of React app
+      description: Serves index.html of React app
       responses:
         '200':
-          description: List of waypoints
+          description: Successfully loaded html page.
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
+
+########################################################################################################################
+#  Static web page hosting REACT app
+########################################################################################################################
+  /web/{name}:
+    get:
+      operationId: rest_api.static_page
+      tags:
+        - web
+      summary: Serves React app
+      description: Serves React app
+      parameters:
+        - in: path
+          name: name
+          schema:
+            type: string
+            format: path
+          required: false
+          description: url path
+      responses:
+        '200':
+          description: Successfully loaded html page.
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
+
+########################################################################################################################
+#  /navigation
+########################################################################################################################
+  /nav:
+    get:
+      operationId: rest_api.get_raw_instr
+      tags:
+        - nav
+      summary: Get raw instrument data
+      description: Get raw instrument data
+      responses:
+        '200':
+          description: Raw instrument data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WayPoints'
+                $ref: '#/components/schemas/RawInstrData'
+
+  /polars:
+    post:
+      operationId: rest_api.polars_upload
+      tags:
+        - nav
+      summary: Uplaod file containing polras data
+      description: Uplaod file containing polras data
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successfully loaded html page.
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
 
 
 ########################################################################################################################
@@ -75,4 +145,24 @@ components:
           description: Degrees of longitude
           minimum: -180
           maximum: 180
+          type: number
+
+    RawInstrData:
+      description: Raw Instruments Data
+      type: object
+      required:
+        - utc
+      properties:
+        utc:
+          description: UTC time stamp
+          type: string
+        awa:
+          description: Apparent Wind Angle (degrees)
+          minimum: -180
+          maximum: 180
+          type: number
+        aws:
+          description: Apparent Wind Speed (knots)
+          minimum: 0
+          maximum: 100
           type: number
