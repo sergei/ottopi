@@ -1,10 +1,12 @@
 import argparse
+import os
 import selectors
 import socket
 import threading
 import serial
 import connexion
 
+import conf
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
 from flask_cors import CORS
@@ -138,7 +140,10 @@ def main(args):
 
     sel = selectors.DefaultSelector()
     interfaces = []
-    nmea_parser = NmeaParser(DataRegistry.get_instance())
+    data_registry = DataRegistry.get_instance()
+    data_registry.read_gpx_file(conf.DATA_DIR + os.sep + conf.GPX_NAME)
+
+    nmea_parser = NmeaParser(data_registry)
 
     # Add TCP server
     add_tcp_server(sel, int(args.tcp_server_port))

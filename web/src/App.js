@@ -1,6 +1,7 @@
 import './App.css';
 import RawInstrDisplay from "./RawInstrDisplay";
 import SwaggerClient from 'swagger-client'
+import GpxUploader from "./GpxUploader";
 
 function App() {
     const specUrl =  "http://localhost:5555/ottopi/openapi.json";
@@ -13,6 +14,7 @@ function App() {
     return (
     <div className="App">
       <RawInstrDisplay  swaggerClient={swaggerClient}/>
+      <GpxUploader swaggerClient={swaggerClient}/>
     </div>
   );
 }

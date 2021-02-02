@@ -2,6 +2,7 @@ import os
 import connexion
 import flask
 from data_registry import DataRegistry
+import conf
 
 
 def get_raw_instr():
@@ -15,7 +16,7 @@ def root_page():
 
 
 def static_page(name):
-    root = '../web/build'
+    root = conf.WEB_APP_DIR
     path = root + os.path.sep + name
     print('Serving {}'.format(path))
     if os.path.isfile(path):
@@ -26,6 +27,17 @@ def static_page(name):
 
 def polars_upload():
     uploaded_file = connexion.request.files['fileName']
-    print('Storing {}'.format(uploaded_file.filename))
-    uploaded_file.save("/tmp/polars.txt")
+    file_name = conf.DATA_DIR + os.sep + conf.POLAR_NAME
+    print('Storing polars to {}'.format(file_name))
+    uploaded_file.save(file_name)
+    return {'status': 200}
+
+
+def gpx_upload():
+    uploaded_file = connexion.request.files['fileName']
+    file_name = conf.DATA_DIR + os.sep + conf.GPX_NAME
+    print('Storing GPX to {}'.format(file_name))
+    uploaded_file.save(file_name)
+    data_registry = DataRegistry.get_instance()
+    data_registry.read_gpx_file(file_name)
     return {'status': 200}

@@ -108,6 +108,31 @@ paths:
                 type: string
 
 
+  /gpx:
+    post:
+      operationId: rest_api.gpx_upload
+      tags:
+        - nav
+      summary: Uplaod GPX file containing routes and waypoints
+      description:  Uplaod GPX file containing routes and waypoints
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successfully loaded html page.
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
+
+
 ########################################################################################################################
 # Components
 ########################################################################################################################
