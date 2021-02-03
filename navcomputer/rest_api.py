@@ -1,6 +1,8 @@
 import os
 import connexion
 import flask
+from gpxpy.gpx import GPXWaypoint
+
 from data_registry import DataRegistry
 import conf
 
@@ -8,6 +10,30 @@ import conf
 def get_raw_instr():
     data_registry = DataRegistry.get_instance()
     return data_registry.get_raw_instr_data_dict()
+
+
+def goto_wpt(body=None):
+    wpt = body
+    data_registry = DataRegistry.get_instance()
+    gpx_wpt = GPXWaypoint(name=wpt['name'], latitude=wpt['lat'],longitude=wpt['lon'])
+    data_registry.set_destination(gpx_wpt)
+    return {'status': 200}
+
+
+def get_wpts():
+    data_registry = DataRegistry.get_instance()
+    gpx_wpts = data_registry.get_wpts()
+    dest_wpt = data_registry.get_dest_wpt()
+    wpts = []
+    for wpt in gpx_wpts:
+        wpt_dict = {
+            'name': wpt.name,
+            'lat': wpt.latitude,
+            'lon': wpt.longitude,
+            'active': dest_wpt is not None and dest_wpt.name == wpt.name
+        }
+        wpts.append(wpt_dict)
+    return wpts
 
 
 def root_page():
@@ -35,7 +61,7 @@ def polars_upload():
 
 def gpx_upload():
     uploaded_file = connexion.request.files['fileName']
-    file_name = conf.DATA_DIR + os.sep + conf.GPX_NAME
+    file_name = conf.DATA_DIR + os.sep + conf.GPX_ARCHIVE_NAME
     print('Storing GPX to {}'.format(file_name))
     uploaded_file.save(file_name)
     data_registry = DataRegistry.get_instance()

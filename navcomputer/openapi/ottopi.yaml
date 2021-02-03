@@ -83,6 +83,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/RawInstrData'
 
+  /wpts:
+    get:
+      operationId: rest_api.get_wpts
+      tags:
+        - nav
+      summary: Get list of waypoints
+      description: Get list of waypoints
+      responses:
+        '200':
+          description: List of waypoints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WayPoints'
+
+  /goto_wpt:
+    post:
+      operationId: rest_api.goto_wpt
+      tags:
+        - nav
+      summary: Set destination WPT
+      description: Set destination WPT
+      requestBody:
+        description: Destination WPT
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Waypoint'
+      responses:
+        '200':
+          description: Successfull upload
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
+
   /polars:
     post:
       operationId: rest_api.polars_upload
@@ -101,7 +137,7 @@ paths:
                   format: binary
       responses:
         '200':
-          description: Successfully loaded html page.
+          description: Successfull upload
           content:
             text/html:   # Add the media type here
               schema:
@@ -155,22 +191,25 @@ components:
       type: object
       required:
         - name
-        - latitude
-        - longitude
+        - lat
+        - lon
       properties:
         name:
           description: Waypoint name
           type: string
-        latitude:
+        lat:
           description: Degrees of latitude
           minimum: -90
           maximum: 90
           type: number
-        longitude:
+        lon:
           description: Degrees of longitude
           minimum: -180
           maximum: 180
           type: number
+        active:
+          description: We are navigating to this waypoint
+          type: boolean
 
     RawInstrData:
       description: Raw Instruments Data

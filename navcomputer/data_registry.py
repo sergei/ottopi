@@ -1,7 +1,10 @@
 import copy
+import os
 import threading
 import gpxpy
 import gpxpy.gpx
+
+from navcomputer import conf
 from raw_instr_data import RawInstrData
 
 
@@ -24,6 +27,7 @@ class DataRegistry:
             self.raw_instr_data = RawInstrData()
             self.lock = threading.Lock()
             self.gpx = None
+            self.dest_wpt = None
 
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:
@@ -46,3 +50,32 @@ class DataRegistry:
                     print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
             except Exception as e:
                 print(e)
+
+    def get_wpts(self):
+        return self.gpx.waypoints
+
+    def set_destination(self, wpt):
+        self.dest_wpt = wpt
+        print('Set new destination {}'.format(self.dest_wpt))
+        # Store new destination
+        gpx = gpxpy.gpx.GPX()
+        gpx.waypoints.append(wpt)
+        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_DESTINATION_NAME
+        with open(gpx_name, 'wt') as f:
+            f.write(gpx.to_xml())
+            print('Destination stored to {}'.format(gpx_name))
+
+    def restore_destination(self):
+        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_DESTINATION_NAME
+        if os.path.isfile(gpx_name):
+            with open(gpx_name, 'rt') as f:
+                try:
+                    gpx = gpxpy.parse(f)
+                    if len(gpx.waypoints) > 0:
+                        self.dest_wpt = gpx.waypoints[0]
+                        print('Restored destination {}'.format(self.dest_wpt))
+                except Exception as e:
+                    print(e)
+
+    def get_dest_wpt(self):
+        return self.dest_wpt

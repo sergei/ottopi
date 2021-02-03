@@ -141,7 +141,8 @@ def main(args):
     sel = selectors.DefaultSelector()
     interfaces = []
     data_registry = DataRegistry.get_instance()
-    data_registry.read_gpx_file(conf.DATA_DIR + os.sep + conf.GPX_NAME)
+    data_registry.read_gpx_file(conf.DATA_DIR + os.sep + conf.GPX_ARCHIVE_NAME)
+    data_registry.restore_destination()
 
     nmea_parser = NmeaParser(data_registry)
 
