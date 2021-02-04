@@ -5,6 +5,7 @@ import gpxpy
 import gpxpy.gpx
 
 from navcomputer import conf
+from navigator import Navigator
 from raw_instr_data import RawInstrData
 
 
@@ -32,6 +33,7 @@ class DataRegistry:
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:
             self.raw_instr_data = raw_instr_data
+        Navigator.get_instance().update(self.raw_instr_data)
 
     def get_raw_instr_data_dict(self):
         with self.lock:
@@ -56,6 +58,7 @@ class DataRegistry:
 
     def set_destination(self, wpt):
         self.dest_wpt = wpt
+        Navigator.get_instance().set_destination(self.dest_wpt)
         print('Set new destination {}'.format(self.dest_wpt))
         # Store new destination
         gpx = gpxpy.gpx.GPX()
@@ -74,6 +77,7 @@ class DataRegistry:
                     if len(gpx.waypoints) > 0:
                         self.dest_wpt = gpx.waypoints[0]
                         print('Restored destination {}'.format(self.dest_wpt))
+                        Navigator.get_instance().set_destination(self.dest_wpt)
                 except Exception as e:
                     print(e)
 
