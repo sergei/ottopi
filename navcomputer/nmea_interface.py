@@ -76,7 +76,7 @@ class NmeaInterface:
             else:
                 if c == '\r' or c == '\n':
                     for listener in self.nmea_listeners:
-                        listener.on_nmea(self.nmea_sentence)
+                        listener.on_nmea(self.nmea_sentence + '\r\n')
                     self.nmea_parser.set_nmea_sentence(self.nmea_sentence)
                     self.nmea_sentence = ''
                     self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_SOP

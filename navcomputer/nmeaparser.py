@@ -17,6 +17,7 @@ class NmeaParser:
     def __init__(self, data_registry):
         self.data_registry = data_registry
         self.mag_decl = None
+        self.last_wpt_over_rmb = None  # Last WPT received from RMB message
         # Cache most recent instrument readings
         self.awa = None  # Apparent wind angle degrees
         self.awa_t = 0
@@ -115,7 +116,17 @@ class NmeaParser:
             lat = self.parse_coord(t[6], t[7])
             lon = self.parse_coord(t[8], t[9])
             wpt = GPXWaypoint(name=name, latitude=lat, longitude=lon)
-            self.data_registry.set_destination(wpt)
+            if self.last_wpt_over_rmb is None:
+                self.last_wpt_over_rmb = wpt
+                self.data_registry.set_destination(wpt)
+            else:
+                # Check if we got the same wpt once again, so we would ignore it
+                same_name = wpt.name == self.last_wpt_over_rmb
+                same_lat = abs(wpt.latitude - self.last_wpt_over_rmb.latitude) < 1.e-5
+                same_lon = abs(wpt.longitude - self.last_wpt_over_rmb.longitude) < 1.e-5
+                if not (same_name and same_lat and same_lon):
+                    self.last_wpt_over_rmb = wpt
+                    self.data_registry.set_destination(wpt)
 
     def parse_rmc(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmc_recommended_minimum_navigation_information """
