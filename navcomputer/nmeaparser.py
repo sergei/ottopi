@@ -2,6 +2,7 @@ import datetime
 import time
 from functools import reduce
 import geomag
+from gpxpy.gpx import GPXWaypoint
 
 from raw_instr_data import RawInstrData
 
@@ -43,7 +44,7 @@ class NmeaParser:
         self.cog_true_t = 0
 
     def set_nmea_sentence(self, nmea_sentence):
-        # print('Got [{}]'.format(nmea_sentence))
+        print('Got [{}]'.format(nmea_sentence))
         # Verify optional checksum
         cc_idx = nmea_sentence.find('*')
         if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
@@ -62,6 +63,8 @@ class NmeaParser:
             self.parse_vhw(t)
         elif t[0].endswith('HDG'):
             self.parse_hdg(t)
+        elif t[0].endswith('RMB'):
+            self.parse_rmb(t)
         elif t[0].endswith('RMC'):
             self.parse_rmc(t)
 
@@ -104,6 +107,15 @@ class NmeaParser:
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_hdg_heading_deviation_variation """
         self.hdg_mag = float(t[1]) if len(t[1]) > 0 else None
         self.hdg_mag_t = time.time()
+
+    def parse_rmb(self, t):
+        """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmb_recommended_minimum_navigation_information """
+        if t[1] == 'A':
+            name = t[5]
+            lat = self.parse_coord(t[6], t[7])
+            lon = self.parse_coord(t[8], t[9])
+            wpt = GPXWaypoint(name=name, latitude=lat, longitude=lon)
+            self.data_registry.set_destination(wpt)
 
     def parse_rmc(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmc_recommended_minimum_navigation_information """

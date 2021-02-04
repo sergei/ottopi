@@ -56,7 +56,7 @@ class Navigator:
                     dest_info.atw_up = dest_info.atw * raw_instr_data.awa > 0
 
                 for listener in self.listeners:
-                    listener.set_dest_info(dest_info)
+                    listener.on_dest_info(dest_info)
 
     def set_destination(self, dest_wpt):
         self.dest_wpt = dest_wpt
