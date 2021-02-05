@@ -4,7 +4,9 @@ from gpxpy import geo
 from dest_info import DestInfo
 import geomag
 
-ARRIVAL_CIRCLE_M = 100 # Probably good enough given chart and GPS accuracy
+from navcomputer.Speaker import Speaker
+
+ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
 METERS_IN_NM = 1852.
 
@@ -81,6 +83,8 @@ class Navigator:
 
                 for listener in self.listeners:
                     listener.on_dest_info(raw_instr_data, dest_info)
+
+                Speaker.get_instance().on_dest_info(dest_info)
 
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx
