@@ -4,7 +4,9 @@ from gpxpy import geo
 from dest_info import DestInfo
 import geomag
 
+from navcomputer.Logger import Logger
 from navcomputer.Speaker import Speaker
+from navcomputer.nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
@@ -40,6 +42,8 @@ class Navigator:
             self.listeners.remove(listener)
 
     def update(self, raw_instr_data):
+        Logger.set_utc(raw_instr_data.utc)
+
         if self.route is not None:
             if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
                 if self.mag_decl is None:
@@ -84,7 +88,13 @@ class Navigator:
                 for listener in self.listeners:
                     listener.on_dest_info(raw_instr_data, dest_info)
 
-                Speaker.get_instance().on_dest_info(dest_info)
+                Logger.log('< ' + encode_apb(dest_info))
+                Logger.log('< ' + encode_rmb(dest_info))
+                Logger.log('< ' + encode_bwr(raw_instr_data, dest_info))
+
+                s = Speaker.get_instance().on_dest_info(dest_info)
+                if s is not None:
+                    Logger.log('> $POTTOPI,SAY,{}'.format(s))
 
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx

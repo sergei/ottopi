@@ -1,3 +1,4 @@
+from navcomputer.Logger import Logger
 from nmea_encoder import encode_apb, encode_bwr, encode_rmb
 from navigator import Navigator
 
@@ -36,13 +37,10 @@ class NmeaInterface:
 
     # Called by navigator when destination information is updated
     def on_dest_info(self, raw_instr_data, dest_info):
-        print('Received {}'.format(dest_info.__dict__))
         apb = encode_apb(dest_info)
         rmb = encode_rmb(dest_info)
         bwr = encode_bwr(raw_instr_data, dest_info)
-        print(apb)
-        print(rmb)
-        print(bwr)
+
         if self.interface_type == NmeaInterface.TCP_APP_CLIENTS:
             self.file.send(bytes(apb, 'utf-8'))
             self.file.send(bytes(rmb, 'utf-8'))

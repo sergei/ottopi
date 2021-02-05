@@ -7,6 +7,7 @@ import serial
 import connexion
 
 import conf
+from navcomputer.Logger import Logger
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
@@ -91,6 +92,8 @@ def start_flask_server(http_port):
 
 
 def main(args):
+
+    Logger.set_log_dir(args.log_dir)
     print('Inputs', args.inputs)
 
     sel = selectors.DefaultSelector()
@@ -136,6 +139,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+    parser.add_argument("--log-dir", help="Directory to store logs",  required=True)
     parser.add_argument("--inputs", help="List of inputs ", nargs='*',  required=True)
     parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=True)
     parser.add_argument("--http-server-port", help="HTTP server port", required=True)

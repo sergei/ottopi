@@ -5,6 +5,7 @@ import geomag
 import gpxpy
 from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
 
+from navcomputer.Logger import Logger
 from raw_instr_data import RawInstrData
 
 SPEED_FACTOR = {
@@ -46,7 +47,8 @@ class NmeaParser:
         self.cog_true_t = 0
 
     def set_nmea_sentence(self, nmea_sentence):
-        print('Got [{}]'.format(nmea_sentence))
+        Logger.log('> ' + nmea_sentence)
+        # print('Got [{}]'.format(nmea_sentence))
         # Verify optional checksum
         cc_idx = nmea_sentence.find('*')
         if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
