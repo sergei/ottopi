@@ -1,9 +1,11 @@
 import unittest
-from datetime import datetime
+import datetime
 
 import gpxpy
 from gpxpy.gpx import GPXRoutePoint
 
+from dest_info import DestInfo
+import nmea_encoder
 from raw_instr_data import RawInstrData
 from navigator import Navigator
 
@@ -14,7 +16,7 @@ class TestStringMethods(unittest.TestCase):
         test_class = self
 
         class NavListener:
-            def on_dest_info(self, dest_info):
+            def on_dest_info(self, raw_instr_data, dest_info):
                 test_class.assertAlmostEqual(dest_info.dtw, 0.92, delta=0.01)
                 test_class.assertAlmostEqual(dest_info.btw, 228, delta=1)
                 test_class.assertAlmostEqual(dest_info.atw, 14, delta=1)
@@ -28,7 +30,7 @@ class TestStringMethods(unittest.TestCase):
 
         lat = 37.871690
         lon = -122.359238
-        instr_data = RawInstrData(t=0, utc=datetime.now(), lat=lat, lon=lon,
+        instr_data = RawInstrData(t=0, utc=datetime.datetime.now(), lat=lat, lon=lon,
                                   sog=10, cog=200, awa=30, aws=15, twa=45, tws=10, sow=5, hdg=214)
 
         dest_wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
@@ -39,7 +41,7 @@ class TestStringMethods(unittest.TestCase):
         navigator.remove_listener(l)
 
         class NavListener:
-            def on_dest_info(self, dest_info):
+            def on_dest_info(self, raw_instr_data, dest_info):
                 test_class.assertAlmostEqual(dest_info.dtw, 0.92, delta=0.01)
                 test_class.assertAlmostEqual(dest_info.btw, 228, delta=1)
                 test_class.assertAlmostEqual(dest_info.atw, 14, delta=1)
@@ -57,6 +59,18 @@ class TestStringMethods(unittest.TestCase):
         navigator.set_route(route, 1)
         navigator.update(instr_data)
         navigator.remove_listener(l)
+
+    def test_encode_bwr(self):
+        utc = datetime.datetime(2020, 5, 17, 11, 45, 57, tzinfo=datetime.timezone.utc)
+        instr_data = RawInstrData(t=0, utc=utc, lat=37.864374, lon=-122.376500,
+                                  sog=10, cog=200, awa=30, aws=15, twa=45, tws=10, sow=5, hdg=214)
+        dest_info = DestInfo()
+        dest_info.wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
+        dest_info.xte = 0.455
+        dest_info.dtw = 0.92
+        dest_info.btw = 228
+        nmea = nmea_encoder.encode_bwr(instr_data, dest_info)
+        self.assertEqual(nmea, "$OPBWR,114557,3751.86244,N,12222.59000,W,,T,228.0,M,0.920,N,DEST,,*21\r\n")
 
 
 if __name__ == '__main__':

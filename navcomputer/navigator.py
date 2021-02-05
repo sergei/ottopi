@@ -1,4 +1,3 @@
-import gpxpy
 from gpxpy import geo
 from dest_info import DestInfo
 import geomag
@@ -71,7 +70,7 @@ class Navigator:
                     dest_info.xte = geo.distance_from_line(loc, orig_wpt, dest_wpt) / METERS_IN_NM
 
                 for listener in self.listeners:
-                    listener.on_dest_info(dest_info)
+                    listener.on_dest_info(raw_instr_data, dest_info)
 
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx

@@ -1,4 +1,4 @@
-from nmea_encoder import encode_apb
+from nmea_encoder import encode_apb, encode_bwr
 from navigator import Navigator
 
 
@@ -35,12 +35,15 @@ class NmeaInterface:
             self.file.send(bytes(nmea, 'utf-8'))
 
     # Called by navigator when destination information is updated
-    def on_dest_info(self, dest_info):
+    def on_dest_info(self, raw_instr_data, dest_info):
         print('Received {}'.format(dest_info.__dict__))
         apb = encode_apb(dest_info)
+        bwr = encode_bwr(raw_instr_data, dest_info)
         print(apb)
+        print(bwr)
         if self.interface_type == NmeaInterface.TCP_APP_CLIENTS:
             self.file.send(bytes(apb, 'utf-8'))
+            self.file.send(bytes(bwr, 'utf-8'))
 
     def read(self):
         if self.interface_type == self.SERIAL_INSTRUMENTS:
