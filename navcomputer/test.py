@@ -70,7 +70,22 @@ class TestStringMethods(unittest.TestCase):
         dest_info.dtw = 0.92
         dest_info.btw = 228
         nmea = nmea_encoder.encode_bwr(instr_data, dest_info)
-        self.assertEqual(nmea, "$OPBWR,114557,3751.86244,N,12222.59000,W,,T,228.0,M,0.920,N,DEST,,*21\r\n")
+        self.assertEqual(nmea, "$OPBWR,114557,3751.86244,N,12222.59000,W,,T,228.0,M,0.920,N,DEST,*0D\r\n")
+
+    def test_encode_rmb(self):
+        utc = datetime.datetime(2020, 5, 17, 11, 45, 57, tzinfo=datetime.timezone.utc)
+        instr_data = RawInstrData(t=0, utc=utc, lat=37.864374, lon=-122.376500,
+                                  sog=10, cog=200, awa=30, aws=15, twa=45, tws=10, sow=5, hdg=214)
+        dest_info = DestInfo()
+        dest_info.wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
+        dest_info.org_wpt = GPXRoutePoint(name="ORIG", latitude=37.864374, longitude=-122.376500)
+        dest_info.xte = 0.455
+        dest_info.dtw = 0.92
+        dest_info.stw = 1.2345567
+        dest_info.btw_true = 214
+        dest_info.is_in_circle = True
+        nmea = nmea_encoder.encode_rmb(dest_info)
+        self.assertEqual(nmea, "$OPRMB,A,0.455,R,ORIG,DEST,3751.86244,N,12222.59000,W,0.920,214.0,1.2,A,*26\r\n")
 
 
 if __name__ == '__main__':

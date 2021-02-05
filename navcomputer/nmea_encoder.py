@@ -11,7 +11,8 @@ def encode_apb(dest):
     else:
         dir_to_steer = 'R' if dest.xte > 0 else 'L'
         nmea += '{:.3f},{},N,'.format(dest.xte, dir_to_steer)
-    nmea += 'V,V,'  # 6,7 Not entered, not crossed
+    nmea += 'A,' if dest.is_in_circle else 'V,'  # 6 Arrival Status, A = Arrival Circle Entered. V = not entered/passed
+    nmea += 'V,'  # 7 Not crossed
     if dest.bod is None:
         nmea += ',M,'  # 8,9 Don't have origin to destination
     else:
@@ -35,7 +36,33 @@ def encode_bwr(instr, dest):
     nmea += '{:.1f},M,'.format(dest.btw) if dest.btw is not None else ',M,'  # 8,9 Bearing, degrees Magnetic
     nmea += '{:.3f},N,'.format(dest.dtw) if dest.dtw is not None else ',N,'  # 10,11 Distance, Nautical Miles
     nmea += '{},'.format(dest.wpt.name)  # 12 Waypoint ID
-    nmea += ','  # 13 FAA mode indicator (NMEA 2.3 and later, optional)
+    nmea += ''  # 13 FAA mode indicator (NMEA 2.3 and later, optional)
+    nmea = append_checksum(nmea)
+    nmea += '\r\n'
+
+    return nmea
+
+
+def encode_rmb(dest):
+    """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmb_recommended_minimum_navigation_information """
+
+    nmea = '$OPRMB,'
+    nmea += 'A,'  # 1 Status, A = Active, V = Invalid
+    if dest.xte is None:
+        nmea += ',,'  # 2,3 XTE is not valid
+    else:
+        dir_to_steer = 'R' if dest.xte > 0 else 'L'
+        nmea += '{:.3f},{},'.format(dest.xte, dir_to_steer)  # 2,3
+    nmea += '{},'.format(dest.org_wpt.name) if dest.org_wpt is not None else ","  # 4 Origin Waypoint ID
+    nmea += '{},'.format(dest.wpt.name)  # 5 Destination Waypoint ID
+    nmea += encode_coord(dest.wpt.latitude, ['N', 'S'])  # 6,7 Destination Waypoint Latitude
+    nmea += encode_coord(dest.wpt.longitude, ['E', 'W'])  # 8,9 DestinationDestination Waypoint Longitude
+    nmea += '{:.3f},'.format(dest.dtw) if dest.dtw is not None else ','  # 10 Range to destination in nautical miles
+    nmea += '{:.1f},'.format(dest.btw_true) if dest.btw_true is not None else ','  # 11 Bearing to destination deg true
+    nmea += '{:.1f},'.format(dest.stw) if dest.stw is not None else ','  # 12 Destination closing velocity in knots
+    nmea += 'A,' if dest.is_in_circle else 'V,'  # 13 Arrival Status, A = Arrival Circle Entered. V = not entered/passed
+    nmea += ''  # 14 FAA mode indicator (NMEA 2.3 and later, optional)
+
     nmea = append_checksum(nmea)
     nmea += '\r\n'
 

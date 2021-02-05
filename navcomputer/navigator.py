@@ -1,6 +1,10 @@
+import math
+
 from gpxpy import geo
 from dest_info import DestInfo
 import geomag
+
+ARRIVAL_CIRCLE_M = 100 # Probably good enough given chart and GPS accuracy
 
 METERS_IN_NM = 1852.
 
@@ -42,11 +46,15 @@ class Navigator:
                 dest_wpt = self.route.points[self.active_wpt_idx]
                 dist_m = geo.distance(raw_instr_data.lat, raw_instr_data.lon, 0,
                                       dest_wpt.latitude, dest_wpt.longitude, 0, False)
+
                 course_true = geo.get_course(raw_instr_data.lat, raw_instr_data.lon,
                                              dest_wpt.latitude, dest_wpt.longitude)
                 dest_info = DestInfo()
                 dest_info.wpt = dest_wpt
                 dest_info.dtw = dist_m / METERS_IN_NM
+                dest_info.xis_in_circle = dist_m < ARRIVAL_CIRCLE_M
+
+                dest_info.btw_true = course_true
                 dest_info.btw = course_true - self.mag_decl
 
                 # Get angle to waypoint (left or right)
@@ -54,6 +62,8 @@ class Navigator:
                     dest_info.atw = dest_info.btw - raw_instr_data.hdg  # Both angles are magnetic
                 else:
                     dest_info.atw = course_true - raw_instr_data.cog  # Both angles are true
+
+                dest_info.stw = raw_instr_data.sog * math.cos(math.radians(dest_info.atw))
 
                 # Get angle to waypoint (up or down relative to the wind)
                 if raw_instr_data.awa is not None:
