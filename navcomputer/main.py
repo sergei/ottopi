@@ -97,7 +97,7 @@ def main(args):
     interfaces = []
     data_registry = DataRegistry.get_instance()
     data_registry.read_gpx_file(conf.DATA_DIR + os.sep + conf.GPX_ARCHIVE_NAME)
-    data_registry.restore_destination()
+    data_registry.restore_active_route()
 
     nmea_parser = NmeaParser(data_registry)
 

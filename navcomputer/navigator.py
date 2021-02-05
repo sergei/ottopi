@@ -1,6 +1,9 @@
+import gpxpy
 from gpxpy import geo
 from dest_info import DestInfo
 import geomag
+
+METERS_IN_NM = 1852.
 
 
 class Navigator:
@@ -19,9 +22,10 @@ class Navigator:
             raise Exception("This class is a singleton!")
         else:
             Navigator.__instance = self
-            self.listeners = []
-            self.dest_wpt = None
             self.mag_decl = None
+            self.listeners = []
+            self.route = None
+            self.active_wpt_idx = None
 
     def add_listener(self, listener):
         self.listeners.append(listener)
@@ -31,17 +35,19 @@ class Navigator:
             self.listeners.remove(listener)
 
     def update(self, raw_instr_data):
-        if self.dest_wpt is not None:
+        if self.route is not None:
             if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
                 if self.mag_decl is None:
                     self.mag_decl = geomag.declination(raw_instr_data.lat, raw_instr_data.lon)
+
+                dest_wpt = self.route.points[self.active_wpt_idx]
                 dist_m = geo.distance(raw_instr_data.lat, raw_instr_data.lon, 0,
-                                      self.dest_wpt.latitude, self.dest_wpt.longitude, 0, False)
+                                      dest_wpt.latitude, dest_wpt.longitude, 0, False)
                 course_true = geo.get_course(raw_instr_data.lat, raw_instr_data.lon,
-                                             self.dest_wpt.latitude, self.dest_wpt.longitude)
+                                             dest_wpt.latitude, dest_wpt.longitude)
                 dest_info = DestInfo()
-                dest_info.wpt = self.dest_wpt
-                dest_info.dtw = dist_m / 1852.
+                dest_info.wpt = dest_wpt
+                dest_info.dtw = dist_m / METERS_IN_NM
                 dest_info.btw = course_true - self.mag_decl
 
                 # Get angle to waypoint (left or right)
@@ -55,8 +61,18 @@ class Navigator:
                     # If wind angle and angle to waypoint have the same sign, then waypoint is upwind
                     dest_info.atw_up = dest_info.atw * raw_instr_data.awa > 0
 
+                if self.active_wpt_idx > 0:
+                    orig_wpt = self.route.points[self.active_wpt_idx-1]
+                    bod_true = geo.get_course(orig_wpt.latitude, orig_wpt.longitude,
+                                              dest_wpt.latitude, dest_wpt.longitude)
+                    dest_info.bod = bod_true - self.mag_decl
+
+                    loc = geo.Location(latitude=raw_instr_data.lat, longitude=raw_instr_data.lon)
+                    dest_info.xte = geo.distance_from_line(loc, orig_wpt, dest_wpt) / METERS_IN_NM
+
                 for listener in self.listeners:
                     listener.on_dest_info(dest_info)
 
-    def set_destination(self, dest_wpt):
-        self.dest_wpt = dest_wpt
+    def set_route(self, route, active_wpt_idx):
+        self.active_wpt_idx = active_wpt_idx
+        self.route = route

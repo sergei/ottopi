@@ -2,7 +2,8 @@ import datetime
 import time
 from functools import reduce
 import geomag
-from gpxpy.gpx import GPXWaypoint
+import gpxpy
+from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
 
 from raw_instr_data import RawInstrData
 
@@ -17,7 +18,7 @@ class NmeaParser:
     def __init__(self, data_registry):
         self.data_registry = data_registry
         self.mag_decl = None
-        self.last_wpt_over_rmb = None  # Last WPT received from RMB message
+        self.last_dest_wpt = None  # Last WPT received from RMB message
         # Cache most recent instrument readings
         self.awa = None  # Apparent wind angle degrees
         self.awa_t = 0
@@ -115,18 +116,22 @@ class NmeaParser:
             name = t[5]
             lat = self.parse_coord(t[6], t[7])
             lon = self.parse_coord(t[8], t[9])
-            wpt = GPXWaypoint(name=name, latitude=lat, longitude=lon)
-            if self.last_wpt_over_rmb is None:
-                self.last_wpt_over_rmb = wpt
-                self.data_registry.set_destination(wpt)
-            else:
+            if self.last_dest_wpt is not None:
                 # Check if we got the same wpt once again, so we would ignore it
-                same_name = wpt.name == self.last_wpt_over_rmb
-                same_lat = abs(wpt.latitude - self.last_wpt_over_rmb.latitude) < 1.e-5
-                same_lon = abs(wpt.longitude - self.last_wpt_over_rmb.longitude) < 1.e-5
-                if not (same_name and same_lat and same_lon):
-                    self.last_wpt_over_rmb = wpt
-                    self.data_registry.set_destination(wpt)
+                same_name = name == self.last_dest_wpt
+                same_lat = abs(lat - self.last_dest_wpt.latitude) < 1.e-5
+                same_lon = abs(lon - self.last_dest_wpt.longitude) < 1.e-5
+                if same_name and same_lat and same_lon:
+                    return
+
+            dest_wpt = GPXRoutePoint(name=name, latitude=lat, longitude=lon)
+            gpx_route = gpxpy.gpx.GPXRoute(name="RMB")
+            gpx_route.points.append(dest_wpt)
+            if self.lat is not None:
+                orig_wpt = GPXRoutePoint(name="HERE", latitude=self.lat, longitude=self.lon)
+                gpx_route.points.insert(0, orig_wpt)
+
+            self.data_registry.set_active_route(gpx_route)
 
     def parse_rmc(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmc_recommended_minimum_navigation_information """

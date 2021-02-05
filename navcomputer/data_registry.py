@@ -27,8 +27,8 @@ class DataRegistry:
             DataRegistry.__instance = self
             self.raw_instr_data = RawInstrData()
             self.lock = threading.Lock()
-            self.gpx = None
-            self.dest_wpt = None
+            self.wpts_gpx = None
+            self.active_route = None
 
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:
@@ -47,39 +47,42 @@ class DataRegistry:
     def read_gpx_file(self, file_name):
         with open(file_name, 'r') as gpx_file:
             try:
-                self.gpx = gpxpy.parse(gpx_file)
-                for waypoint in self.gpx.waypoints:
+                self.wpts_gpx = gpxpy.parse(gpx_file)
+                for waypoint in self.wpts_gpx.waypoints:
                     print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
             except Exception as e:
                 print(e)
 
     def get_wpts(self):
-        return self.gpx.waypoints
+        return self.wpts_gpx.waypoints
 
-    def set_destination(self, wpt):
-        self.dest_wpt = wpt
-        Navigator.get_instance().set_destination(self.dest_wpt)
-        print('Set new destination {}'.format(self.dest_wpt))
-        # Store new destination
+    def set_active_route(self, route):
+        self.active_route = route
+        print('Set new active route {}'.format(self.active_route))
+        Navigator.get_instance().set_route(route, route.get_points_no() - 1)
+        # Store new route
         gpx = gpxpy.gpx.GPX()
-        gpx.waypoints.append(wpt)
-        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_DESTINATION_NAME
+        gpx.routes.append(route)
+        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_CUR_ROUTE_NAME
         with open(gpx_name, 'wt') as f:
             f.write(gpx.to_xml())
-            print('Destination stored to {}'.format(gpx_name))
+            print('Route stored to {}'.format(gpx_name))
 
-    def restore_destination(self):
-        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_DESTINATION_NAME
+    def restore_active_route(self):
+        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_CUR_ROUTE_NAME
         if os.path.isfile(gpx_name):
             with open(gpx_name, 'rt') as f:
                 try:
                     gpx = gpxpy.parse(f)
-                    if len(gpx.waypoints) > 0:
-                        self.dest_wpt = gpx.waypoints[0]
-                        print('Restored destination {}'.format(self.dest_wpt))
-                        Navigator.get_instance().set_destination(self.dest_wpt)
+                    if len(gpx.routes) > 0:
+                        self.active_route = gpx.routes[0]
+                        print('Restored active route {}'.format(self.active_route))
+                        Navigator.get_instance().set_route(self.active_route, self.active_route.get_points_no() - 1)
                 except Exception as e:
                     print(e)
 
     def get_dest_wpt(self):
-        return self.dest_wpt
+        if self.active_route is not None:
+            return self.active_route.points[-1]
+        else:
+            return None
