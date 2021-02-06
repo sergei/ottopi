@@ -98,6 +98,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/WayPoints'
 
+  /logs:
+    get:
+      operationId: rest_api.get_logs
+      tags:
+        - nav
+      summary: Get list of log files
+      description: Get list of log files
+      responses:
+        '200':
+          description: List of log files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /log/{name}:
+    get:
+      operationId: rest_api.get_log
+      tags:
+        - nav
+      summary: Download log file
+      description: Download log files
+      parameters:
+        - in: path
+          name: name
+          schema:
+            type: string
+            format: path
+          required: true
+          description: log name
+      responses:
+        '200':
+          description: Log file
+          content:
+            octet/binary:
+              schema:
+                type: string
+                format: binary
+
+  /all_logs.zip:
+    get:
+      operationId: rest_api.zip_all_logs
+      tags:
+        - nav
+      summary: Download all log files in one zip
+      description: Download all log files in one zip
+      responses:
+        '200':
+          description: ZIP file
+          content:
+            octet/binary:
+              schema:
+                type: string
+                format: binary
+
   /goto_wpt:
     post:
       operationId: rest_api.goto_wpt

@@ -5,6 +5,7 @@ from gpxpy.gpx import GPXWaypoint
 
 from data_registry import DataRegistry
 import conf
+from navcomputer.Logger import Logger
 
 
 def get_raw_instr():
@@ -15,7 +16,7 @@ def get_raw_instr():
 def goto_wpt(body=None):
     wpt = body
     data_registry = DataRegistry.get_instance()
-    gpx_wpt = GPXWaypoint(name=wpt['name'], latitude=wpt['lat'],longitude=wpt['lon'])
+    gpx_wpt = GPXWaypoint(name=wpt['name'], latitude=wpt['lat'], longitude=wpt['lon'])
     data_registry.set_destination(gpx_wpt)
     return {'status': 200}
 
@@ -67,3 +68,23 @@ def gpx_upload():
     data_registry = DataRegistry.get_instance()
     data_registry.read_gpx_file(file_name)
     return {'status': 200}
+
+
+def get_logs():
+    return Logger.get_logs()
+
+
+def get_log(name):
+    content = Logger.get_log(name)
+    if content is None:
+        return {'Log not found': 200}
+    else:
+        return content
+
+
+def zip_all_logs():
+    content = Logger.zip_all_logs()
+    if content is None:
+        return {'Log not found': 200}
+    else:
+        return content

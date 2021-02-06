@@ -1,9 +1,11 @@
 import glob
+import io
 import os
 import threading
+from zipfile import ZipFile
 
-LOG_DURATION_SECONDS = 60
-KEEP_MAX_LOGS = 3
+LOG_DURATION_SECONDS = 3600
+KEEP_MAX_LOGS = 72
 
 
 class Logger:
@@ -37,6 +39,43 @@ class Logger:
         if utc is not None:
             Logger.get_instance().__set_utc(utc)
 
+    @classmethod
+    def get_logs(cls):
+        log_dir = Logger.get_instance().log_dir
+        logs = []
+        if log_dir is not None:
+            log_list = sorted(glob.glob(log_dir + os.sep + 'log-*.nmea'), reverse=True)
+            for log in log_list:
+                logs.append(os.path.basename(log))
+
+        return logs
+
+    @classmethod
+    def zip_all_logs(cls):
+        log_dir = Logger.get_instance().log_dir
+        if log_dir is not None:
+            mem_file = io.BytesIO()
+            with ZipFile(mem_file, 'w') as myzip:
+                log_list = sorted(glob.glob(log_dir + os.sep + 'log-*.nmea'))
+                for log in log_list:
+                    myzip.write(log, arcname='ottopi' + os.path.sep + os.path.basename(log))
+            mem_file.seek(0)
+            return mem_file.read()
+
+        return None
+
+    @classmethod
+    def get_log(cls, name):
+        log_dir = Logger.get_instance().log_dir
+        if log_dir is None:
+            return None
+
+        log_name = log_dir + os.sep + os.path.basename(name)
+        if os.path.isfile(log_name):
+            return open(log_name, 'r').read()
+        else:
+            return None
+
     @staticmethod
     def log(s):
         if s.endswith('\n'):
@@ -50,7 +89,6 @@ class Logger:
                 # noinspection PyBroadException
                 try:
                     self.log_file.write(s)
-                    print('Writing {}'.format(s))
                 except Exception as e:
                     print(e)
 
