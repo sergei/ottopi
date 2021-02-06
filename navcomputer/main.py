@@ -7,7 +7,7 @@ import serial
 import connexion
 
 import conf
-from navcomputer.Logger import Logger
+from Logger import Logger
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
@@ -69,7 +69,7 @@ def add_tcp_client(sel, inp, interfaces, nmea_parser):
 
 def add_tcp_server(sel, tcp_port):
     sock = socket.socket()
-    sock.bind(('localhost', tcp_port))
+    sock.bind(('0.0.0.0', tcp_port))
     sock.listen(100)
     sock.setblocking(False)
     sel.register(sock, selectors.EVENT_READ, accept_nmea_tcp)

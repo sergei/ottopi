@@ -4,7 +4,7 @@ import threading
 import gpxpy
 import gpxpy.gpx
 
-from navcomputer import conf
+import conf
 from navigator import Navigator
 from raw_instr_data import RawInstrData
 

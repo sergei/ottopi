@@ -5,7 +5,7 @@ from gpxpy.gpx import GPXWaypoint
 
 from data_registry import DataRegistry
 import conf
-from navcomputer.Logger import Logger
+from Logger import Logger
 
 
 def get_raw_instr():

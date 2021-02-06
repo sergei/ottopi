@@ -5,7 +5,7 @@ import geomag
 import gpxpy
 from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
 
-from navcomputer.Logger import Logger
+from Logger import Logger
 from raw_instr_data import RawInstrData
 
 SPEED_FACTOR = {

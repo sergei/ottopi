@@ -1,4 +1,3 @@
-from navcomputer.Logger import Logger
 from nmea_encoder import encode_apb, encode_bwr, encode_rmb
 from navigator import Navigator
 

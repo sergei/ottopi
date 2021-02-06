@@ -4,9 +4,9 @@ from gpxpy import geo
 from dest_info import DestInfo
 import geomag
 
-from navcomputer.Logger import Logger
-from navcomputer.Speaker import Speaker
-from navcomputer.nmea_encoder import encode_apb, encode_rmb, encode_bwr
+from Logger import Logger
+from Speaker import Speaker
+from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 

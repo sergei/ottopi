@@ -6,7 +6,7 @@ import WayPointsList from "./WayPointsList";
 import LogFileList from "./LogFileList";
 
 function App() {
-    const specUrl =  "http://localhost:5555/ottopi/openapi.json";
+    const specUrl =  "openapi.json";
     const swaggerClient = new SwaggerClient(specUrl);
     swaggerClient.then(client => {
         console.log("OpenAPi spec:");

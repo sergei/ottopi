@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 
@@ -19,7 +20,12 @@ class Speaker:
         else:
             Speaker.__instance = self
             self.last_dest_announced_at = time.time()
-            self.espeak_bin = '/usr/local/bin/espeak'
+            if os.path.isfile('/usr/local/bin/espeak'):
+                self.espeak_bin = '/usr/local/bin/espeak'
+            elif os.path.isfile('/usr/bin/espeak'):
+                self.espeak_bin = '/usr/bin/espeak'
+            else:
+                self.espeak_bin = None
 
     def on_dest_info(self, dest_info):
         if time.time() - self.last_dest_announced_at >= 60:

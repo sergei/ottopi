@@ -64,3 +64,8 @@
   * Reads user uploaded files 
   * Read user commands (select WPT, select route, start timer)
   * Computes nav data
+
+# Raspberry PI installation 
+* Make access point https://www.raspberrypi.org/documentation/configuration/wireless/access-point-routed.md
+* Install pip3 sudo apt-get install python3-pip
+* install TTS sudo apt-get install espeak
