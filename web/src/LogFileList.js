@@ -32,10 +32,16 @@ class LogFileList extends Component {
         if( this.state.loading ) {
             return (<div>Loading logs ...</div>)
         }else {
-            let logs = this.state.logs.map( (log_name, i) => (
-                    <LogFile log={log_name}  key={i} />
-                )
-            );
+            let logs;
+            if ( this.state.ok){
+                logs = this.state.logs.map( (log_name, i) => (
+                        <LogFile log={log_name}  key={i} />
+                    )
+                );
+            }else{
+                logs = 'Failed to fetch logs';
+            }
+
             return (
                 <div>
                     {logs}

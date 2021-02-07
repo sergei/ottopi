@@ -48,10 +48,15 @@ class WayPointsList extends Component {
         if( this.state.loading ) {
             return (<div>Loading WPTs ...</div>)
         }else {
-            let wpts = this.state.wpts.map( (wpt, i) => (
-                    <WayPoint {...wpt} key={i} navigateTo={this.navigateTo}/>
-                )
-            );
+            let wpts;
+            if( this.state.ok){
+                 wpts = this.state.wpts.map( (wpt, i) => (
+                        <WayPoint {...wpt} key={i} navigateTo={this.navigateTo}/>
+                    )
+                );
+            }else{
+                wpts = 'Failed to fetch WPTs';
+            }
             return (
                 <div>
                     {wpts}
