@@ -6,6 +6,7 @@ from gpxpy.gpx import GPXWaypoint
 from data_registry import DataRegistry
 import conf
 from Logger import Logger
+from navigator import Navigator
 
 
 def get_raw_instr():
@@ -88,3 +89,20 @@ def zip_all_logs():
         return {'Log not found': 200}
     else:
         return content
+
+
+def tack():
+    print('Tacking')
+    if Navigator.get_instance().tack():
+        return {'status': 200}
+    else:
+        return 'Not connected', 420
+
+
+def steer(degrees):
+    degrees = int(degrees)
+    print('Steering {} degrees'.format(degrees))
+    if Navigator.get_instance().steer(degrees):
+        return {'status': 200}
+    else:
+        return 'Not connected', 420

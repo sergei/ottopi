@@ -6,6 +6,7 @@ import geomag
 
 from Logger import Logger
 from Speaker import Speaker
+from bang_control import BangControl
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
@@ -29,6 +30,7 @@ class Navigator:
             raise Exception("This class is a singleton!")
         else:
             Navigator.__instance = self
+            self.bang_control = BangControl()
             self.mag_decl = None
             self.listeners = []
             self.route = None
@@ -99,3 +101,14 @@ class Navigator:
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx
         self.route = route
+
+    def tack(self):
+        Speaker.get_instance().say('Tacking')
+        if self.bang_control.is_connected():
+            return self.bang_control.tack()
+        return False
+
+    def steer(self, degrees):
+        Speaker.get_instance().say('Turn {} degrees'.format(degrees))
+        if self.bang_control.is_connected():
+            self.bang_control.steer(degrees)

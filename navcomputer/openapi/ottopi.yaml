@@ -2,7 +2,7 @@ openapi: 3.0.0
 
 servers:
   - description: localhost
-    url: http://localhost:5555/ottopi
+    url: http://localhost:5555
 
 info:
   description: APIs to interact with Otto Pi
@@ -16,15 +16,17 @@ info:
 
 tags:
   - name: nav
-    description: Navigation control REST APIs
+    description: Navigation data REST APIs
   - name: web
-    description: Paths to acess the builtin Web application
+    description: Paths to acess the builtin Web site
+  - name: autopilot
+    description: Autopilot control REST APIs
 
 paths:
 ########################################################################################################################
 #  Static web page hosting REACT app
 ########################################################################################################################
-  /web:
+  /ottopi:
     get:
       operationId: rest_api.root_page
       tags:
@@ -42,7 +44,7 @@ paths:
 ########################################################################################################################
 #  Static web page hosting REACT app
 ########################################################################################################################
-  /web/{name}:
+  /ottopi/{name}:
     get:
       operationId: rest_api.static_page
       tags:
@@ -170,9 +172,9 @@ paths:
               $ref: '#/components/schemas/Waypoint'
       responses:
         '200':
-          description: Successfull upload
+          description: Successfully set
           content:
-            text/html:   # Add the media type here
+            text/html:
               schema:
                 type: string
 
@@ -222,6 +224,48 @@ paths:
           description: Successfully loaded html page.
           content:
             text/html:   # Add the media type here
+              schema:
+                type: string
+
+########################################################################################################################
+#  /autopilot
+########################################################################################################################
+#  /autopilot/engage:
+#  /autopilot/steer:
+  /autopilot/tack:
+    post:
+      operationId: rest_api.tack
+      tags:
+        - autopilot
+      summary: Instruct autopilot to tack
+      description: Instruct autopilot to tack (or gybe if going downwind)
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /autopilot/steer/{degrees}:
+    post:
+      operationId: rest_api.steer
+      tags:
+        - autopilot
+      summary: Instruct autopilot to change course
+      description: Instruct autopilot to change course by amount degrees specified in parameters
+      parameters:
+        - in: path
+          name: degrees
+          schema:
+            type: string
+          required: true
+          description: Amount of degrees to change course (negative left positive right)
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
               schema:
                 type: string
 
