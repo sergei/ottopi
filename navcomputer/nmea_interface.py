@@ -32,7 +32,10 @@ class NmeaInterface:
 
     def on_nmea(self, nmea):
         if self.interface_type == NmeaInterface.TCP_APP_CLIENTS:
-            self.file.send(bytes(nmea, 'utf-8'))
+            try:
+                self.file.send(bytes(nmea, 'utf-8'))
+            except IOError as e:
+                print(e)
 
     # Called by navigator when destination information is updated
     def on_dest_info(self, raw_instr_data, dest_info):
