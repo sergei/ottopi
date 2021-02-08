@@ -1,4 +1,4 @@
---inputs=/dev/ttyUSB0:4800 /dev/ttyAMA0:4800
+--inputs=/dev/ttyUSB0:4800 /dev/serial0:4800
 --tcp-server-port=54321
 --http-server-port=80
 --log-dir=/home/pi/data/logs

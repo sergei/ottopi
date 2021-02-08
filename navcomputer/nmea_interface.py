@@ -35,7 +35,7 @@ class NmeaInterface:
             try:
                 self.file.send(bytes(nmea, 'utf-8'))
             except IOError as e:
-                print(e)
+                print('Should not see it {}'.format(e))  # TODO might consider closing this connection
 
     # Called by navigator when destination information is updated
     def on_dest_info(self, raw_instr_data, dest_info):
@@ -50,7 +50,12 @@ class NmeaInterface:
 
     def read(self):
         if self.interface_type == self.SERIAL_INSTRUMENTS:
-            data = self.file.read(10)  # Should be ready
+            try:
+                data = self.file.read(10)  # Should be ready
+            except TimeoutError as e:
+                print('Should never happen {}'.format(e))
+                return None
+
             if data:
                 self.set_nmea_data(data)
                 return data

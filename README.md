@@ -70,9 +70,11 @@
 * Install pip3 sudo apt-get install python3-pip
 * install TTS sudo apt-get install espeak
 * See https://www.raspberrypi.org/forums/viewtopic.php?t=136974 to rid of espeak errors
+* See UART configuration at https://www.raspberrypi.org/documentation/configuration/uart.md
+  * https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README
 
 
-* B&G ACP wiring
+# B&G ACP wiring
 https://www.cruisersforum.com/forums/f116/b-and-g-h1000-pilot-handheld-wires-meaning-78713.html
   On the ACP the connenctions are color coded, if you have the proper B&G cable, the wire color are the same.
   
