@@ -29,6 +29,12 @@ class DataRegistry:
             self.lock = threading.Lock()
             self.wpts_gpx = None
             self.active_route = None
+            self.data_dir = None
+
+    def set_data_dir(self, data_dir):
+        self.data_dir = os.path.expanduser(data_dir)
+        if not os.path.isdir(self.data_dir):
+            os.makedirs(self.data_dir)
 
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:
@@ -44,17 +50,21 @@ class DataRegistry:
         else:
             return {}
 
-    def read_gpx_file(self, file_name):
-        with open(file_name, 'r') as gpx_file:
-            try:
-                self.wpts_gpx = gpxpy.parse(gpx_file)
-                for waypoint in self.wpts_gpx.waypoints:
-                    print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
-            except Exception as e:
-                print(e)
+    def read_gpx_file(self):
+        file_name = os.path.expanduser(self.data_dir + os.sep + conf.GPX_ARCHIVE_NAME)
+        try:
+            with open(file_name, 'r') as gpx_file:
+                try:
+                    self.wpts_gpx = gpxpy.parse(gpx_file)
+                    for waypoint in self.wpts_gpx.waypoints:
+                        print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
+                except Exception as e:
+                    print(e)
+        except IOError as error:
+            print(error)
 
     def get_wpts(self):
-        return self.wpts_gpx.waypoints
+        return self.wpts_gpx.waypoints if self.wpts_gpx is not None else []
 
     def set_active_route(self, route):
         self.active_route = route
@@ -63,13 +73,13 @@ class DataRegistry:
         # Store new route
         gpx = gpxpy.gpx.GPX()
         gpx.routes.append(route)
-        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_CUR_ROUTE_NAME
+        gpx_name = self.data_dir + os.sep + conf.GPX_CUR_ROUTE_NAME
         with open(gpx_name, 'wt') as f:
             f.write(gpx.to_xml())
             print('Route stored to {}'.format(gpx_name))
 
     def restore_active_route(self):
-        gpx_name = conf.DATA_DIR + os.sep + conf.GPX_CUR_ROUTE_NAME
+        gpx_name = self.data_dir + os.sep + conf.GPX_CUR_ROUTE_NAME
         if os.path.isfile(gpx_name):
             with open(gpx_name, 'rt') as f:
                 try:

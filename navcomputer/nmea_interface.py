@@ -47,9 +47,8 @@ class NmeaInterface:
 
     def read(self):
         if self.interface_type == self.SERIAL_INSTRUMENTS:
-            data = self.file.read(1000)  # Should be ready
+            data = self.file.read(10)  # Should be ready
             if data:
-                print('received', repr(data), 'from', self.file)
                 self.set_nmea_data(data)
                 return data
             else:

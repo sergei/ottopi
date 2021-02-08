@@ -7,7 +7,7 @@ import LogFileList from "./LogFileList";
 import Autopilot from "./Autopilot";
 
 function App() {
-    const specUrl =  "http://localhost:5555/openapi.json";
+    const specUrl =  "openapi.json";
     const swaggerClient = new SwaggerClient(specUrl);
     swaggerClient.then(client => {
         console.log("OpenAPi spec:");

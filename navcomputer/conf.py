@@ -1,5 +1,4 @@
 WEB_APP_DIR = '../web/build'
-DATA_DIR = 'data'
 POLAR_NAME = 'polar.txt'
 GPX_ARCHIVE_NAME = 'nav.gpx'
 GPX_CUR_ROUTE_NAME = 'current_route.gpx'

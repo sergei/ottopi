@@ -34,7 +34,7 @@ class GpxUploader extends Component {
 
         this.props.swaggerClient.then(client => {
             let uploadUrl = new Url(client.url);
-            uploadUrl.set('pathname','ottopi/gpx');
+            uploadUrl.set('pathname','gpx');
             axios.post(uploadUrl.toString(), formData).then((response) => {
                 console.log(response);
                 this.setState({ uploading: false, finished: true, success: true });

@@ -1,7 +1,8 @@
 import os
 import connexion
 import flask
-from gpxpy.gpx import GPXWaypoint
+import gpxpy
+from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
 
 from data_registry import DataRegistry
 import conf
@@ -17,8 +18,12 @@ def get_raw_instr():
 def goto_wpt(body=None):
     wpt = body
     data_registry = DataRegistry.get_instance()
-    gpx_wpt = GPXWaypoint(name=wpt['name'], latitude=wpt['lat'], longitude=wpt['lon'])
-    data_registry.set_destination(gpx_wpt)
+
+    dest_wpt = GPXRoutePoint(name=wpt['name'], latitude=wpt['lat'], longitude=wpt['lon'])
+    gpx_route = gpxpy.gpx.GPXRoute(name="WEB")
+    gpx_route.points.append(dest_wpt)
+
+    data_registry.set_active_route(gpx_route)
     return {'status': 200}
 
 
@@ -54,20 +59,21 @@ def static_page(name):
 
 
 def polars_upload():
+    data_registry = DataRegistry.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = conf.DATA_DIR + os.sep + conf.POLAR_NAME
+    file_name = data_registry.data_dir + os.sep + conf.POLAR_NAME
     print('Storing polars to {}'.format(file_name))
     uploaded_file.save(file_name)
     return {'status': 200}
 
 
 def gpx_upload():
+    data_registry = DataRegistry.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = conf.DATA_DIR + os.sep + conf.GPX_ARCHIVE_NAME
+    file_name = data_registry.data_dir + os.sep + conf.GPX_ARCHIVE_NAME
     print('Storing GPX to {}'.format(file_name))
     uploaded_file.save(file_name)
-    data_registry = DataRegistry.get_instance()
-    data_registry.read_gpx_file(file_name)
+    data_registry.read_gpx_file()
     return {'status': 200}
 
 

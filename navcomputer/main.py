@@ -92,14 +92,19 @@ def start_flask_server(http_port):
 
 
 def main(args):
-
-    Logger.set_log_dir(args.log_dir)
     print('Inputs', args.inputs)
+    inputs = []
+    for s in args.inputs:
+        inputs += s.split()
 
     sel = selectors.DefaultSelector()
     interfaces = []
+
+    Logger.set_log_dir(args.log_dir)
+
     data_registry = DataRegistry.get_instance()
-    data_registry.read_gpx_file(conf.DATA_DIR + os.sep + conf.GPX_ARCHIVE_NAME)
+    data_registry.set_data_dir(args.data_dir)
+    data_registry.read_gpx_file()
     data_registry.restore_active_route()
 
     nmea_parser = NmeaParser(data_registry)
@@ -109,7 +114,7 @@ def main(args):
 
     # Open and register specified inputs
     instr_inputs = []
-    for inp in args.inputs:
+    for inp in inputs:
         if inp.startswith('tcp'):
             ifc = add_tcp_client(sel, inp, interfaces, nmea_parser)
             if ifc is not None:
@@ -140,6 +145,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("--log-dir", help="Directory to store logs",  required=True)
+    parser.add_argument("--data-dir", help="Directory to keep GPX data",  required=True)
     parser.add_argument("--inputs", help="List of inputs ", nargs='*',  required=True)
     parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=True)
     parser.add_argument("--http-server-port", help="HTTP server port", required=True)
