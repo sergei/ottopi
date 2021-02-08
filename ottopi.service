@@ -1,0 +1,18 @@
+[Unit]
+Description=Ottopi service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/home/pi/ottopi/navcomputer
+ExecStart=/usr/bin/python3 /home/pi/ottopi/navcomputer/main.py @/home/pi/ottopi/navcomputer/args/rpi.txt
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ottopi
+
+[Install]
+WantedBy=multi-user.target
