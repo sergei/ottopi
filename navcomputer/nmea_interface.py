@@ -70,7 +70,7 @@ class NmeaInterface:
                 return None
 
     def set_nmea_data(self, data):
-        for c in data.decode('ascii'):
+        for c in data.decode('ascii', errors='ignore'):
             if self.nmea_state == NmeaInterface.NMEA_STATE_WAIT_SOP:
                 if c == '$':
                     self.nmea_sentence += c
