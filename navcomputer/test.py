@@ -6,6 +6,7 @@ from gpxpy.gpx import GPXRoutePoint
 
 from dest_info import DestInfo
 import nmea_encoder
+from Polars import Polars
 from raw_instr_data import RawInstrData
 from navigator import Navigator
 
@@ -86,6 +87,70 @@ class TestStringMethods(unittest.TestCase):
         dest_info.is_in_circle = True
         nmea = nmea_encoder.encode_rmb(dest_info)
         self.assertEqual(nmea, "$OPRMB,A,0.455,R,ORIG,DEST,3751.86244,N,12222.59000,W,0.920,214.0,1.2,A,*26\r\n")
+
+    def test_polars(self):
+        polars = Polars()
+
+        self.assertFalse(polars.is_valid())
+
+        polars.read_table('data/J105.txt')
+
+        # Upwind
+        # Lowest wind in the table
+        target_speed, target_twa = polars.get_targets(6, -30)
+        self.assertAlmostEqual(target_twa, 44.6, delta=0.01)
+        self.assertAlmostEqual(target_speed, 4.58, delta=0.01)
+
+        # Exact wind in the table
+        target_speed, target_twa = polars.get_targets(8, -30)
+        self.assertAlmostEqual(target_twa, 41.7, delta=0.01)
+        self.assertAlmostEqual(target_speed, 5.44, delta=0.01)
+
+        # Highest wind in the table
+        target_speed, target_twa = polars.get_targets(20, -30)
+        self.assertAlmostEqual(target_twa, 39.5, delta=0.01)
+        self.assertAlmostEqual(target_speed, 6.79, delta=0.01)
+
+        # Extrapolate below lowest wind
+        target_speed, target_twa = polars.get_targets(4, -30)
+        self.assertAlmostEqual(target_twa, 47.5, delta=0.01)
+        self.assertAlmostEqual(target_speed, 3.71, delta=0.01)
+
+        # Extrapolate above strongest wind
+        target_speed, target_twa = polars.get_targets(24, -30)
+        self.assertAlmostEqual(target_twa, 40.3, delta=0.01)
+        self.assertAlmostEqual(target_speed, 6.86, delta=0.01)
+
+        # Interpolate within table wind range
+        target_speed, target_twa = polars.get_targets(7, -30)
+        self.assertAlmostEqual(target_twa, (44.6 + 41.7)/2, delta=0.01)
+        self.assertAlmostEqual(target_speed, (5.44 + 4.58)/2, delta=0.01)
+
+        # Downwind
+        # Lowest wind in the table
+        target_speed, target_twa = polars.get_targets(6, -130)
+        self.assertAlmostEqual(target_twa, 140.5, delta=0.01)
+        self.assertAlmostEqual(target_speed, 4.59, delta=0.01)
+
+        # Exact wind in the table
+        target_speed, target_twa = polars.get_targets(8, -130)
+        self.assertAlmostEqual(target_twa, 144.8, delta=0.01)
+        self.assertAlmostEqual(target_speed, 5.52, delta=0.01)
+
+        # Highest wind in the table
+        target_speed, target_twa = polars.get_targets(20, -130)
+        self.assertAlmostEqual(target_twa, 178.7, delta=0.01)
+        self.assertAlmostEqual(target_speed, 8.14, delta=0.01)
+
+        # Self try to read invalid file
+
+        polars.read_table('data/nav.gpx')
+
+        # Make sure the polars are still valid
+        self.assertTrue(polars.is_valid())
+        target_speed, target_twa = polars.get_targets(20, -130)
+        self.assertAlmostEqual(target_twa, 178.7, delta=0.01)
+        self.assertAlmostEqual(target_speed, 8.14, delta=0.01)
 
 
 if __name__ == '__main__':

@@ -13,6 +13,7 @@ class Replay(NavigationListener):
         self.last_dest_wpt = None  # Last WPT received from RMB message
         self.kml = simplekml.Kml()
 
+        # Icons are available at http://kml4earth.appspot.com/icons.html
         self.trk_pt_style = simplekml.Style()
         self.trk_pt_style.labelstyle.color = simplekml.Color.red  # Make the text red
         self.trk_pt_style.labelstyle.scale = 0.1  # Make the text twice as big
