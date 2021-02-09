@@ -77,7 +77,8 @@ class NmeaParser:
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle """
         if t[2] == 'R':
             if t[5] == 'A':
-                self.awa = float(t[1])
+                awa = float(t[1])
+                self.awa = awa if awa <= 180 else awa - 360
                 self.awa_t = time.time()
                 self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
                 self.aws_t = time.time()
@@ -88,7 +89,8 @@ class NmeaParser:
                 self.aws_t = time.time()
         elif t[2] == 'T':
             if t[5] == 'A':
-                self.twa = float(t[1])
+                twa = float(t[1])
+                self.twa = twa if twa <= 180 else twa - 360
                 self.twa_t = time.time()
                 self.tws = float(t[3]) * SPEED_FACTOR[t[4]]
                 self.tws_t = time.time()
