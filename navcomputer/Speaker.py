@@ -1,9 +1,11 @@
 import os
 import subprocess
-import time
+
+from NavigatorListener import NavigationListener
+from Logger import Logger
 
 
-class Speaker:
+class Speaker(NavigationListener):
     __instance = None
 
     @staticmethod
@@ -18,8 +20,8 @@ class Speaker:
         if Speaker.__instance is not None:
             raise Exception("This class is a singleton!")
         else:
+            super().__init__()
             Speaker.__instance = self
-            self.last_dest_announced_at = time.time()
             if os.path.isfile('/usr/local/bin/espeak'):
                 self.espeak_bin = '/usr/local/bin/espeak'
             elif os.path.isfile('/usr/bin/espeak'):
@@ -27,23 +29,9 @@ class Speaker:
             else:
                 self.espeak_bin = None
 
-    def on_dest_info(self, dest_info):
-        if time.time() - self.last_dest_announced_at >= 60:
-            if dest_info.atw_up is not None:
-                s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
-                                                          abs(dest_info.atw),
-                                                          'up' if dest_info.atw_up else 'down')
-            else:
-                s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
-                                                                 abs(dest_info.atw),
-                                                                 'right' if dest_info.atw > 0 else 'left')
-            self.say(s)
-            self.last_dest_announced_at = time.time()
-            return s
-        else:
-            return None
+    def on_speech(self, speech):
+        print('Saying ' + speech)
+        Logger.log('> $POTTOPI,SAY,{}'.format(speech))
 
-    def say(self, s):
-        print('Saying ' + s)
-        cmd = [self.espeak_bin, '"' + s + '"']
+        cmd = [self.espeak_bin, '"' + speech + '"']
         subprocess.run(cmd)

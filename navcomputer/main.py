@@ -1,17 +1,17 @@
 import argparse
-import os
 import selectors
 import socket
 import threading
 import serial
 import connexion
+from flask_cors import CORS
 
-import conf
 from Logger import Logger
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
-from flask_cors import CORS
+from Speaker import Speaker
+from navigator import Navigator
 
 
 def accept_nmea_tcp(sock, sel, interfaces, nmea_parser, instr_inputs):
@@ -93,21 +93,30 @@ def start_flask_server(http_port):
 
 def main(args):
     print('Inputs', args.inputs)
+    Logger.set_log_dir(args.log_dir)
+
+    data_registry = DataRegistry.get_instance()
+
+    data_registry.set_data_dir(args.data_dir)
+    data_registry.read_gpx_file()
+    data_registry.restore_active_route()
+
+    nmea_parser = NmeaParser(data_registry)
+
+    if args.replay_dir is not None:
+        from replay import Replay
+        replay = Replay(args.replay_dir, args.log_dir, nmea_parser)
+        Navigator.get_instance().add_listener(replay)
+        replay.run()
+        return
+
+    Navigator.get_instance().add_listener(Speaker.get_instance())
     inputs = []
     for s in args.inputs:
         inputs += s.split()
 
     sel = selectors.DefaultSelector()
     interfaces = []
-
-    Logger.set_log_dir(args.log_dir)
-
-    data_registry = DataRegistry.get_instance()
-    data_registry.set_data_dir(args.data_dir)
-    data_registry.read_gpx_file()
-    data_registry.restore_active_route()
-
-    nmea_parser = NmeaParser(data_registry)
 
     # Add TCP server
     add_tcp_server(sel, int(args.tcp_server_port))
@@ -146,7 +155,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("--log-dir", help="Directory to store logs",  required=True)
     parser.add_argument("--data-dir", help="Directory to keep GPX data",  required=True)
-    parser.add_argument("--inputs", help="List of inputs ", nargs='*',  required=True)
-    parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=True)
-    parser.add_argument("--http-server-port", help="HTTP server port", required=True)
+    parser.add_argument("--inputs", help="List of inputs ", nargs='*',  required=False)
+    parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=False)
+    parser.add_argument("--http-server-port", help="HTTP server port", required=False)
+    parser.add_argument("--replay-dir", help="Replay logs found in this directory", required=False)
+
     main(parser.parse_args())

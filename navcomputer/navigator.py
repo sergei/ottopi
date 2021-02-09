@@ -5,7 +5,6 @@ from dest_info import DestInfo
 import geomag
 
 from Logger import Logger
-from Speaker import Speaker
 from bang_control import BangControl
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
@@ -35,6 +34,7 @@ class Navigator:
             self.listeners = []
             self.route = None
             self.active_wpt_idx = None
+            self.last_dest_announced_at = None
 
     def add_listener(self, listener):
         self.listeners.append(listener)
@@ -46,11 +46,11 @@ class Navigator:
     def update(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
 
-        if self.route is not None:
-            if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
-                if self.mag_decl is None:
-                    self.mag_decl = geomag.declination(raw_instr_data.lat, raw_instr_data.lon)
+        if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
+            if self.mag_decl is None:
+                self.mag_decl = geomag.declination(raw_instr_data.lat, raw_instr_data.lon)
 
+            if self.route is not None:
                 dest_wpt = self.route.points[self.active_wpt_idx]
                 dist_m = geo.distance(raw_instr_data.lat, raw_instr_data.lon, 0,
                                       dest_wpt.latitude, dest_wpt.longitude, 0, False)
@@ -94,21 +94,38 @@ class Navigator:
                 Logger.log('< ' + encode_rmb(dest_info))
                 Logger.log('< ' + encode_bwr(raw_instr_data, dest_info))
 
-                s = Speaker.get_instance().on_dest_info(dest_info)
-                if s is not None:
-                    Logger.log('> $POTTOPI,SAY,{}'.format(s))
+                if self.last_dest_announced_at is not None:
+                    since_last_speech = (raw_instr_data.utc - self.last_dest_announced_at).total_seconds()
+                else:
+                    since_last_speech = 3600
+                if since_last_speech >= 60:
+                    self.last_dest_announced_at = raw_instr_data.utc
+                    if dest_info.atw_up is not None:
+                        s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
+                                                                  abs(dest_info.atw),
+                                                                  'up' if dest_info.atw_up else 'down')
+                    else:
+                        s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
+                                                                         abs(dest_info.atw),
+                                                                         'right' if dest_info.atw > 0 else 'left')
+                    for listener in self.listeners:
+                        listener.on_speech(s)
 
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx
         self.route = route
 
     def tack(self):
-        Speaker.get_instance().say('Tacking')
+        for listener in self.listeners:
+            listener.on_speech('Tacking')
         if self.bang_control.is_connected():
             return self.bang_control.tack()
         return False
 
     def steer(self, degrees):
-        Speaker.get_instance().say('Turn {} degrees'.format(degrees))
+        for listener in self.listeners:
+            listener.on_speech('Tacking')
+
         if self.bang_control.is_connected():
-            self.bang_control.steer(degrees)
+            return self.bang_control.steer(degrees)
+        return False

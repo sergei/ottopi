@@ -50,6 +50,7 @@ class NmeaParser:
         Logger.log('> ' + nmea_sentence)
         # print('Got [{}]'.format(nmea_sentence))
         # Verify optional checksum
+        nmea_sentence = nmea_sentence.rstrip()
         cc_idx = nmea_sentence.find('*')
         if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
             body = nmea_sentence[1:cc_idx]  # string between $ and *
@@ -120,13 +121,14 @@ class NmeaParser:
             lon = self.parse_coord(t[8], t[9])
             if self.last_dest_wpt is not None:
                 # Check if we got the same wpt once again, so we would ignore it
-                same_name = name == self.last_dest_wpt
+                same_name = name == self.last_dest_wpt.name
                 same_lat = abs(lat - self.last_dest_wpt.latitude) < 1.e-5
                 same_lon = abs(lon - self.last_dest_wpt.longitude) < 1.e-5
                 if same_name and same_lat and same_lon:
                     return
 
             dest_wpt = GPXRoutePoint(name=name, latitude=lat, longitude=lon)
+            self.last_dest_wpt = dest_wpt
             gpx_route = gpxpy.gpx.GPXRoute(name="RMB")
             gpx_route.points.append(dest_wpt)
             if self.lat is not None:

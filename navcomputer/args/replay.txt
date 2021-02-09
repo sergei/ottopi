@@ -1,0 +1,3 @@
+--replay-dir=~/ttt/playback/2011-12-10-BYC-Midwinters
+--log-dir=~/tmp/ottopi/replays
+--data-dir=~/tmp/ottopi/gpx

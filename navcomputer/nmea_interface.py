@@ -1,8 +1,9 @@
+from NavigatorListener import NavigationListener
 from nmea_encoder import encode_apb, encode_bwr, encode_rmb
 from navigator import Navigator
 
 
-class NmeaInterface:
+class NmeaInterface(NavigationListener):
     SERIAL_INSTRUMENTS = 0  # Instruments input, output to autopilot
     TCP_INSTRUMENTS_INPUT = 1  # Input of GPS and instruments data
     TCP_APP_CLIENTS = 2  # Applications like Open CPN
@@ -10,6 +11,7 @@ class NmeaInterface:
     NMEA_STATE_WAIT_EOP = 2
 
     def __init__(self, file, interface_type, nmea_parser, instr_inputs):
+        super().__init__()
         self.file = file
         self.interface_type = interface_type
         self.nmea_parser = nmea_parser
