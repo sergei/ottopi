@@ -12,25 +12,33 @@ class Replay(NavigationListener):
         self.nmea_parser = nmea_parser
         self.last_dest_wpt = None  # Last WPT received from RMB message
         self.kml = simplekml.Kml()
+        self.route_folder = self.kml.newfolder(name="Route")
         self.wpts_folder = self.kml.newfolder(name="Wpts")
         self.summary_folder = self.kml.newfolder(name="Sumary")
-        self.route_folder = self.kml.newfolder(name="Route")
+        self.speech_folder = self.kml.newfolder(name="Speech")
 
         # Icons are available at http://kml4earth.appspot.com/icons.html
         self.trk_pt_style = simplekml.Style()
         self.trk_pt_style.labelstyle.color = simplekml.Color.red  # Make the text red
-        self.trk_pt_style.labelstyle.scale = 0.1  # Make the text twice as big
+        self.trk_pt_style.labelstyle.scale = 0.1
         self.trk_pt_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png'
 
         self.mark_style = simplekml.Style()
         self.mark_style.labelstyle.color = simplekml.Color.red  # Make the text red
-        self.mark_style.labelstyle.scale = 1  # Make the text twice as big
+        self.mark_style.labelstyle.scale = 1
         self.mark_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png'
 
         self.summary_style = simplekml.Style()
         self.summary_style.labelstyle.color = simplekml.Color.yellow  # Make the text red
-        self.summary_style.labelstyle.scale = 2  # Make the text twice as big
+        self.summary_style.labelstyle.scale = 2
         self.summary_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/yen.png'
+
+        self.speech_style = simplekml.Style()
+        self.speech_style.labelstyle.color = simplekml.Color.yellow  # Make the text red
+        self.speech_style.labelstyle.scale = 2
+        self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/arts.png'
+
+        self.last_coords = None
 
     def run(self):
         log_list = sorted(glob.glob(self.replay_dir + os.sep + 'log-*.nmea'))
@@ -45,7 +53,8 @@ class Replay(NavigationListener):
         self.kml.save(kml_file)
 
     def on_dest_info(self, raw_instr_data, dest_info):
-        point = self.route_folder.newpoint(name="", coords=[(raw_instr_data.lon, raw_instr_data.lat)])
+        self.last_coords = (raw_instr_data.lon, raw_instr_data.lat)
+        point = self.route_folder.newpoint(name="", coords=[self.last_coords])
         point.style = self.trk_pt_style
 
         description = "==INSTR==\n"
@@ -82,3 +91,7 @@ class Replay(NavigationListener):
 
     def on_speech(self, s):
         print(s)
+        if self.last_coords is not None:
+            point = self.speech_folder.newpoint(name="", coords=[self.last_coords])
+            point.style = self.speech_style
+            point.description = s
