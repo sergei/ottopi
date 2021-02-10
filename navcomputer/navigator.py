@@ -74,6 +74,7 @@ class Navigator:
         if leg_summary is not None:
             for listener in self.listeners:
                 listener.on_leg_summary(leg_summary)
+            self.say_leg_summary(leg_summary)
 
         if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
             if self.mag_decl is None:
@@ -123,22 +124,7 @@ class Navigator:
                 Logger.log('< ' + encode_rmb(dest_info))
                 Logger.log('< ' + encode_bwr(raw_instr_data, dest_info))
 
-                if self.last_dest_announced_at is not None:
-                    since_last_speech = (raw_instr_data.utc - self.last_dest_announced_at).total_seconds()
-                else:
-                    since_last_speech = 3600
-                if since_last_speech >= 60:
-                    self.last_dest_announced_at = raw_instr_data.utc
-                    if dest_info.atw_up is not None:
-                        s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
-                                                                  abs(dest_info.atw),
-                                                                  'up' if dest_info.atw_up else 'down')
-                    else:
-                        s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
-                                                                         abs(dest_info.atw),
-                                                                         'right' if dest_info.atw > 0 else 'left')
-                    for listener in self.listeners:
-                        listener.on_speech(s)
+                self.say_dest_info(dest_info, raw_instr_data)
 
     def set_route(self, route, active_wpt_idx):
         self.active_wpt_idx = active_wpt_idx
@@ -158,3 +144,42 @@ class Navigator:
         if self.bang_control.is_connected():
             return self.bang_control.steer(degrees)
         return False
+
+    def say_dest_info(self, dest_info, raw_instr_data):
+        if self.last_dest_announced_at is not None:
+            since_last_speech = (raw_instr_data.utc - self.last_dest_announced_at).total_seconds()
+        else:
+            since_last_speech = 3600
+        if since_last_speech >= 60:
+            self.last_dest_announced_at = raw_instr_data.utc
+            if dest_info.atw_up is not None:
+                s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
+                                                          abs(dest_info.atw),
+                                                          'up' if dest_info.atw_up else 'down')
+            else:
+                s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
+                                                                 abs(dest_info.atw),
+                                                                 'right' if dest_info.atw > 0 else 'left')
+            for listener in self.listeners:
+                listener.on_speech(s)
+
+    def say_leg_summary(self, leg_summary):
+        phrase = ''
+        if leg_summary.delta_dist_wind_m is not None:
+            direction = 'gained' if leg_summary.delta_dist_wind_m > 0 else 'lost'
+            phrase += 'You {} {:.0f} meters to the target boat. '.format(direction,
+                                                                         abs(leg_summary.delta_dist_wind_m))
+
+        if leg_summary.delta_boat_speed_perc is not None:
+            direction = 'faster' if leg_summary.delta_boat_speed_perc > 0 else 'slower'
+            phrase += 'You were {:.0f} percent {} than target. '.format(abs(leg_summary.delta_boat_speed_perc),
+                                                                        direction)
+
+        if leg_summary.avg_delta_twa is not None:
+            direction = 'higher' if leg_summary.avg_delta_twa > 0 else 'lower'
+            phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(leg_summary.avg_delta_twa),
+                                                                                direction)
+
+        if len(phrase) > 0:
+            for listener in self.listeners:
+                listener.on_speech(phrase)
