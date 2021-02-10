@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from navigator_listener import NavigationListener
-from Logger import Logger
+from logger import Logger
 
 
 class Speaker(NavigationListener):

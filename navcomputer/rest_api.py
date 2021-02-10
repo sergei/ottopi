@@ -6,7 +6,7 @@ from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
 
 from data_registry import DataRegistry
 import conf
-from Logger import Logger
+from logger import Logger
 from navigator import Navigator
 
 

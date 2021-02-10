@@ -7,12 +7,12 @@ import serial
 import connexion
 from flask_cors import CORS
 
-from Logger import Logger
+from logger import Logger
 import conf
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
-from Speaker import Speaker
+from speaker import Speaker
 from navigator import Navigator
 
 

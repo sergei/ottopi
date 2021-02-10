@@ -4,7 +4,7 @@ from gpxpy import geo
 from dest_info import DestInfo
 import geomag
 
-from Logger import Logger
+from logger import Logger
 from bang_control import BangControl
 from Polars import Polars
 from leg_analyzer import LegAnalyzer
