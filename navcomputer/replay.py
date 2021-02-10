@@ -1,7 +1,7 @@
 import glob
 import os
 import simplekml
-from NavigatorListener import NavigationListener
+from navigator_listener import NavigationListener
 
 
 class Replay(NavigationListener):

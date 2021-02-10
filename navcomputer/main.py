@@ -1,4 +1,5 @@
 import argparse
+import os
 import selectors
 import socket
 import threading
@@ -7,6 +8,7 @@ import connexion
 from flask_cors import CORS
 
 from Logger import Logger
+import conf
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
 from data_registry import DataRegistry
@@ -100,6 +102,8 @@ def main(args):
     data_registry.set_data_dir(args.data_dir)
     data_registry.read_gpx_file()
     data_registry.restore_active_route()
+
+    Navigator.get_instance().read_polars(args.data_dir + os.sep + conf.POLAR_NAME)
 
     nmea_parser = NmeaParser(data_registry)
 

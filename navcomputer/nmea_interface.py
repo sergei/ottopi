@@ -1,4 +1,4 @@
-from NavigatorListener import NavigationListener
+from navigator_listener import NavigationListener
 from nmea_encoder import encode_apb, encode_bwr, encode_rmb
 from navigator import Navigator
 

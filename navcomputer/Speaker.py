@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from NavigatorListener import NavigationListener
+from navigator_listener import NavigationListener
 from Logger import Logger
 
 

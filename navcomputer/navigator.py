@@ -6,11 +6,29 @@ import geomag
 
 from Logger import Logger
 from bang_control import BangControl
+from Polars import Polars
+from leg_analyzer import LegAnalyzer
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
 METERS_IN_NM = 1852.
+
+
+class Targets:
+    def __init__(self, polars, tws, twa, sow):
+        if sow is None or twa is None:
+            self.boat_vmg = None
+        else:
+            self.boat_vmg = sow * math.cos(math.radians(twa))
+
+        if tws is None or twa is None:
+            self.target_sow = None
+            self.target_vmg = None
+            self.target_twa = None
+        else:
+            self.target_sow, self.target_twa = polars.get_targets(tws, twa)
+            self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
 
 
 class Navigator:
@@ -35,6 +53,11 @@ class Navigator:
             self.route = None
             self.active_wpt_idx = None
             self.last_dest_announced_at = None
+            self.polars = Polars()
+            self.leg_analyzer = LegAnalyzer()
+
+    def read_polars(self, file_name):
+        self.polars.read_table(file_name)
 
     def add_listener(self, listener):
         self.listeners.append(listener)
@@ -45,6 +68,12 @@ class Navigator:
 
     def update(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
+
+        targets = Targets(self.polars, raw_instr_data.tws, raw_instr_data.twa, raw_instr_data.sow)
+        leg_summary = self.leg_analyzer.update(raw_instr_data, targets)
+        if leg_summary is not None:
+            for listener in self.listeners:
+                listener.on_leg_summary(leg_summary)
 
         if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
             if self.mag_decl is None:
