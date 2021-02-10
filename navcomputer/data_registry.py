@@ -5,31 +5,16 @@ import gpxpy
 import gpxpy.gpx
 
 import conf
-from navigator import Navigator
 from raw_instr_data import RawInstrData
 
 
 class DataRegistry:
-    __instance = None
-
-    @staticmethod
-    def get_instance():
-        """ Static access method """
-        if DataRegistry.__instance is None:
-            DataRegistry()
-        return DataRegistry.__instance
 
     def __init__(self):
-        """ Virtually private constructor.  """
-        if DataRegistry.__instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            DataRegistry.__instance = self
-            self.raw_instr_data = RawInstrData()
-            self.lock = threading.Lock()
-            self.wpts_gpx = None
-            self.active_route = None
-            self.data_dir = None
+        self.raw_instr_data = RawInstrData()
+        self.lock = threading.Lock()
+        self.wpts_gpx = None
+        self.data_dir = None
 
     def set_data_dir(self, data_dir):
         self.data_dir = os.path.expanduser(data_dir)
@@ -39,7 +24,11 @@ class DataRegistry:
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:
             self.raw_instr_data = raw_instr_data
-        Navigator.get_instance().update(self.raw_instr_data)
+
+    def get_raw_instr_data(self):
+        with self.lock:
+            raw_instr_data = copy.copy(self.raw_instr_data)
+        return raw_instr_data
 
     def get_raw_instr_data_dict(self):
         with self.lock:
@@ -66,11 +55,7 @@ class DataRegistry:
     def get_wpts(self):
         return self.wpts_gpx.waypoints if self.wpts_gpx is not None else []
 
-    def set_active_route(self, route):
-        self.active_route = route
-        print('Set new active route {}'.format(self.active_route))
-        Navigator.get_instance().set_route(route, route.get_points_no() - 1)
-        # Store new route
+    def store_active_route(self, route):
         gpx = gpxpy.gpx.GPX()
         gpx.routes.append(route)
         gpx_name = self.data_dir + os.sep + conf.GPX_CUR_ROUTE_NAME
@@ -85,14 +70,9 @@ class DataRegistry:
                 try:
                     gpx = gpxpy.parse(f)
                     if len(gpx.routes) > 0:
-                        self.active_route = gpx.routes[0]
-                        print('Restored active route {}'.format(self.active_route))
-                        Navigator.get_instance().set_route(self.active_route, self.active_route.get_points_no() - 1)
+                        active_route = gpx.routes[0]
+                        print('Restored active route {}'.format(active_route))
+                        return active_route
                 except Exception as e:
                     print(e)
-
-    def get_dest_wpt(self):
-        if self.active_route is not None:
-            return self.active_route.points[-1]
-        else:
-            return None
+        return None

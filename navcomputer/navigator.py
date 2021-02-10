@@ -1,13 +1,17 @@
 import math
 
+import gpxpy
 from gpxpy import geo
+from gpxpy.gpx import GPXRoutePoint
+
 from dest_info import DestInfo
 import geomag
 
 from logger import Logger
 from bang_control import BangControl
-from Polars import Polars
+from polars import Polars
 from leg_analyzer import LegAnalyzer
+from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
@@ -28,7 +32,10 @@ class Targets:
             self.target_twa = None
         else:
             self.target_sow, self.target_twa = polars.get_targets(tws, twa)
-            self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
+            if self.target_sow is not None and self.target_twa is not None:
+                self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
+            else:
+                self.target_vmg = None
 
 
 class Navigator:
@@ -47,14 +54,21 @@ class Navigator:
             raise Exception("This class is a singleton!")
         else:
             Navigator.__instance = self
+            self.data_registry = DataRegistry()
             self.bang_control = BangControl()
-            self.mag_decl = None
-            self.listeners = []
-            self.route = None
-            self.active_wpt_idx = None
-            self.last_dest_announced_at = None
             self.polars = Polars()
             self.leg_analyzer = LegAnalyzer()
+            self.mag_decl = None
+            self.listeners = []
+            self.active_route = None
+            self.active_wpt_idx = None
+            self.last_dest_announced_at = None
+
+    def get_data_dir(self):
+        return self.data_registry.data_dir
+
+    def set_data_dir(self, data_dir):
+        self.data_registry.set_data_dir(data_dir)
 
     def read_polars(self, file_name):
         self.polars.read_table(file_name)
@@ -66,8 +80,12 @@ class Navigator:
         if listener in self.listeners:
             self.listeners.remove(listener)
 
-    def update(self, raw_instr_data):
+    def get_raw_instr_data_dict(self):
+        return self.data_registry.get_raw_instr_data_dict()
+
+    def set_raw_instr_data(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
+        self.data_registry.set_raw_instr_data(raw_instr_data)
 
         targets = Targets(self.polars, raw_instr_data.tws, raw_instr_data.twa, raw_instr_data.sow)
         leg_summary = self.leg_analyzer.update(raw_instr_data, targets)
@@ -80,8 +98,8 @@ class Navigator:
             if self.mag_decl is None:
                 self.mag_decl = geomag.declination(raw_instr_data.lat, raw_instr_data.lon)
 
-            if self.route is not None:
-                dest_wpt = self.route.points[self.active_wpt_idx]
+            if self.active_route is not None:
+                dest_wpt = self.active_route.points[self.active_wpt_idx]
                 dist_m = geo.distance(raw_instr_data.lat, raw_instr_data.lon, 0,
                                       dest_wpt.latitude, dest_wpt.longitude, 0, False)
 
@@ -109,7 +127,7 @@ class Navigator:
                     dest_info.atw_up = dest_info.atw * raw_instr_data.awa > 0
 
                 if self.active_wpt_idx > 0:
-                    orig_wpt = self.route.points[self.active_wpt_idx-1]
+                    orig_wpt = self.active_route.points[self.active_wpt_idx - 1]
                     bod_true = geo.get_course(orig_wpt.latitude, orig_wpt.longitude,
                                               dest_wpt.latitude, dest_wpt.longitude)
                     dest_info.bod = bod_true - self.mag_decl
@@ -126,9 +144,40 @@ class Navigator:
 
                 self.say_dest_info(dest_info, raw_instr_data)
 
+    def goto_wpt(self, dest_wpt):
+        gpx_route = gpxpy.gpx.GPXRoute(name="TO WPT")
+        gpx_route.points.append(dest_wpt)
+
+        instr_data = self.data_registry.get_raw_instr_data()
+        if instr_data is not None:
+            orig_wpt = GPXRoutePoint(name="HERE", latitude=instr_data.lat, longitude=instr_data.lon)
+            gpx_route.points.insert(0, orig_wpt)
+
+        self.set_route(gpx_route, len(gpx_route.points)-1)
+
     def set_route(self, route, active_wpt_idx):
+        print('Set new active route {}'.format(route))
         self.active_wpt_idx = active_wpt_idx
-        self.route = route
+        self.active_route = route
+        self.data_registry.store_active_route(route)
+
+    def get_dest_wpt(self):
+        if self.active_route is not None:
+            return self.active_route.points[-1]
+        else:
+            return None
+
+    def read_gpx_file(self):
+        self.data_registry.read_gpx_file()
+
+    def restore_active_route(self):
+        route = self.data_registry.restore_active_route()
+        if route is not None:
+            self.active_route = route
+            self.active_wpt_idx = self.active_route.get_points_no() - 1
+
+    def get_wpts(self):
+        return self.data_registry.get_wpts()
 
     def tack(self):
         for listener in self.listeners:

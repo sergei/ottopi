@@ -11,7 +11,6 @@ from logger import Logger
 import conf
 from nmea_interface import NmeaInterface
 from nmeaparser import NmeaParser
-from data_registry import DataRegistry
 from speaker import Speaker
 from navigator import Navigator
 
@@ -97,24 +96,23 @@ def main(args):
     print('Inputs', args.inputs)
     Logger.set_log_dir(args.log_dir)
 
-    data_registry = DataRegistry.get_instance()
+    navigator = Navigator.get_instance()
+    data_dir = os.path.expanduser(args.data_dir)
+    navigator.set_data_dir(data_dir)
+    navigator.read_gpx_file()
+    navigator.restore_active_route()
+    navigator.read_polars(data_dir + os.sep + conf.POLAR_NAME)
 
-    data_registry.set_data_dir(args.data_dir)
-    data_registry.read_gpx_file()
-    data_registry.restore_active_route()
-
-    Navigator.get_instance().read_polars(args.data_dir + os.sep + conf.POLAR_NAME)
-
-    nmea_parser = NmeaParser(data_registry)
+    nmea_parser = NmeaParser(navigator)
 
     if args.replay_dir is not None:
         from replay import Replay
         replay = Replay(args.replay_dir, args.log_dir, nmea_parser)
-        Navigator.get_instance().add_listener(replay)
+        navigator.add_listener(replay)
         replay.run()
         return
 
-    Navigator.get_instance().add_listener(Speaker.get_instance())
+    navigator.add_listener(Speaker.get_instance())
     inputs = []
     for s in args.inputs:
         inputs += s.split()

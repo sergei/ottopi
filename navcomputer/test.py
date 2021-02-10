@@ -6,7 +6,8 @@ from gpxpy.gpx import GPXRoutePoint
 
 from dest_info import DestInfo
 import nmea_encoder
-from Polars import Polars
+from polars import Polars
+from navigator_listener import NavigationListener
 from raw_instr_data import RawInstrData
 from navigator import Navigator
 
@@ -16,7 +17,7 @@ class TestStringMethods(unittest.TestCase):
     def test_dest_info(self):
         test_class = self
 
-        class NavListener:
+        class NavListener(NavigationListener):
             def on_dest_info(self, raw_instr_data, dest_info):
                 test_class.assertAlmostEqual(dest_info.dtw, 0.92, delta=0.01)
                 test_class.assertAlmostEqual(dest_info.btw, 228, delta=1)
@@ -26,8 +27,9 @@ class TestStringMethods(unittest.TestCase):
                 test_class.assertIsNone(dest_info.bod)
 
         navigator = Navigator.get_instance()
-        l = NavListener()
-        navigator.add_listener(l)
+        navigator.set_data_dir('/tmp/otto_test')
+        listener = NavListener()
+        navigator.add_listener(listener)
 
         lat = 37.871690
         lon = -122.359238
@@ -38,10 +40,10 @@ class TestStringMethods(unittest.TestCase):
         route = gpxpy.gpx.GPXRoute(name="RMB")
         route.points.append(dest_wpt)
         navigator.set_route(route, 0)
-        navigator.update(instr_data)
-        navigator.remove_listener(l)
+        navigator.set_raw_instr_data(instr_data)
+        navigator.remove_listener(listener)
 
-        class NavListener:
+        class NavListener(NavigationListener):
             def on_dest_info(self, raw_instr_data, dest_info):
                 test_class.assertAlmostEqual(dest_info.dtw, 0.92, delta=0.01)
                 test_class.assertAlmostEqual(dest_info.btw, 228, delta=1)
@@ -50,16 +52,16 @@ class TestStringMethods(unittest.TestCase):
                 test_class.assertAlmostEqual(dest_info.xte, 0.455, delta=0.001)
                 test_class.assertAlmostEqual(dest_info.bod, 200, delta=1)
 
-        l = NavListener()
-        navigator.add_listener(l)
+        listener = NavListener()
+        navigator.add_listener(listener)
         dest_wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
         orig_wpt = GPXRoutePoint(name="ORIG", latitude=37.882646, longitude=-122.361774)
         route = gpxpy.gpx.GPXRoute(name="RMB")
         route.points.append(orig_wpt)
         route.points.append(dest_wpt)
         navigator.set_route(route, 1)
-        navigator.update(instr_data)
-        navigator.remove_listener(l)
+        navigator.set_raw_instr_data(instr_data)
+        navigator.remove_listener(listener)
 
     def test_encode_bwr(self):
         utc = datetime.datetime(2020, 5, 17, 11, 45, 57, tzinfo=datetime.timezone.utc)
@@ -74,9 +76,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(nmea, "$OPBWR,114557,3751.86244,N,12222.59000,W,,T,228.0,M,0.920,N,DEST,*0D\r\n")
 
     def test_encode_rmb(self):
-        utc = datetime.datetime(2020, 5, 17, 11, 45, 57, tzinfo=datetime.timezone.utc)
-        instr_data = RawInstrData(t=0, utc=utc, lat=37.864374, lon=-122.376500,
-                                  sog=10, cog=200, awa=30, aws=15, twa=45, tws=10, sow=5, hdg=214)
         dest_info = DestInfo()
         dest_info.wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
         dest_info.org_wpt = GPXRoutePoint(name="ORIG", latitude=37.864374, longitude=-122.376500)

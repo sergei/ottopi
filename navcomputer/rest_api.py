@@ -1,36 +1,34 @@
+"""
+This file contains the entry points for the REST API calls received form HTTP server
+"""
 import os
 import connexion
 import flask
-import gpxpy
-from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
+from gpxpy.gpx import GPXRoutePoint
 
-from data_registry import DataRegistry
 import conf
 from logger import Logger
 from navigator import Navigator
 
 
 def get_raw_instr():
-    data_registry = DataRegistry.get_instance()
-    return data_registry.get_raw_instr_data_dict()
+    navigator = Navigator.get_instance()
+    return navigator.get_raw_instr_data_dict()
 
 
 def goto_wpt(body=None):
     wpt = body
-    data_registry = DataRegistry.get_instance()
+    navigator = Navigator.get_instance()
 
     dest_wpt = GPXRoutePoint(name=wpt['name'], latitude=wpt['lat'], longitude=wpt['lon'])
-    gpx_route = gpxpy.gpx.GPXRoute(name="WEB")
-    gpx_route.points.append(dest_wpt)
-
-    data_registry.set_active_route(gpx_route)
+    navigator.goto_wpt(dest_wpt)
     return {'status': 200}
 
 
 def get_wpts():
-    data_registry = DataRegistry.get_instance()
-    gpx_wpts = data_registry.get_wpts()
-    dest_wpt = data_registry.get_dest_wpt()
+    navigator = Navigator.get_instance()
+    gpx_wpts = navigator.get_wpts()
+    dest_wpt = navigator.get_dest_wpt()
     wpts = []
     for wpt in gpx_wpts:
         wpt_dict = {
@@ -59,21 +57,21 @@ def static_page(name):
 
 
 def polars_upload():
-    data_registry = DataRegistry.get_instance()
+    navigator = Navigator.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = data_registry.data_dir + os.sep + conf.POLAR_NAME
+    file_name = navigator.get_data_dir() + os.sep + conf.POLAR_NAME
     print('Storing polars to {}'.format(file_name))
     uploaded_file.save(file_name)
     return {'status': 200}
 
 
 def gpx_upload():
-    data_registry = DataRegistry.get_instance()
+    navigator = Navigator.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = data_registry.data_dir + os.sep + conf.GPX_ARCHIVE_NAME
+    file_name = navigator.get_data_dir() + os.sep + conf.GPX_ARCHIVE_NAME
     print('Storing GPX to {}'.format(file_name))
     uploaded_file.save(file_name)
-    data_registry.read_gpx_file()
+    navigator.read_gpx_file()
     return {'status': 200}
 
 

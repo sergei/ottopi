@@ -2,8 +2,7 @@ import datetime
 import time
 from functools import reduce
 import geomag
-import gpxpy
-from gpxpy.gpx import GPXWaypoint, GPXRoutePoint
+from gpxpy.gpx import GPXRoutePoint
 
 from logger import Logger
 from raw_instr_data import RawInstrData
@@ -16,8 +15,8 @@ SPEED_FACTOR = {
 
 
 class NmeaParser:
-    def __init__(self, data_registry):
-        self.data_registry = data_registry
+    def __init__(self, navigator):
+        self.navigator = navigator
         self.mag_decl = None
         self.last_dest_wpt = None  # Last WPT received from RMB message
         # Cache most recent instrument readings
@@ -55,7 +54,7 @@ class NmeaParser:
         if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
             body = nmea_sentence[1:cc_idx]  # string between $ and *
             received_cc = int(nmea_sentence[cc_idx+1:], 16)
-            computed_crc = reduce(lambda i,j: int(i) ^ int(j), [ord(x) for x in body])
+            computed_crc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in body])
             if received_cc != computed_crc:
                 return
             else:
@@ -131,13 +130,7 @@ class NmeaParser:
 
             dest_wpt = GPXRoutePoint(name=name, latitude=lat, longitude=lon)
             self.last_dest_wpt = dest_wpt
-            gpx_route = gpxpy.gpx.GPXRoute(name="RMB")
-            gpx_route.points.append(dest_wpt)
-            if self.lat is not None:
-                orig_wpt = GPXRoutePoint(name="HERE", latitude=self.lat, longitude=self.lon)
-                gpx_route.points.insert(0, orig_wpt)
-
-            self.data_registry.set_active_route(gpx_route)
+            self.navigator.goto_wpt(dest_wpt)
 
     def parse_rmc(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmc_recommended_minimum_navigation_information """
@@ -165,7 +158,8 @@ class NmeaParser:
         if t[2] == 'A':
             self.set_raw_instr_data()
 
-    def parse_coord(self, p, hemi):
+    @staticmethod
+    def parse_coord(p, hemi):
         dot_idx = p.find('.')
         deg_len = 2 if dot_idx == 4 else 3
         deg = float(p[0:deg_len])
@@ -193,5 +187,5 @@ class NmeaParser:
         sow = None if self.sow_t < exp_time else self.sow
         hdg = None if self.hdg_mag_t < exp_time else self.hdg_mag
 
-        self.data_registry.set_raw_instr_data(RawInstrData(t=now, utc=utc, lat=lat, lon=lon, sog=sog, cog=cog,
-                                                           awa=awa, aws=aws, twa=twa, tws=tws, sow=sow, hdg=hdg))
+        self.navigator.set_raw_instr_data(RawInstrData(t=now, utc=utc, lat=lat, lon=lon, sog=sog, cog=cog, awa=awa,
+                                                       aws=aws, twa=twa, tws=tws, sow=sow, hdg=hdg))

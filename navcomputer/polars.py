@@ -36,6 +36,9 @@ class Polars:
         :param twa: Current true wind angle (used to determine if we are sailing upwind or downwind)
         :return:  target_speed, target_twa
         """
+        if not self.valid:
+            return None, None
+
         # Find the speeds above and below current wind speed
         speeds = list(self.polars.keys())
         speed_below = None
