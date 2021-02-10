@@ -18,7 +18,7 @@ class LegSummary:
 class LegAnalyzer:
     HIST_LEN = 120
     STRAIGHT_THR_CNT = 110
-    STRAIGHT_THR_ANGLE = 10
+    STRAIGHT_THR_ANGLE = 20
 
     def __init__(self):
         self.hist = []
@@ -60,6 +60,8 @@ class LegAnalyzer:
         avg_target_vmg, avg_target_vmg_cnt = self.mean([t.target_vmg for d, t in self.hist])
         avg_target_sow, avg_target_sow_cnt = self.mean([t.target_sow for d, t in self.hist])
         avg_target_twa, avg_target_twa_cnt = self.mean([t.target_twa for d, t in self.hist])
+        if avg_boat_twa < 0:
+            avg_target_twa = - avg_target_twa
 
         elapsed_time_hr = (self.hist[-1][0].utc - self.hist[0][0].utc).total_seconds() / 3600.
 
