@@ -111,7 +111,7 @@ class Navigator:
                 dest_info = DestInfo()
                 dest_info.wpt = dest_wpt
                 dest_info.dtw = dist_m / METERS_IN_NM
-                dest_info.xis_in_circle = dist_m < ARRIVAL_CIRCLE_M
+                dest_info.is_in_circle = dist_m < ARRIVAL_CIRCLE_M
 
                 dest_info.btw_true = course_true
                 dest_info.btw = course_true - self.mag_decl
@@ -147,6 +147,9 @@ class Navigator:
 
                 self.say_dest_info(dest_info, raw_instr_data)
 
+                # Consider switching to the next waypoint
+                self.next_wpt(dest_info)
+
     def goto_wpt(self, dest_wpt):
         gpx_route = gpxpy.gpx.GPXRoute(name="TO WPT")
         gpx_route.points.append(dest_wpt)
@@ -177,7 +180,10 @@ class Navigator:
         route = self.data_registry.restore_active_route()
         if route is not None:
             self.active_route = route
-            self.active_wpt_idx = self.active_route.get_points_no() - 1
+            if route.number is not None:
+                self.active_wpt_idx = route.number
+            else:
+                self.active_wpt_idx = self.active_route.get_points_no() - 1
 
     def get_wpts(self):
         return self.data_registry.get_wpts()
@@ -238,3 +244,17 @@ class Navigator:
         if len(phrase) > 0:
             for listener in self.listeners:
                 listener.on_speech(phrase)
+
+    def next_wpt(self, dest_info):
+        if dest_info.is_in_circle:
+            if self.active_wpt_idx >= len(self.active_route.points) - 1:
+                return  # We are at last point, nowhere to move
+
+            # Advance to the next one
+            old_name = self.active_route.points[self.active_wpt_idx].name
+            self.active_wpt_idx += 1
+            new_name = self.active_route.points[self.active_wpt_idx].name
+            phrase = 'Arrived to {} mark. Next mark is {}'.format(old_name, new_name)
+            for listener in self.listeners:
+                listener.on_speech(phrase)
+
