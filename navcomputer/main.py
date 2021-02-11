@@ -25,10 +25,6 @@ def accept_nmea_tcp(sock, sel, interfaces, nmea_parser, instr_inputs):
     interfaces.append(interface)
 
 
-def read_serial(port, sel):
-    pass
-
-
 def add_serial_port(sel, inp, interfaces, nmea_parser):
     print('Adding input {} ...'.format(inp))
     t = inp.split(':')

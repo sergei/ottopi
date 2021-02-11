@@ -24,7 +24,7 @@ class BangControl:
         PLUS_TEN: 36,
         MINUS_TEN: 37,
         PLUS_ONE: 35,
-        MINUS_ONE: 33,
+        MINUS_ONE: 32,
     }
 
     def __init__(self):

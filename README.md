@@ -5,18 +5,34 @@
   * Upload GPX (WPTs, Routes)
   * Download ZIP (GPX,NMEA,KMZ)
   * Upload Polars 
-  * Upload PHRF CSV
   * Current nav status
     * SOG, SOW, COG, HDG, Bearing to WPT, AWA, AWS, TWD, TWS, VMG, Target VMG
   * Historic plots
-    * HDG, SPD, VMG1
+    * HDG, SPD, VMG
+  * Upload PHRF CSV
   * Race Timer control (start/sync/stop) (Reverse handicap start)
   * Race timer countdown 
   * Race timer elapsed handicap time
 * Audio output 
-  * Race Timer 
+  * Angle to the mark
   * Gain/Loss vs Target
-    
+  * Race Timer 
+* Bluetooth remote control 
+  * Race control 
+    * Start/Reset Timer (Play/Stop button)
+    * Sync timer        (+ button)
+    * Set committee boat ( >| button)
+    * Set pin            ( |< button)
+  * Route selection 
+    * Next Route/PrevRoute ( >|, |< buttons )
+    * Select Route         ( Play/Stop button )
+    * Next mark/Prev mark  ( +, - button )
+  * Autopilot control
+    * Tack/gybe ( Play/Stop button )
+    * Up/Down 10 degrees  ( >|, |< buttons )
+    * Up/Down 1 degree  ( +, - button )
+  
+
 # OttoPi box Hardware I/O
 * GND
 * NMEA IN
@@ -93,3 +109,8 @@ https://www.cruisersforum.com/forums/f116/b-and-g-h1000-pilot-handheld-wires-mea
   
   Dirk
   LeaseOnLife is online now  	
+
+
+# Remote controller 
+Use BT AVRCP profile to control the autopilot and mark selection 
+This tutorial shows hoe to listen to AVRCP commands 
