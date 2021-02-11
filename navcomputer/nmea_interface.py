@@ -68,7 +68,15 @@ class NmeaInterface(NavigationListener):
                     instr_input.remove_nmea_listener(self)
                 return None
         else:
-            data = self.file.recv(10)  # Should be ready
+            try:
+                data = self.file.recv(10)  # Should be ready
+            except Exception as e:
+                print('Should never happen {}'.format(e))
+                print('Lost connection to ', self.file)
+                Navigator.get_instance().remove_listener(self)
+                for instr_input in self.instr_inputs:
+                    instr_input.remove_nmea_listener(self)
+                return None
             if data:
                 self.set_nmea_data(data)
                 return data
