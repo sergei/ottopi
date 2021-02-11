@@ -73,6 +73,9 @@ class Navigator:
     def read_polars(self, file_name):
         self.polars.read_table(file_name)
 
+    def set_polars(self, polars):
+        self.polars = polars
+
     def add_listener(self, listener):
         self.listeners.append(listener)
 
@@ -167,8 +170,8 @@ class Navigator:
         else:
             return None
 
-    def read_gpx_file(self):
-        self.data_registry.read_gpx_file()
+    def read_gpx_file(self, file_name):
+        return self.data_registry.read_gpx_file(file_name)
 
     def restore_active_route(self):
         route = self.data_registry.restore_active_route()

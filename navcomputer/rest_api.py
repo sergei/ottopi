@@ -10,6 +10,7 @@ from gpxpy.gpx import GPXRoutePoint
 import conf
 from logger import Logger
 from navigator import Navigator
+from polars import Polars
 
 
 def get_raw_instr():
@@ -94,20 +95,37 @@ def static_page(name):
 def polars_upload():
     navigator = Navigator.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = navigator.get_data_dir() + os.sep + conf.POLAR_NAME
-    print('Storing polars to {}'.format(file_name))
-    uploaded_file.save(file_name)
-    return {'status': 200}
+    polars_file_name = navigator.get_data_dir() + os.sep + conf.POLAR_NAME
+    tmp_file_name = polars_file_name + '.tmp'
+    print('Storing uploaded polars to {}'.format(tmp_file_name))
+    uploaded_file.save(tmp_file_name)
+    # Now verify if it's valid file
+    polars = Polars()
+    polars.read_table(tmp_file_name)
+    if polars.is_valid():
+        print('Polars validated OK, renaming to {}'.format(polars_file_name))
+        os.rename(tmp_file_name, polars_file_name)
+        navigator.set_polars(polars)
+        return {'status': 200}
+    else:
+        print('Polars validation failed')
+        return 'Invalid polars format', 420
 
 
 def gpx_upload():
     navigator = Navigator.get_instance()
     uploaded_file = connexion.request.files['fileName']
-    file_name = navigator.get_data_dir() + os.sep + conf.GPX_ARCHIVE_NAME
-    print('Storing GPX to {}'.format(file_name))
-    uploaded_file.save(file_name)
-    navigator.read_gpx_file()
-    return {'status': 200}
+    gpx_file_name = navigator.get_data_dir() + os.sep + conf.GPX_ARCHIVE_NAME
+    tmp_file_name = gpx_file_name + '.tmp'
+    print('Storing GPX to {}'.format(tmp_file_name))
+    uploaded_file.save(tmp_file_name)
+    if navigator.read_gpx_file(tmp_file_name):
+        print('GPX validated OK, renaming to {}'.format(gpx_file_name))
+        os.rename(tmp_file_name, gpx_file_name)
+        return {'status': 200}
+    else:
+        print('GPX validation failed')
+        return 'Invalid GPX format', 420
 
 
 def get_logs():

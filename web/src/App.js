@@ -1,7 +1,7 @@
 import './App.css';
 import RawInstrDisplay from "./RawInstrDisplay";
 import SwaggerClient from 'swagger-client'
-import GpxUploader from "./GpxUploader";
+import FileUploader from "./FileUploader";
 import WayPointsList from "./WayPointsList";
 import LogFileList from "./LogFileList";
 import Autopilot from "./Autopilot";
@@ -18,12 +18,13 @@ function App() {
 
     return (
     <div className="App">
-      <RawInstrDisplay  swaggerClient={swaggerClient}/>
-      <Autopilot   swaggerClient={swaggerClient} />
-      <WayPointsList   swaggerClient={swaggerClient} />
-      <RoutesList   swaggerClient={swaggerClient} />
-      <GpxUploader swaggerClient={swaggerClient}/>
-      <LogFileList   swaggerClient={swaggerClient} />
+      <RawInstrDisplay swaggerClient={swaggerClient}/>
+      <Autopilot swaggerClient={swaggerClient} />
+      <WayPointsList swaggerClient={swaggerClient} />
+      <RoutesList swaggerClient={swaggerClient} />
+      <FileUploader swaggerClient={swaggerClient} uploadPath={'gpx'} label={'Upload GPX'}/>
+      <LogFileList swaggerClient={swaggerClient} />
+      <FileUploader swaggerClient={swaggerClient} uploadPath={'polars'} label={'Upload Polar file'}/>
     </div>
   );
 }

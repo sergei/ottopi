@@ -99,7 +99,8 @@ def main(args):
     navigator = Navigator.get_instance()
     data_dir = os.path.expanduser(args.data_dir)
     navigator.set_data_dir(data_dir)
-    navigator.read_gpx_file()
+    gpx_file_name = navigator.get_data_dir() + os.sep + conf.GPX_ARCHIVE_NAME
+    navigator.read_gpx_file(gpx_file_name)
     navigator.restore_active_route()
     navigator.read_polars(data_dir + os.sep + conf.POLAR_NAME)
 

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import axios from 'axios';
 import Url from "url-parse";
 
-class GpxUploader extends Component {
+class FileUploader extends Component {
     state = {
         // Initially, no file is selected
         selectedFile: null,
@@ -34,7 +34,7 @@ class GpxUploader extends Component {
 
         this.props.swaggerClient.then(client => {
             let uploadUrl = new Url(client.url);
-            uploadUrl.set('pathname','gpx');
+            uploadUrl.set('pathname', this.props.uploadPath);
             axios.post(uploadUrl.toString(), formData).then((response) => {
                 console.log(response);
                 this.setState({ uploading: false, finished: true, success: true });
@@ -63,7 +63,7 @@ class GpxUploader extends Component {
                 <div>
                     <div>
                         <h3>
-                            Upload GPX file
+                            {this.props.label}
                         </h3>
                         <div>
                             <input type="file" onChange={this.onFileChange} />
@@ -79,4 +79,4 @@ class GpxUploader extends Component {
     }
 }
 
-export default GpxUploader;
+export default FileUploader;

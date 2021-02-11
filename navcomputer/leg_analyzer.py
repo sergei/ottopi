@@ -66,18 +66,24 @@ class LegAnalyzer:
         elapsed_time_hr = (self.hist[-1][0].utc - self.hist[0][0].utc).total_seconds() / 3600.
 
         # Compare distances sailed to wind
-        target_wind_dist_m = avg_target_vmg * elapsed_time_hr * METERS_IN_NM
-        boat_wind_dist_m = avg_boat_vmg * elapsed_time_hr * METERS_IN_NM
-        delta_dist_wind_m = boat_wind_dist_m - target_wind_dist_m
+        if avg_target_vmg is not None and avg_boat_vmg is not None:
+            target_wind_dist_m = avg_target_vmg * elapsed_time_hr * METERS_IN_NM
+            boat_wind_dist_m = avg_boat_vmg * elapsed_time_hr * METERS_IN_NM
+            delta_dist_wind_m = boat_wind_dist_m - target_wind_dist_m
+        else:
+            delta_dist_wind_m = None
 
         # See if sailed higher or lower on average
-        avg_delta_twa = avg_target_twa - avg_boat_twa
+        if avg_target_twa is not None and avg_boat_twa is not None:
+            avg_delta_twa = avg_target_twa - avg_boat_twa
+        else:
+            avg_delta_twa = None
 
         # See if sailed faster or slower than target
-        if avg_boat_sow > 0.1 and avg_target_sow > 0.1:
-            delta_boat_speed_perc = (avg_boat_sow/avg_target_sow - 1) * 100
-        else:
-            delta_boat_speed_perc = None
+        delta_boat_speed_perc = None
+        if avg_boat_sow is not None and avg_target_sow is not None:
+            if avg_boat_sow > 0.1 and avg_target_sow > 0.1:
+                delta_boat_speed_perc = (avg_boat_sow/avg_target_sow - 1) * 100
 
         orig_wpt = GPXRoutePoint(name='', latitude=self.hist[0][0].lat, longitude=self.hist[0][0].lon,
                                  time=self.hist[0][0].utc)

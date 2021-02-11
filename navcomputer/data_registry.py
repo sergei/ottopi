@@ -39,8 +39,7 @@ class DataRegistry:
         else:
             return {}
 
-    def read_gpx_file(self):
-        file_name = os.path.expanduser(self.data_dir + os.sep + conf.GPX_ARCHIVE_NAME)
+    def read_gpx_file(self, file_name):
         try:
             with open(file_name, 'r') as gpx_file:
                 try:
@@ -49,11 +48,12 @@ class DataRegistry:
                         print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
                     for route in self.gpx.routes:
                         print('Route {0}'.format(route.name))
-
+                    return True
                 except Exception as e:
                     print(e)
         except IOError as error:
             print(error)
+        return False
 
     def get_wpts(self):
         return self.gpx.waypoints if self.gpx is not None else []
