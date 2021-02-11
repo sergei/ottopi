@@ -100,6 +100,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/WayPoints'
 
+  /routes:
+    get:
+      operationId: rest_api.get_routes
+      tags:
+        - nav
+      summary: Get list of routes
+      description: Get list of routes
+      responses:
+        '200':
+          description: List of routes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Routes'
+
   /logs:
     get:
       operationId: rest_api.get_logs
@@ -173,6 +188,27 @@ paths:
       responses:
         '200':
           description: Successfully set
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /select_route:
+    post:
+      operationId: rest_api.select_route
+      tags:
+        - nav
+      summary: Sail this route
+      description: Sail this route
+      requestBody:
+        description: Sail this route
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: Successfully selected
           content:
             text/html:
               schema:
@@ -275,6 +311,38 @@ paths:
 ########################################################################################################################
 components:
   schemas:
+
+    Routes:
+      type: object
+      required:
+        - wpts
+      properties:
+        wpts:
+          description: List of routes
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+
+    Route:
+      type: object
+      required:
+        - name
+        - wpts
+      properties:
+        name:
+          description: Route name
+          type: string
+        active:
+          description: This route is currently active
+          type: boolean
+        active_wpt_idx:
+          description: Index of waypoint we are currently naviagtion to (zero based)
+          type: integer
+        wpts:
+          description: List of waypoints
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
 
     WayPoints:
       type: object

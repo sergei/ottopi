@@ -179,6 +179,9 @@ class Navigator:
     def get_wpts(self):
         return self.data_registry.get_wpts()
 
+    def get_routes(self):
+        return self.data_registry.get_routes()
+
     def tack(self):
         for listener in self.listeners:
             listener.on_speech('Tacking')

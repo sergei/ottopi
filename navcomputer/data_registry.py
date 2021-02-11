@@ -13,7 +13,7 @@ class DataRegistry:
     def __init__(self):
         self.raw_instr_data = RawInstrData()
         self.lock = threading.Lock()
-        self.wpts_gpx = None
+        self.gpx = None
         self.data_dir = None
 
     def set_data_dir(self, data_dir):
@@ -44,16 +44,22 @@ class DataRegistry:
         try:
             with open(file_name, 'r') as gpx_file:
                 try:
-                    self.wpts_gpx = gpxpy.parse(gpx_file)
-                    for waypoint in self.wpts_gpx.waypoints:
+                    self.gpx = gpxpy.parse(gpx_file)
+                    for waypoint in self.gpx.waypoints:
                         print('waypoint {0} -> ({1},{2})'.format(waypoint.name, waypoint.latitude, waypoint.longitude))
+                    for route in self.gpx.routes:
+                        print('Route {0}'.format(route.name))
+
                 except Exception as e:
                     print(e)
         except IOError as error:
             print(error)
 
     def get_wpts(self):
-        return self.wpts_gpx.waypoints if self.wpts_gpx is not None else []
+        return self.gpx.waypoints if self.gpx is not None else []
+
+    def get_routes(self):
+        return self.gpx.routes if self.gpx is not None else []
 
     def store_active_route(self, route):
         gpx = gpxpy.gpx.GPX()

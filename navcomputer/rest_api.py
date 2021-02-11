@@ -4,6 +4,7 @@ This file contains the entry points for the REST API calls received form HTTP se
 import os
 import connexion
 import flask
+import gpxpy
 from gpxpy.gpx import GPXRoutePoint
 
 import conf
@@ -39,6 +40,40 @@ def get_wpts():
         }
         wpts.append(wpt_dict)
     return wpts
+
+
+def select_route(body=None):
+    route = body
+    print(route)
+    active_wpt_idx = int(route['active_wpt_idx'])
+    gpx_route = gpxpy.gpx.GPXRoute(name=route['name'], number=active_wpt_idx)
+    for wpt in route['wpts']:
+        gpx_route.points.append(GPXRoutePoint(name=wpt['name'],
+                                              latitude=float(wpt['lat']), longitude=float(wpt['lon'])))
+
+    Navigator.get_instance().set_route(gpx_route, active_wpt_idx)
+
+    return {'status': 200}
+
+
+def get_routes():
+    navigator = Navigator.get_instance()
+    gpx_routes = navigator.get_routes()
+    routes = []
+    for gpx_route in gpx_routes:
+        wpts = []
+        for wpt in gpx_route.points:
+            wpts.append({
+                'name': wpt.name,
+                'lat': wpt.latitude,
+                'lon': wpt.longitude,
+            })
+        route = {
+            'name': gpx_route.name,
+            'wpts': wpts
+        }
+        routes.append(route)
+    return routes
 
 
 def root_page():

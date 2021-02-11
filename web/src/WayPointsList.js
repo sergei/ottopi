@@ -5,7 +5,6 @@ class WayPointsList extends Component {
     // State of this component
     state = {
         loading: true, // will be true when ajax request is running
-        result: null,
     };
 
     navigateTo = (wpt) => {
