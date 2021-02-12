@@ -40,6 +40,16 @@ class DestInfo extends React.Component {
             });
         }
 
+    toFixed = (val, dec) =>{
+        if (val === null) return '';
+        if (typeof val !== 'undefined') {
+            return val.toFixed(dec);
+        }else{
+            return '---';
+        }
+
+    }
+
     render() {
         if (this.state.loading){
             return(<div> Loading ...</div>);
@@ -47,8 +57,8 @@ class DestInfo extends React.Component {
             const direction = this.state.dest.atw_up ? 'up' : 'down;'
             return (
                 <div>
-                    <div>{this.state.dest.name} {Math.abs(this.state.dest.atw).toFixed(1)} degrees {direction} </div>
-                    DTW {this.state.dest.dtw.toFixed(3)} BTW {this.state.dest.btw.toFixed(0)}
+                    <div>{this.state.dest.name} {this.toFixed(Math.abs(this.state.dest.atw),1)} degrees {direction} </div>
+                    DTW {this.toFixed(this.state.dest.dtw,3)} BTW {this.toFixed(this.state.dest.btw,0)}
                 </div>
             );
         }else{

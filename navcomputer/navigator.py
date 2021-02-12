@@ -83,8 +83,8 @@ class Navigator:
         if listener in self.listeners:
             self.listeners.remove(listener)
 
-    def get_raw_instr_data_dict(self):
-        return self.data_registry.get_raw_instr_data_dict()
+    def get_raw_instr_data(self):
+        return self.data_registry.get_raw_instr_data()
 
     def get_dest_info(self):
         return self.data_registry.get_dest_info()

@@ -40,15 +40,6 @@ class DataRegistry:
             raw_instr_data = copy.copy(self.raw_instr_data)
         return raw_instr_data
 
-    def get_raw_instr_data_dict(self):
-        with self.lock:
-            raw_instr_data = copy.copy(self.raw_instr_data)
-
-        if raw_instr_data is not None:
-            return raw_instr_data.__dict__
-        else:
-            return {}
-
     def read_gpx_file(self, file_name):
         try:
             with open(file_name, 'r') as gpx_file:

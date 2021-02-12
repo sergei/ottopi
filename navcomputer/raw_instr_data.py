@@ -6,8 +6,8 @@ class RawInstrData:
         self.utc = utc
         self.lat = lat
         self.lon = lon
-        self.sog = sog
-        self.cog = cog
+        self.sog = sog  # Speed over ground KTS
+        self.cog = cog  # Course over ground (true degrees)
         # Sensors
         self.awa = awa  # Apparent wind angle degrees
         self.aws = aws  # Apparent wind speed KTS
@@ -15,5 +15,3 @@ class RawInstrData:
         self.tws = tws  # True wind speed KTS
         self.sow = sow  # Speed over water KTS
         self.hdg = hdg  # Boat heading (magnetic degrees)
-
-

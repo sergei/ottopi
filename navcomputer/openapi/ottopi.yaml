@@ -422,6 +422,16 @@ components:
         utc:
           description: UTC time stamp
           type: string
+        lat:
+          description: Latitude (degrees)
+          minimum: -90
+          maximum: 90
+          type: number
+        lon:
+          description: Longitude (degrees)
+          minimum: -180
+          maximum: 180
+          type: number
         awa:
           description: Apparent Wind Angle (degrees)
           minimum: -180
@@ -431,6 +441,36 @@ components:
           description: Apparent Wind Speed (knots)
           minimum: 0
           maximum: 100
+          type: number
+        twa:
+          description: True Wind Angle (degrees)
+          minimum: -180
+          maximum: 180
+          type: number
+        tws:
+          description: True Wind Speed (knots)
+          minimum: 0
+          maximum: 100
+          type: number
+        sow:
+          description: Speed over water (knots)
+          minimum: 0
+          maximum: 100
+          type: number
+        sog:
+          description: Speed over ground (knots)
+          minimum: 0
+          maximum: 100
+          type: number
+        hdg:
+          description: Boat heading (magnetic degrees)
+          minimum: 0
+          maximum: 359
+          type: number
+        cog:
+          description: Course over ground (magnetic degrees)
+          minimum: 0
+          maximum: 359
           type: number
 
     DestInfo:

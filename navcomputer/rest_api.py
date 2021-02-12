@@ -15,7 +15,20 @@ from polars import Polars
 
 def get_raw_instr():
     navigator = Navigator.get_instance()
-    return navigator.get_raw_instr_data_dict()
+    data =  navigator.get_raw_instr_data()
+    return {
+        'utc': data.utc,
+        'lat': data.lat,
+        'lon': data.lon,
+        'awa': data.awa,
+        'aws': data.aws,
+        'twa': data.twa,
+        'tws': data.tws,
+        'sow': data.sow,
+        'sog': data.sog,
+        'hdg': data.hdg,
+        'cog': data.cog,
+    }
 
 
 def get_dest():
