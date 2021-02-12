@@ -47,7 +47,7 @@ class NmeaParser:
 
     def set_nmea_sentence(self, nmea_sentence):
         Logger.log('> ' + nmea_sentence)
-        # print('Got [{}]'.format(nmea_sentence))
+        # print('set_nmea_sentence({})'.format(nmea_sentence))
         # Verify optional checksum
         nmea_sentence = nmea_sentence.rstrip()
         cc_idx = nmea_sentence.find('*')

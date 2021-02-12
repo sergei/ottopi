@@ -28,16 +28,24 @@ def accept_nmea_tcp(sock, sel, interfaces, nmea_parser, instr_inputs):
 def add_serial_port(sel, inp, interfaces, nmea_parser):
     print('Adding input {} ...'.format(inp))
     t = inp.split(':')
-    if len(t) != 2:
+    if len(t) != 3:
         print('Wrong serial port input format: {}'.format(inp))
-        print('Must be /dev/ttyAMA:4800 for /dev/ttyAMA at 4800 baud')
+        print('Must be /dev/ttyUSB0:4800:gps or /dev/ttyS0:4800:instr')
         return
 
     port_name = t[0]
     baud_rate = int(t[1])
     try:
         ser = serial.Serial(port_name, baud_rate, timeout=None)
-        interface = NmeaInterface(ser, NmeaInterface.SERIAL_INSTRUMENTS, nmea_parser, [])
+        if t[2] == 'gps':
+            ifc_type = NmeaInterface.SERIAL_NMEA_GPS
+        elif t[2] == 'instr':
+            ifc_type = NmeaInterface.SERIAL_NMEA_INSTR
+        else:
+            print('Wrong serial port input type: {}'.format(inp))
+            return
+
+        interface = NmeaInterface(ser, ifc_type, nmea_parser, [])
         sel.register(ser, selectors.EVENT_READ, interface)
         interfaces.append(interface)
         return interface
@@ -131,6 +139,12 @@ def main(args):
             ifc = add_serial_port(sel, inp, interfaces, nmea_parser)
             if ifc is not None:
                 instr_inputs.append(ifc)
+
+    # Connect inputs to outputs
+    for inp_ifc in instr_inputs:
+        for out_ifc in instr_inputs:
+            if out_ifc.interface_type in [NmeaInterface.SERIAL_NMEA_INSTR]:
+                inp_ifc.add_nmea_listener(out_ifc)
 
     # Start FLASK server
     start_flask_server(int(args.http_server_port))

@@ -4,9 +4,11 @@ from navigator import Navigator
 
 
 class NmeaInterface(NavigationListener):
-    SERIAL_INSTRUMENTS = 0  # Instruments input, output to autopilot
-    TCP_INSTRUMENTS_INPUT = 1  # Input of GPS and instruments data
-    TCP_APP_CLIENTS = 2  # Applications like Open CPN
+    SERIAL_NMEA_GPS = 0        # GPS NMEA input
+    SERIAL_NMEA_INSTR = 1      # Instruments input, output to autopilot
+    TCP_INSTRUMENTS_INPUT = 2  # Input of GPS and instruments data
+    TCP_APP_CLIENTS = 3        # Applications like Open CPN
+
     NMEA_STATE_WAIT_SOP = 1
     NMEA_STATE_WAIT_EOP = 2
 
@@ -15,11 +17,11 @@ class NmeaInterface(NavigationListener):
         self.file = file
         self.interface_type = interface_type
         self.nmea_parser = nmea_parser
-        self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_SOP
+        self.nmea_state = self.NMEA_STATE_WAIT_SOP
         self.nmea_sentence = ""
         self.instr_inputs = instr_inputs
         self.nmea_listeners = []
-        if interface_type in [NmeaInterface.SERIAL_INSTRUMENTS, NmeaInterface.TCP_APP_CLIENTS]:
+        if interface_type in [self.SERIAL_NMEA_INSTR, self.TCP_APP_CLIENTS]:
             Navigator.get_instance().add_listener(self)
 
         # Subscribe to the feed of of NMEA instrument inputs
@@ -33,9 +35,14 @@ class NmeaInterface(NavigationListener):
         self.nmea_listeners.remove(listener)
 
     def on_nmea(self, nmea):
-        if self.interface_type == NmeaInterface.TCP_APP_CLIENTS:
+        if self.interface_type == self.TCP_APP_CLIENTS:
             try:
                 self.file.send(bytes(nmea, 'utf-8'))
+            except IOError as e:
+                print('Should not see it {}'.format(e))  # TODO might consider closing this connection
+        elif self.interface_type == self.SERIAL_NMEA_INSTR:
+            try:
+                self.file.write(bytes(nmea, 'utf-8'))
             except IOError as e:
                 print('Should not see it {}'.format(e))  # TODO might consider closing this connection
 
@@ -45,15 +52,15 @@ class NmeaInterface(NavigationListener):
         rmb = encode_rmb(dest_info)
         bwr = encode_bwr(raw_instr_data, dest_info)
 
-        if self.interface_type == NmeaInterface.TCP_APP_CLIENTS:
+        if self.interface_type in [self.SERIAL_NMEA_INSTR, self.TCP_APP_CLIENTS]:
             self.file.send(bytes(apb, 'utf-8'))
             self.file.send(bytes(rmb, 'utf-8'))
             self.file.send(bytes(bwr, 'utf-8'))
 
     def read(self):
-        if self.interface_type == self.SERIAL_INSTRUMENTS:
+        if self.interface_type in [self.SERIAL_NMEA_GPS, self.SERIAL_NMEA_INSTR]:
             try:
-                data = self.file.read(10)  # Should be ready
+                data = self.file.read(1)  # Should be ready
             except TimeoutError as e:
                 print('Should never happen {}'.format(e))
                 return None
@@ -69,7 +76,7 @@ class NmeaInterface(NavigationListener):
                 return None
         else:
             try:
-                data = self.file.recv(10)  # Should be ready
+                data = self.file.recv(1)  # Should be ready
             except Exception as e:
                 print('Should never happen {}'.format(e))
                 print('Lost connection to ', self.file)
@@ -89,16 +96,16 @@ class NmeaInterface(NavigationListener):
 
     def set_nmea_data(self, data):
         for c in data.decode('ascii', errors='ignore'):
-            if self.nmea_state == NmeaInterface.NMEA_STATE_WAIT_SOP:
+            if self.nmea_state == self.NMEA_STATE_WAIT_SOP:
                 if c == '$':
                     self.nmea_sentence += c
-                    self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_EOP
+                    self.nmea_state = self.NMEA_STATE_WAIT_EOP
             else:
                 if c == '\r' or c == '\n':
                     for listener in self.nmea_listeners:
                         listener.on_nmea(self.nmea_sentence + '\r\n')
                     self.nmea_parser.set_nmea_sentence(self.nmea_sentence)
                     self.nmea_sentence = ''
-                    self.nmea_state = NmeaInterface.NMEA_STATE_WAIT_SOP
+                    self.nmea_state = self.NMEA_STATE_WAIT_SOP
                 else:
                     self.nmea_sentence += c
