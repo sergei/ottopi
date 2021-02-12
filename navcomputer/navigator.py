@@ -91,11 +91,14 @@ class Navigator:
         self.data_registry.set_raw_instr_data(raw_instr_data)
 
         targets = Targets(self.polars, raw_instr_data.tws, raw_instr_data.twa, raw_instr_data.sow)
-        leg_summary = self.leg_analyzer.update(raw_instr_data, targets)
+        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data, targets)
         if leg_summary is not None:
             for listener in self.listeners:
                 listener.on_leg_summary(leg_summary)
             self.say_leg_summary(leg_summary)
+
+        if wind_shift is not None:
+            self.say_wind_shift(wind_shift)
 
         if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
             if self.mag_decl is None:
@@ -245,6 +248,14 @@ class Navigator:
             for listener in self.listeners:
                 listener.on_speech(phrase)
 
+    def say_wind_shift(self, wind_shift):
+        angle_direction = 'lifted' if wind_shift.is_lift else 'headed'
+        wind_direction = 'veered' if wind_shift.shift_deg > 0 else 'backed'
+        phrase = 'Wind {} by {:.0f} degrees. You got {} '.format(wind_direction, abs(wind_shift.shift_deg),
+                                                                 angle_direction)
+        for listener in self.listeners:
+            listener.on_speech(phrase)
+
     def next_wpt(self, dest_info):
         if dest_info.is_in_circle:
             if self.active_wpt_idx >= len(self.active_route.points) - 1:
@@ -257,4 +268,3 @@ class Navigator:
             phrase = 'Arrived to {} mark. Next mark is {}'.format(old_name, new_name)
             for listener in self.listeners:
                 listener.on_speech(phrase)
-

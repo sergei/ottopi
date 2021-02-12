@@ -1,6 +1,10 @@
+import math
+from collections import deque
+
 from gpxpy.gpx import GPXRoutePoint
 
 METERS_IN_NM = 1852.
+TURN_DURATION = 20  # Analyze that many points for the turn duration
 
 
 class LegSummary:
@@ -15,24 +19,44 @@ class LegSummary:
         self.delta_boat_speed_perc = delta_boat_speed_perc
 
 
+class WindShift:
+    def __init__(self, detected, shift_deg, is_lift):
+        self.detected = detected
+        self.shift_deg = shift_deg
+        self.is_lift = is_lift
+
+
 class LegAnalyzer:
     HIST_LEN = 120
     STRAIGHT_THR_CNT = 110
-    STRAIGHT_THR_ANGLE = 20
+    STRAIGHT_THR_ANGLE = 30
+    TWDS_LEN = 40  # Length of running window to analyze for shifts
+    SHIFT_THR_DEG = 10  # Detect shifts greater than that
 
     def __init__(self):
         self.hist = []
         self.summaries = []
+        self.twds = deque()
 
     def update(self, instr_data, targets):
         summary = None
+
+        # See if any maneuver was done
+        if self.check_for_turns():
+            self.hist.clear()
+            self.twds.clear()
+
+        self.hist.append((instr_data, targets))
+
         # Check if we accumulated enough data in our history buffer
         if len(self.hist) == LegAnalyzer.HIST_LEN:
             summary = self.process_history()
             self.hist.clear()
 
-        self.hist.append((instr_data, targets))
-        return summary
+        #  Check for wind shifts
+        wind_shift = self.detect_wind_shift(instr_data)
+
+        return summary, wind_shift
 
     def process_history(self):
         # Check if sailed more or less straight line by comparing
@@ -105,3 +129,80 @@ class LegAnalyzer:
         acc = sum([x if x is not None else 0 for x in xx])
         cnt = len(xx) - xx.count(None)
         return None if cnt == 0 else acc / cnt, cnt
+
+    def check_for_turns(self):
+        if len(self.hist) < TURN_DURATION:
+            return False
+
+        # Get last N points
+        twas = [d.twa for d, t in self.hist[-TURN_DURATION:]]
+        staright_cnt = int(TURN_DURATION / 4)
+        mean_twa_after, after_cnt = self.mean(twas[-staright_cnt:])
+        mean_twa_before, before_cnt = self.mean(twas[:staright_cnt])
+
+        # Check if we trust these mean values
+        if before_cnt < staright_cnt:
+            print('Too few before AWSs')
+            return False
+
+        if after_cnt < staright_cnt:
+            print('Too few after AWSs')
+            return False
+
+        is_tack_or_gybe = math.copysign(1, mean_twa_before) * math.copysign(1, mean_twa_after) < 0
+        is_upwind_before = abs(mean_twa_before) < 90
+        is_upwind_after = abs(mean_twa_after) < 90
+
+        if is_upwind_before and is_upwind_after and is_tack_or_gybe:
+            print('Tack detected')
+            return True
+        elif (not is_upwind_before and not is_upwind_after) and is_tack_or_gybe:
+            print('Gybe detected')
+            return True
+
+        if is_upwind_before and not is_upwind_after:
+            print('Rounded windward mark')
+            return True
+
+        if not is_upwind_before and is_upwind_after:
+            print('Rounded leeward mark')
+            return True
+
+        return False
+
+    def detect_wind_shift(self, instr_data):
+        if instr_data.twa is not None and instr_data.hdg is not None:
+            if len(self.twds) == LegAnalyzer.TWDS_LEN:
+                self.twds.popleft()
+            twd = instr_data.hdg + instr_data.twa
+            if twd < 0:
+                twd += 360
+            elif twd >= 360:
+                twd -= 360
+
+            self.twds.append(twd)
+
+            half_win = int(LegAnalyzer.TWDS_LEN/2)
+            if len(self.twds) == LegAnalyzer.TWDS_LEN:
+                before_twd, _ = self.mean(list(self.twds)[0:half_win])
+                after_twd, _ = self.mean(list(self.twds)[half_win:])
+                shift_deg = after_twd - before_twd
+                # Make sign negative for baccking and positive for veering
+                if shift_deg > 180:  # eg, 355 - 10 = 345 = -15   backed by 15 degrees
+                    shift_deg -= 360
+                elif shift_deg < -180:  # Eg 10 - 355 = -345 = 15 veered by 15 degrees
+                    shift_deg += 360
+
+                wind_shift_detected = abs(shift_deg) > LegAnalyzer.SHIFT_THR_DEG
+                if wind_shift_detected:
+                    # Veer on a starboard tack is a lift
+                    # Backing on a port tack is a lift as well
+                    is_lift = shift_deg * instr_data.twa > 0
+                    wind_shift = WindShift(wind_shift_detected, shift_deg, is_lift)
+                    self.twds.clear()
+                    # print(wind_shift.__dict__, instr_data.twa)
+                    return wind_shift
+                else:
+                    return None
+
+        return None
