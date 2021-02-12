@@ -8,8 +8,13 @@ import Autopilot from "./Autopilot";
 import RoutesList from "./RoutesList";
 
 function App() {
-    const specUrl =  "openapi.json";
-    // const specUrl =  "http://localhost:5555/openapi.json";
+    let specUrl;
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        specUrl =  "http://localhost:5555/openapi.json";
+    } else {
+        // production code
+        specUrl =  "openapi.json";
+    }
     const swaggerClient = new SwaggerClient(specUrl);
     swaggerClient.then(client => {
         console.log("OpenAPi spec:");
