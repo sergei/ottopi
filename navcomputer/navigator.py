@@ -86,6 +86,9 @@ class Navigator:
     def get_raw_instr_data_dict(self):
         return self.data_registry.get_raw_instr_data_dict()
 
+    def get_dest_info(self):
+        return self.data_registry.get_dest_info()
+
     def set_raw_instr_data(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
         self.data_registry.set_raw_instr_data(raw_instr_data)
@@ -152,6 +155,8 @@ class Navigator:
 
                 # Consider switching to the next waypoint
                 self.next_wpt(dest_info)
+
+                self.data_registry.set_dest_info(dest_info)
 
     def goto_wpt(self, dest_wpt):
         gpx_route = gpxpy.gpx.GPXRoute(name="TO WPT")
@@ -268,3 +273,6 @@ class Navigator:
             phrase = 'Arrived to {} mark. Next mark is {}'.format(old_name, new_name)
             for listener in self.listeners:
                 listener.on_speech(phrase)
+
+    def get_history(self):
+        return self.leg_analyzer.summaries

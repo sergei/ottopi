@@ -18,6 +18,33 @@ def get_raw_instr():
     return navigator.get_raw_instr_data_dict()
 
 
+def get_dest():
+    navigator = Navigator.get_instance()
+    dest_info = navigator.get_dest_info()
+    if dest_info is None:
+        return {}
+    else:
+        return {
+            'name': dest_info.wpt.name,
+            'dtw': dest_info.dtw,
+            'btw': dest_info.btw,
+            'atw': dest_info.atw,
+            'atw_up': dest_info.atw_up,
+        }
+
+
+def get_history():
+    navigator = Navigator.get_instance()
+    history = []
+    for item in navigator.get_history():
+        history.append({
+            'utc': item.utc,
+            'hdg': item.avg_hdg,
+            'twa': item.avg_boat_twa
+        })
+    return history
+
+
 def goto_wpt(body=None):
     wpt = body
     navigator = Navigator.get_instance()

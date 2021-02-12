@@ -15,11 +15,21 @@ class DataRegistry:
         self.lock = threading.Lock()
         self.gpx = None
         self.data_dir = None
+        self.dest_info = None
 
     def set_data_dir(self, data_dir):
         self.data_dir = os.path.expanduser(data_dir)
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
+
+    def set_dest_info(self, dest_info):
+        with self.lock:
+            self.dest_info = dest_info
+
+    def get_dest_info(self):
+        with self.lock:
+            dest_info = copy.copy(self.dest_info)
+        return dest_info
 
     def set_raw_instr_data(self, raw_instr_data):
         with self.lock:

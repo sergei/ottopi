@@ -70,7 +70,7 @@ paths:
 ########################################################################################################################
 #  /navigation
 ########################################################################################################################
-  /nav:
+  /instr:
     get:
       operationId: rest_api.get_raw_instr
       tags:
@@ -84,6 +84,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RawInstrData'
+
+  /dest:
+    get:
+      operationId: rest_api.get_dest
+      tags:
+        - nav
+      summary: Get destination information
+      description: Get destination information
+      responses:
+        '200':
+          description: Destination information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestInfo'
+
+  /history:
+    get:
+      operationId: rest_api.get_history
+      tags:
+        - nav
+      summary: Get historical data
+      description: Get historical data
+      responses:
+        '200':
+          description: Historical data
+          content:
+            application/json:
+              schema:
+                description: History
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoryItem'
 
   /wpts:
     get:
@@ -398,4 +431,47 @@ components:
           description: Apparent Wind Speed (knots)
           minimum: 0
           maximum: 100
+          type: number
+
+    DestInfo:
+      description: Destination information
+      type: object
+      properties:
+        name:
+          description: Name of destination waypoint
+          type: string
+        dtw:
+          description: Distance to wpt ( nautical miles)
+          type: number
+        btw:
+          description: Bearing to waypoint (magnetic degrees)
+          minimum: 0
+          maximum: 360
+          type: number
+        atw:
+          description: Angle to waypoint [-180;+180] (negative mark is to the left, positive mark is to the right)
+          minimum: -180
+          maximum: 180
+          type: number
+        atw_up:
+          description: If mark is up or down relative to the wind direction (True - Up, False  - Down)
+          type: boolean
+
+    HistoryItem:
+      description: History item
+      type: object
+      properties:
+        utc:
+          description: Time UTC
+          type: string
+          format: date-time
+        hdg:
+          description: Average heading (magnetic degrees)
+          minimum: 0
+          maximum: 360
+          type: number
+        twa:
+          description: Average true wind angle
+          minimum: -180
+          maximum: 180
           type: number

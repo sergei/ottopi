@@ -6,6 +6,8 @@ import WayPointsList from "./WayPointsList";
 import LogFileList from "./LogFileList";
 import Autopilot from "./Autopilot";
 import RoutesList from "./RoutesList";
+import DestInfo from "./DestInfo";
+import NavHistoryList from "./NavHistoryList";
 
 function App() {
     let specUrl;
@@ -24,6 +26,8 @@ function App() {
     return (
     <div className="App">
       <RawInstrDisplay swaggerClient={swaggerClient}/>
+      <DestInfo swaggerClient={swaggerClient}/>
+      <NavHistoryList swaggerClient={swaggerClient} />
       <Autopilot swaggerClient={swaggerClient} />
       <WayPointsList swaggerClient={swaggerClient} />
       <RoutesList swaggerClient={swaggerClient} />

@@ -8,8 +8,9 @@ TURN_DURATION = 20  # Analyze that many points for the turn duration
 
 
 class LegSummary:
-    def __init__(self, orig=None, dest=None, avg_boat_twa=None, avg_hdg=None, delta_dist_wind_m=None,
+    def __init__(self, utc=None, orig=None, dest=None, avg_boat_twa=None, avg_hdg=None, delta_dist_wind_m=None,
                  avg_delta_twa=None, delta_boat_speed_perc=None):
+        self.utc = utc
         self.orig = orig
         self.dest = dest
         self.avg_boat_twa = avg_boat_twa
@@ -116,7 +117,8 @@ class LegAnalyzer:
         dest_wpt = GPXRoutePoint(name='', latitude=self.hist[-1][0].lat, longitude=self.hist[-1][0].lon,
                                  time=self.hist[-1][0].utc)
 
-        summary = LegSummary(orig=orig_wpt, dest=dest_wpt, avg_boat_twa=avg_boat_twa, avg_hdg=avg_hdg,
+        utc = self.hist[-1][0].utc
+        summary = LegSummary(utc=utc, orig=orig_wpt, dest=dest_wpt, avg_boat_twa=avg_boat_twa, avg_hdg=avg_hdg,
                              delta_dist_wind_m=delta_dist_wind_m, avg_delta_twa=avg_delta_twa,
                              delta_boat_speed_perc=delta_boat_speed_perc)
 
