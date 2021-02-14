@@ -296,6 +296,22 @@ paths:
               schema:
                 type: string
 
+  /announce_current_route:
+    post:
+      operationId: rest_api.announce_current_route
+      tags:
+        - nav
+      summary: Announce current route and waypoint
+      description: Announce current route and waypoint
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+
 ########################################################################################################################
 #  /autopilot
 ########################################################################################################################

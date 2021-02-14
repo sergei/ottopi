@@ -97,6 +97,10 @@ def select_route(body=None):
     return {'status': 200}
 
 
+def announce_current_route():
+    Navigator.get_instance().announce_current_route()
+
+
 def get_routes():
     navigator = Navigator.get_instance()
     gpx_routes = navigator.get_routes()

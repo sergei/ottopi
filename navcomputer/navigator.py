@@ -89,6 +89,16 @@ class Navigator:
     def get_dest_info(self):
         return self.data_registry.get_dest_info()
 
+    def announce_current_route(self):
+        route = self.active_route
+        if route is not None:
+            phrase = 'Current route {}. Navigating to {}'.format(route.name, route.points[self.active_wpt_idx].name)
+        else:
+            phrase = 'No route is selected'
+
+        for listener in self.listeners:
+            listener.on_speech(phrase)
+
     def set_raw_instr_data(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
         self.data_registry.set_raw_instr_data(raw_instr_data)
@@ -174,6 +184,10 @@ class Navigator:
         self.active_wpt_idx = active_wpt_idx
         self.active_route = route
         self.data_registry.store_active_route(route)
+
+        phrase = 'Selected route {}. Next mark is {}'.format(route.name, route.points[self.active_wpt_idx].name)
+        for listener in self.listeners:
+            listener.on_speech(phrase)
 
     def get_dest_wpt(self):
         if self.active_route is not None:
