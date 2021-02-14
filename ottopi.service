@@ -1,5 +1,5 @@
 [Unit]
-Description=Ottopi service
+Description=Ottopi navigator service
 After=network.target
 StartLimitIntervalSec=0
 

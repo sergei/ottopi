@@ -1,0 +1,18 @@
+[Unit]
+Description=Ottopi Bluetooth remote control service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+WorkingDirectory=/home/pi/ottopi/bt_remote
+ExecStart=/usr/bin/python3 /home/pi/ottopi/bt_remote/main.py @/home/pi/ottopi/bt_remote/args/rpi.txt
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ottopi-bt
+
+[Install]
+WantedBy=multi-user.target
