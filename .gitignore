@@ -1,3 +1,5 @@
 /navcomputer/data/
 *.o
 /mobix-web-template/
+/web/.idea/inspectionProfiles/Project_Default.xml
+navcomputer/__pycache__/
