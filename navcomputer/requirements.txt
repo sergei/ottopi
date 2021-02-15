@@ -6,4 +6,6 @@ gpxpy==1.4.2
 pyserial==3.5
 swagger-ui-bundle==0.0.8
 RPi.GPIO==0.7.0
+evdev==1.4.0
+
 

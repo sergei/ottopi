@@ -27,9 +27,6 @@ Device C7:A3:E8:B2:B1:EB (public)
 	LegacyPairing: no
 	UUID: Human Interface Device    (00001812-0000-1000-8000-00805f9b34fb)
 	RSSI: -68
-
-
-
 ```
 
 # How to enable bluetoothd debug output

@@ -1,5 +1,6 @@
 import re
 import subprocess
+import threading
 from multiprocessing import Process
 import time
 
@@ -63,6 +64,11 @@ class CmdLineBtRemote(BtRemote):
         p.start()
 
     def poll_device(self, event_handler):
+        t = threading.Thread(target=self.__poll_device, name='flask_server', args=[event_handler], daemon=True)
+        t.start()
+        return t
+
+    def __poll_device(self, event_handler):
         # Without sdbuf there is huge buffering in the pipe between btmon and the pipe, so we don't get all events
         cmd = ['sudo'] + ['stdbuf', '-o0'] + ['btmon', '--no-pager']
         print('executing [{}]'.format(' '.join(cmd)))
@@ -74,7 +80,7 @@ class CmdLineBtRemote(BtRemote):
             if output == '' and process.poll() is not None:
                 break
             if output:
-                if re.search('ACL Data RX', output) is not None:
+                if re.search('ACL Data RX.*Handle 64', output) is not None:
                     wait_for_data = True
                 if wait_for_data and re.search('Data:', output):
                     t = output.split()

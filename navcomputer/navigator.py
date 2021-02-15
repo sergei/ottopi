@@ -181,7 +181,7 @@ class Navigator:
 
     def set_route(self, route, active_wpt_idx):
         print('Set new active route {}'.format(route))
-        self.active_wpt_idx = active_wpt_idx
+        self.active_wpt_idx = active_wpt_idx % route.get_points_no()
         self.active_route = route
         self.data_registry.store_active_route(route)
 
@@ -203,7 +203,7 @@ class Navigator:
         if route is not None:
             self.active_route = route
             if route.number is not None:
-                self.active_wpt_idx = route.number
+                self.active_wpt_idx = route.number % self.active_route.get_points_no()
             else:
                 self.active_wpt_idx = self.active_route.get_points_no() - 1
 

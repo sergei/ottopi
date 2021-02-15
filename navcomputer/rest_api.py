@@ -89,7 +89,7 @@ def get_wpts():
 def select_route(body=None):
     route = body
     print(route)
-    active_wpt_idx = int(route['active_wpt_idx'])
+    active_wpt_idx = int(route['active_wpt_idx']) % len(route['wpts'])
     gpx_route = gpxpy.gpx.GPXRoute(name=route['name'], number=active_wpt_idx)
     for wpt in route['wpts']:
         gpx_route.points.append(GPXRoutePoint(name=wpt['name'],
