@@ -1,0 +1,15 @@
+[Unit]
+Description=Ottopi update service
+After=network.target
+
+[Service]
+Type=oneshot
+User=pi
+WorkingDirectory=/home/pi/ottopi/update
+ExecStart=/home/pi/ottopi/update/run-update.sh
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ottopi
+
+[Install]
+WantedBy=multi-user.target

@@ -2,6 +2,9 @@
 This file contains the entry points for the REST API calls received form HTTP server
 """
 import os
+import pwd
+import grp
+
 import connexion
 import flask
 import gpxpy
@@ -15,7 +18,7 @@ from polars import Polars
 
 def get_raw_instr():
     navigator = Navigator.get_instance()
-    data =  navigator.get_raw_instr_data()
+    data = navigator.get_raw_instr_data()
     return {
         'utc': data.utc,
         'lat': data.lat,
@@ -170,6 +173,21 @@ def gpx_upload():
     else:
         print('GPX validation failed')
         return 'Invalid GPX format', 420
+
+
+def sw_update():
+    navigator = Navigator.get_instance()
+    uploaded_file = connexion.request.files['fileName']
+    package_file_name = navigator.get_data_dir() + os.sep + conf.UPDATE_PKG_NAME
+    print('Storing update to {}'.format(package_file_name))
+    uploaded_file.save(package_file_name)
+
+    # The update service is running as user pi
+    uid = pwd.getpwnam("pi").pw_uid
+    gid = grp.getgrnam("pi").gr_gid
+    os.chown(package_file_name, uid, gid)
+
+    return {'status': 200}
 
 
 def get_logs():

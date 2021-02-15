@@ -1,12 +1,13 @@
 [Unit]
 Description=Ottopi navigator service
-After=network.target
+After=ottopi-update.service
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 Restart=always
 RestartSec=1
+# Need to run as root in order to access server on port 80
 User=root
 WorkingDirectory=/home/pi/ottopi/navcomputer
 ExecStart=/usr/bin/python3 /home/pi/ottopi/navcomputer/main.py @/home/pi/ottopi/navcomputer/args/rpi.txt

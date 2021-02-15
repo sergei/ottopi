@@ -34,6 +34,7 @@ function App() {
       <FileUploader swaggerClient={swaggerClient} uploadPath={'gpx'} label={'Upload GPX'}/>
       <LogFileList swaggerClient={swaggerClient} />
       <FileUploader swaggerClient={swaggerClient} uploadPath={'polars'} label={'Upload Polar file'}/>
+      <FileUploader swaggerClient={swaggerClient} uploadPath={'sw_update'} label={'Upload Software Update'}/>
     </div>
   );
 }
