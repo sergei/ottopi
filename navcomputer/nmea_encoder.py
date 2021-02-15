@@ -18,7 +18,7 @@ def encode_apb(dest):
     else:
         nmea += '{:.1f},M,'.format(dest.bod)
     nmea += dest.wpt.name + ',' if dest.wpt is not None else ','  # Waypoint name
-    nmea += '{:.1f},M'.format(dest.btw) if dest.btw is not None else ',M'  # 11,12
+    nmea += '{:.1f},M,'.format(dest.btw) if dest.btw is not None else ',M'  # 11,12
     nmea += '{:.1f},M'.format(dest.btw) if dest.btw is not None else ',M'  # 13,14 Keep the same as 11,12
     nmea = append_checksum(nmea)
     nmea += '\r\n'

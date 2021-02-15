@@ -34,7 +34,16 @@ class NmeaInterface(NavigationListener):
     def remove_nmea_listener(self, listener):
         self.nmea_listeners.remove(listener)
 
+    IGNORE_MSGS = ['GLL', 'GSA', 'GSV', 'GGA']
+
     def on_nmea(self, nmea):
+        # Ignore unwanted GPS messages
+        t = nmea.split()
+        nmea_msg = t[0]
+        for msg in self.IGNORE_MSGS:
+            if msg in nmea_msg:
+                return
+
         if self.interface_type == self.TCP_APP_CLIENTS:
             try:
                 self.file.send(bytes(nmea, 'utf-8'))
@@ -52,10 +61,15 @@ class NmeaInterface(NavigationListener):
         rmb = encode_rmb(dest_info)
         bwr = encode_bwr(raw_instr_data, dest_info)
 
-        if self.interface_type in [self.SERIAL_NMEA_INSTR, self.TCP_APP_CLIENTS]:
-            self.file.send(bytes(apb, 'utf-8'))
-            self.file.send(bytes(rmb, 'utf-8'))
-            self.file.send(bytes(bwr, 'utf-8'))
+        if self.interface_type in [self.TCP_APP_CLIENTS]:
+            self.file.send(bytes(apb, 'ascii'))
+            self.file.send(bytes(rmb, 'ascii'))
+            self.file.send(bytes(bwr, 'ascii'))
+
+        if self.interface_type in [self.SERIAL_NMEA_INSTR]:
+            self.file.write(bytes(apb, 'ascii'))
+            self.file.write(bytes(rmb, 'ascii'))
+            self.file.write(bytes(bwr, 'ascii'))
 
     def read(self):
         if self.interface_type in [self.SERIAL_NMEA_GPS, self.SERIAL_NMEA_INSTR]:

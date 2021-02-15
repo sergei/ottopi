@@ -6,6 +6,7 @@ import threading
 import serial
 import connexion
 from flask_cors import CORS
+import logging
 
 from logger import Logger
 import conf
@@ -86,13 +87,16 @@ def flask_server(http_port):
     app.add_api('ottopi.yaml')
     CORS(app.app)
 
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+
     # Use FLASK development server to host connexion app
-    app.run(port=http_port)
+    app.run(port=http_port, debug=False)
 
 
 def start_flask_server(http_port):
     # noinspection PyRedundantParentheses
-    t = threading.Thread(target=flask_server, name='flask_server', args=[http_port])
+    t = threading.Thread(target=flask_server, name='flask_server', args=[http_port], daemon=True)
     t.start()
 
 
