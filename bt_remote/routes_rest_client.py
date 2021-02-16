@@ -28,19 +28,19 @@ class RoutesRestClient(RestClient):
     def on_remote_key(self, key):
         if key == BtRemote.PLAY_BUTTON:  # Select an go
             self.post('announce_current_route', {})
-        elif key == BtRemote.NEXT_BUTTON:  # Next route
+        elif key == BtRemote.PLUS_BUTTON:  # Next route
             self.routes = self.get('routes')
             num_routes = len(self.routes)
             if num_routes > 0:
                 self.active_route_idx = (self.active_route_idx + 1) % num_routes
                 self.post_route(self.routes[self.active_route_idx])
-        elif key == BtRemote.PREV_BUTTON:  # Previous route
+        elif key == BtRemote.MINUS_BUTTON:  # Previous route
             self.routes = self.get('routes')
             num_routes = len(self.routes)
             if num_routes > 0:
                 self.active_route_idx = (self.active_route_idx - 1) % num_routes
                 self.post_route(self.routes[self.active_route_idx])
-        elif key == BtRemote.PLUS_BUTTON:  # Next waypoint
+        elif key == BtRemote.NEXT_BUTTON:  # Next waypoint
             self.routes = self.get('routes')
             num_routes = len(self.routes)
             if num_routes > 0:
@@ -48,7 +48,7 @@ class RoutesRestClient(RestClient):
                 if num_wpts > 0:
                     self.active_wpt_idx = (self.active_wpt_idx + 1) % num_wpts
                     self.post_route(self.routes[self.active_route_idx])
-        elif key == BtRemote.MINUS_BUTTON:  # Previous waypoint
+        elif key == BtRemote.PREV_BUTTON:  # Previous waypoint
             self.routes = self.get('routes')
             num_routes = len(self.routes)
             if num_routes > 0:
