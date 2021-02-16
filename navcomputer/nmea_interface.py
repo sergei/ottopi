@@ -34,7 +34,7 @@ class NmeaInterface(NavigationListener):
     def remove_nmea_listener(self, listener):
         self.nmea_listeners.remove(listener)
 
-    IGNORE_MSGS = ['GLL', 'GSA', 'GSV', 'GGA']
+    IGNORE_MSGS = ['GLL', 'GSA', 'GSV', 'GGA', 'PGLOR', 'VTG']
 
     def on_nmea(self, nmea):
         # Ignore unwanted GPS messages

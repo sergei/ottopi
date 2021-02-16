@@ -92,12 +92,18 @@ class Navigator:
     def announce_current_route(self):
         route = self.active_route
         if route is not None:
-            phrase = 'Current route {}. Navigating to {}'.format(route.name, route.points[self.active_wpt_idx].name)
+            phrase = 'Route {}. Navigating to {}'.format(route.name, route.points[self.active_wpt_idx].name)
         else:
             phrase = 'No route is selected'
 
         for listener in self.listeners:
             listener.on_speech(phrase)
+
+        dest_info = self.data_registry.get_dest_info()
+        if dest_info is not None:
+            raw_instr_data = self.data_registry.get_raw_instr_data()
+            if raw_instr_data is not None:
+                self.say_dest_info(dest_info, raw_instr_data, say_now=True)
 
     def set_raw_instr_data(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
@@ -228,12 +234,13 @@ class Navigator:
             return self.bang_control.steer(degrees)
         return False
 
-    def say_dest_info(self, dest_info, raw_instr_data):
+    def say_dest_info(self, dest_info, raw_instr_data, say_now=False):
         if self.last_dest_announced_at is not None:
             since_last_speech = (raw_instr_data.utc - self.last_dest_announced_at).total_seconds()
         else:
             since_last_speech = 3600
-        if since_last_speech >= 60:
+
+        if since_last_speech >= 60 or say_now:
             self.last_dest_announced_at = raw_instr_data.utc
             if dest_info.atw_up is not None:
                 s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
