@@ -174,6 +174,11 @@ class Navigator:
 
                 self.data_registry.set_dest_info(dest_info)
 
+    def clear_dest(self):
+        self.data_registry.clear_active_route()
+        self.active_route = None
+        self.active_wpt_idx = None
+
     def goto_wpt(self, dest_wpt):
         gpx_route = gpxpy.gpx.GPXRoute(name="TO WPT")
         gpx_route.points.append(dest_wpt)

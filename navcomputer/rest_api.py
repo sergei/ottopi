@@ -100,6 +100,11 @@ def select_route(body=None):
     return {'status': 200}
 
 
+def clear_dest():
+    print('Clear current destination')
+    Navigator.get_instance().clear_dest()
+
+
 def announce_current_route():
     Navigator.get_instance().announce_current_route()
 

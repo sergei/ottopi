@@ -136,6 +136,11 @@ class LegAnalyzer:
         if len(self.hist) < TURN_DURATION:
             return False
 
+        # TODO:
+        # Exclude near DDW TWA is range [-170 +170] from consideration
+        # Don't compute mean values over sign change
+        # Consider [-170 +170] as separate DDW state
+
         # Get last N points
         twas = [d.twa for d, t in self.hist[-TURN_DURATION:]]
         staright_cnt = int(TURN_DURATION / 4)

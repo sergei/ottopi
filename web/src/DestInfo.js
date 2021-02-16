@@ -40,6 +40,22 @@ class DestInfo extends React.Component {
             });
         }
 
+    stopNavigation = (wpt) => {
+        console.log('Clear detination', wpt);
+        this.props.swaggerClient
+            .then( client => {
+                client.apis.nav.rest_api_clear_dest({},{})
+                    .then(response => {
+                        console.log(response);
+                        this.requestWpts();
+                    }).catch( error => {
+                    console.log("API error" + error);
+                })
+            }).catch( error => {
+            console.log("Client error" + error);
+        });
+    };
+
     toFixed = (val, dec) =>{
         if (val === null) return '';
         if (typeof val !== 'undefined') {
@@ -54,13 +70,21 @@ class DestInfo extends React.Component {
         if (this.state.loading){
             return(<div> Loading ...</div>);
         }else if( this.state.ok ){
-            const direction = this.state.dest.atw_up ? 'up' : 'down;'
-            return (
-                <div>
-                    <div>{this.state.dest.name} {this.toFixed(Math.abs(this.state.dest.atw),1)} degrees {direction} </div>
-                    DTW {this.toFixed(this.state.dest.dtw,3)} BTW {this.toFixed(this.state.dest.btw,0)}
-                </div>
-            );
+            const destSelected = 'name' in this.state.dest;
+            if (destSelected) {
+                const direction = this.state.dest.atw_up ? 'up' : 'down;'
+                return (
+                    <div>
+                        <div>{this.state.dest.name} {this.toFixed(Math.abs(this.state.dest.atw),1)} degrees {direction} </div>
+                        <div>DTW {this.toFixed(this.state.dest.dtw,3)} BTW {this.toFixed(this.state.dest.btw,0)}</div>
+                        <div><button onClick={() => this.stopNavigation()}>Stop navigation</button></div>
+                    </div>
+                );
+            }else{
+                return (
+                    <div>No destination selected</div>
+                );
+            }
         }else{
             return (
                 <div>Failed to fetch</div>

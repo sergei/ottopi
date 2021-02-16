@@ -334,6 +334,21 @@ paths:
               schema:
                 type: string
 
+  /clear_dest:
+    post:
+      operationId: rest_api.clear_dest
+      tags:
+        - nav
+      summary: Clears current destination
+      description: Clears current destination
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
 
 ########################################################################################################################
 #  /autopilot
