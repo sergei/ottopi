@@ -86,7 +86,7 @@ class MainScreen extends Component {
         }
         return (
             <div className="App">
-                <MenuButtons setScreen={this.setScreen}/>
+                <MenuButtons currentScreen={this.state.screen} setScreen={this.setScreen}/>
                 {screen_jsx}
             </div>
         );
