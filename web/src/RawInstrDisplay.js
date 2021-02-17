@@ -1,4 +1,5 @@
 import React from 'react';
+import {Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@material-ui/core";
 
 class RawInstrDisplay extends React.Component {
 
@@ -54,12 +55,36 @@ class RawInstrDisplay extends React.Component {
             return(<div> Loading ...</div>);
         }else if( this.state.ok ){
             return (
-                <div>
-                    <div>AWA {this.toFixed(this.state.instr.awa,0)} AWS {this.toFixed(this.state.instr.aws,1)}</div>
-                    <div>TWA {this.toFixed(this.state.instr.twa,0)} TWS {this.toFixed(this.state.instr.tws,1)}</div>
-                    <div>SOG {this.toFixed(this.state.instr.sog,1)} TWS {this.toFixed(this.state.instr.sow,1)}</div>
-                    <div>COG {this.toFixed(this.state.instr.cog,0)} HDG {this.toFixed(this.state.instr.hdg,0)}</div>
-                </div>
+                <TableContainer component={Paper}>
+                    <Table size={'small'} >
+                        <TableBody>
+                            <TableRow>
+                                <TableCell align="center"><Typography variant="h6">AWS</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.aws,1)}</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">AWA</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.awa,0)}</Typography></TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell align="center"><Typography variant="h6">TWS</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.tws,1)}</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">TWA</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.twa,0)}</Typography></TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell align="center"><Typography variant="h6">SOW</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.sow,1)}</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">HDG</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.hdg,0)}</Typography></TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell align="center"><Typography variant="h6">SOG</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.sog,1)}</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">COG</Typography></TableCell>
+                                <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.instr.cog,0)}</Typography></TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             );
         }else{
             return (
