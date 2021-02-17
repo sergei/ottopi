@@ -1,4 +1,5 @@
 import React from 'react';
+import {Button, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@material-ui/core";
 
 class DestInfo extends React.Component {
 
@@ -72,22 +73,38 @@ class DestInfo extends React.Component {
         }else if( this.state.ok ){
             const destSelected = 'name' in this.state.dest;
             if (destSelected) {
-                const direction = this.state.dest.atw_up ? 'up' : 'down;'
+                const direction = this.state.dest.atw_up ? 'Up' : 'Down;'
                 return (
-                    <div>
-                        <div>{this.state.dest.name} {this.toFixed(Math.abs(this.state.dest.atw),1)} degrees {direction} </div>
-                        <div>DTW {this.toFixed(this.state.dest.dtw,3)} BTW {this.toFixed(this.state.dest.btw,0)}</div>
-                        <div><button onClick={() => this.stopNavigation()}>Stop navigation</button></div>
-                    </div>
+                    <Paper>
+                        <Paper>
+                            <Typography variant="h5">{this.state.dest.name} {this.toFixed(Math.abs(this.state.dest.atw),1)}&#176; {direction} </Typography>
+                        </Paper>
+
+                        <TableContainer component={Paper}>
+                            <Table size={'small'} >
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell align="center"><Typography variant="h6">DTW</Typography></TableCell>
+                                        <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.dest.dtw,3)}</Typography></TableCell>
+                                        <TableCell align="center"><Typography variant="h6">BTW</Typography></TableCell>
+                                        <TableCell align="center"><Typography variant="h6">{this.toFixed(this.state.dest.btw,0)}</Typography></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <Paper>
+                            <Button variant="contained" onClick={() => this.stopNavigation()}>Stop navigation</Button>
+                        </Paper>
+                    </Paper>
                 );
             }else{
                 return (
-                    <div>No destination selected</div>
+                    <Paper>No destination selected</Paper>
                 );
             }
         }else{
             return (
-                <div>Failed to fetch</div>
+                <Paper>Failed to fetch</Paper>
             );
         }
     }
