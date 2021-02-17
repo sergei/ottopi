@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import Route from "./Route";
+import RouteListView from "../views/RouteListView";
 
-class RoutesList extends Component {
+class Routes extends Component {
     // State of this component
     state = {
         loading: true, // will be true when ajax request is running
@@ -48,25 +48,10 @@ class RoutesList extends Component {
     }
 
     render() {
-        if( this.state.loading ) {
-            return (<div>Loading routes ...</div>)
-        }else {
-            let routes;
-            if( this.state.ok){
-                routes = this.state.routes.map( (route, i) => (
-                        <Route {...route} key={i} routeIdx={i} selectRoute={this.selectRoute}/>
-                    )
-                );
-            }else{
-                routes = 'Failed to fetch routes';
-            }
-            return (
-                <div>
-                    {routes}
-                </div>
-            )
-        }
+        return ( <RouteListView loading={this.state.loading}  ok={this.state.ok}
+                                routes={this.state.routes} selectRoute={this.selectRoute}
+        />);
     }
 }
 
-export default RoutesList;
+export default Routes;

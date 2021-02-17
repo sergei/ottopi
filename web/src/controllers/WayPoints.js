@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import WayPoint from "./WayPoint";
+import WayPointsListView from "../views/WayPointsListView";
 
-class WayPointsList extends Component {
+class WayPoints extends Component {
     // State of this component
     state = {
         loading: true, // will be true when ajax request is running
@@ -44,25 +44,10 @@ class WayPointsList extends Component {
     }
 
     render() {
-        if( this.state.loading ) {
-            return (<div>Loading WPTs ...</div>)
-        }else {
-            let wpts;
-            if( this.state.ok){
-                 wpts = this.state.wpts.map( (wpt, i) => (
-                        <WayPoint {...wpt} key={i} navigateTo={this.navigateTo}/>
-                    )
-                );
-            }else{
-                wpts = 'Failed to fetch WPTs';
-            }
-            return (
-                <div>
-                    {wpts}
-                </div>
-            )
-        }
+        return (<WayPointsListView  loading={this.state.loading}  ok={this.state.ok}
+                                    navigateTo={this.state.navigateTo} wpts={this.state.wpts}
+            /> );
     }
 }
 
-export default WayPointsList;
+export default WayPoints;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function RoutePoint(props) {
+function RoutePointView(props) {
     let wpt = {
         'name': props.name,
         'lat': props.lat,
@@ -8,7 +8,7 @@ function RoutePoint(props) {
     }
     let active = props.active ? '>' : '';
 
-    console.log("RoutePoint");
+    console.log("RoutePointView");
     console.log(props);
 
     return (
@@ -17,5 +17,5 @@ function RoutePoint(props) {
         </div>
     );
 }
-export default RoutePoint;
+export default RoutePointView;
 

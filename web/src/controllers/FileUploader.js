@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import Url from "url-parse";
+import RouteListView from "../views/RouteListView";
+import FileUploaderView from "../views/FileUploaderView";
 
 class FileUploader extends Component {
     state = {
@@ -46,36 +48,10 @@ class FileUploader extends Component {
     };
 
     render() {
-        let uploadStatus;
-        if (this.state.finished && this.state.success)
-            uploadStatus = "Sucessfully uploaded";
-        else if (this.state.finished && !this.state.success)
-            uploadStatus = "Upload failed";
-        else
-            uploadStatus = "";
-
-        if ( this.state.uploading){
-            return (
-                <div> Uploading ... </div>
-            )
-        }else {
-            return (
-                <div>
-                    <div>
-                        <h3>
-                            {this.props.label}
-                        </h3>
-                        <div>
-                            <input type="file" onChange={this.onFileChange} />
-                            <button onClick={this.onFileUpload}>
-                                Upload
-                            </button>
-                        </div>
-                        {uploadStatus}
-                    </div>
-                </div>
-            );
-        }
+        return ( <FileUploaderView label={this.props.label} finished={this.state.finished}
+                                   success={this.state.success} uploading={this.state.uploading}
+                                   onFileChange={this.onFileChange} onFileUpload={this.onFileUpload}
+        />);
     }
 }
 

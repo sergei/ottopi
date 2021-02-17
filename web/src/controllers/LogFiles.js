@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import LogFile from "./LogFile";
+import LogFileListView from "../views/LogFileListView";
 
-class LogFileList extends Component {
+class LogFiles extends Component {
     // State of this component
     state = {
         loading: true, // will be true when ajax request is running
@@ -29,28 +29,10 @@ class LogFileList extends Component {
     }
 
     render() {
-        if( this.state.loading ) {
-            return (<div>Loading logs ...</div>)
-        }else {
-            let logs;
-            if ( this.state.ok){
-                logs = this.state.logs.map( (log_name, i) => (
-                        <LogFile log={log_name}  key={i} />
-                    )
-                );
-            }else{
-                logs = 'Failed to fetch logs';
-            }
-
-            return (
-                <div>
-                    {logs}
-                    <a href="all_logs.zip">Get all files in one ZIP</a>
-
-                </div>
-            )
+        return ( <LogFileListView loading={this.state.loading}  ok={this.state.ok}
+                                logs={this.state.logs}
+                />);
         }
-    }
 }
 
-export default LogFileList;
+export default LogFiles;

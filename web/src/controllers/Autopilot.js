@@ -1,4 +1,6 @@
 import React, {Component} from 'react';
+import DestInfoView from "../views/DestInfoView";
+import AutopilotView from "../views/AutopilotView";
 
 class Autopilot extends Component {
 
@@ -13,7 +15,7 @@ class Autopilot extends Component {
         this.setState( {loading:true, ok: true} )
         this.props.swaggerClient
             .then( client => {
-                client.apis.autopilot.rest_api_steer({degrees},{})
+                client.apis.autopilot.rest_api_steer({degrees}, {})
                     .then(response => {
                         this.setState( {loading:false, ok: true} );
                     }).catch( error => {
@@ -47,35 +49,10 @@ class Autopilot extends Component {
     };
 
     render() {
-        if( this.state.loading ) {
-            return (<div>Sending command ...</div>)
-        }else {
-            let status = '';
-            if ( !this.state.ok ){
-                status = 'Failed to send command';
-            }
-
-            return (
-                <div>
-                    <div>
-                        <button onClick={() => this.turn(-1)}>1 deg left</button>
-                        <button onClick={() => this.turn(1)}> 1 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => this.turn(-5)}> 5 deg left</button>
-                        <button onClick={() => this.turn(5)}> 5 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => this.turn(-10)}> 10 deg left</button>
-                        <button onClick={() => this.turn(10)}> 10 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => this.tack()}>Tack/Gybe</button>
-                    </div>
-                    <div>{status}</div>
-                </div>
-            );
-        }
+        return ( <AutopilotView loading={this.state.loading}  ok={this.state.ok}
+                               turn={this.turn} tack={this.tack}
+            />
+        );
     }
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function LogFile(props) {
+function LogFileView(props) {
     let href = "log/" + props.log;
     return (
         <div>
@@ -9,4 +9,4 @@ function LogFile(props) {
     );
 }
 
-export default LogFile;
+export default LogFileView;

@@ -1,12 +1,12 @@
 import React from 'react';
-import {screens} from "./MainScreen";
+import {screens} from "../MainScreen";
 import {BottomNavigation, BottomNavigationAction} from "@material-ui/core";
 import ExploreIcon from '@material-ui/icons/Explore';
 import ShowChartIcon from '@material-ui/icons/ShowChart';
 import BrightnessAutoIcon from '@material-ui/icons/BrightnessAuto';
 import SdCardIcon from '@material-ui/icons/SdCard';
 
-function MenuButtons(props) {
+function MenuButtonsView(props) {
 
     return (
             <BottomNavigation
@@ -25,4 +25,4 @@ function MenuButtons(props) {
 
 }
 
-export default MenuButtons;
+export default MenuButtonsView;

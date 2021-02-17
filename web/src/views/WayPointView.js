@@ -1,6 +1,6 @@
 import React from 'react';
 
-function WayPoint(props) {
+function WayPointView(props) {
     let wpt = {
         'name': props.name,
         'lat': props.lat,
@@ -13,4 +13,4 @@ function WayPoint(props) {
         </div>
     );
 }
-export default WayPoint;
+export default WayPointView;

@@ -1,7 +1,7 @@
 import React from 'react';
 import Moment from 'react-moment';
 
-function NavHistoryItem(props) {
+function NavHistoryItemView(props) {
     return (
         <div>
             HDG {props.hdg.toFixed(0)}
@@ -9,4 +9,4 @@ function NavHistoryItem(props) {
         </div>
     );
 }
-export default NavHistoryItem;
+export default NavHistoryItemView;

@@ -1,15 +1,15 @@
 import './App.css';
-import RawInstrDisplay from "./RawInstrDisplay";
+import RawInstrDisplay from "./controllers/RawInstrDisplay";
 import SwaggerClient from 'swagger-client'
-import FileUploader from "./FileUploader";
-import WayPointsList from "./WayPointsList";
-import LogFileList from "./LogFileList";
-import Autopilot from "./Autopilot";
-import RoutesList from "./RoutesList";
-import DestInfo from "./DestInfo";
-import NavHistoryList from "./NavHistoryList";
+import FileUploader from "./controllers/FileUploader";
+import WayPoints from "./controllers/WayPoints";
+import LogFiles from "./controllers/LogFiles";
+import Autopilot from "./controllers/Autopilot";
+import Routes from "./controllers/Routes";
+import DestInfo from "./controllers/DestInfo";
+import NavHistory from "./controllers/NavHistory";
 import {Component} from "react";
-import MenuButtons from "./MenuButtons";
+import MenuButtonsView from "./views/MenuButtonsView";
 
 export const screens = {
     NAVIGATION: "navigation",
@@ -55,14 +55,14 @@ class MainScreen extends Component {
                     <div>
                         <RawInstrDisplay swaggerClient={this.state.swaggerClient}/>
                         <DestInfo swaggerClient={this.state.swaggerClient}/>
-                        <NavHistoryList swaggerClient={this.state.swaggerClient} />
+                        <NavHistory swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
             case screens.ROUTES:
                 screen_jsx =
                     <div>
-                        <WayPointsList swaggerClient={this.state.swaggerClient} />
-                        <RoutesList swaggerClient={this.state.swaggerClient} />
+                        <WayPoints swaggerClient={this.state.swaggerClient} />
+                        <Routes swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
             case screens.AUTOPILOT:
@@ -75,9 +75,9 @@ class MainScreen extends Component {
                 screen_jsx =
                     <div>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Upload GPX'}/>
-                        <LogFileList swaggerClient={this.state.swaggerClient} />
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Upload Polar file'}/>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Upload Software Update'}/>
+                        <LogFiles swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
             default:
@@ -86,7 +86,7 @@ class MainScreen extends Component {
         }
         return (
             <div className="App">
-                <MenuButtons currentScreen={this.state.screen} setScreen={this.setScreen}/>
+                <MenuButtonsView currentScreen={this.state.screen} setScreen={this.setScreen}/>
                 {screen_jsx}
             </div>
         );
