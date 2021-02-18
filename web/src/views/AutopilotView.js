@@ -1,36 +1,62 @@
 import React from 'react';
+import {Button, Paper, Table, TableBody, TableCell, TableContainer, TableRow} from "@material-ui/core";
 
 function AutopilotView(props){
-
         if( props.loading ) {
             return (<div>Sending command ...</div>)
-        }else {
-            let status = '';
-            if ( !props.ok ){
-                status = 'Failed to send command';
-            }
-
+        } else {
             return (
-                <div>
-                    <div>
-                        <button onClick={() => props.turn(-1)}>1 deg left</button>
-                        <button onClick={() => props.turn(1)}> 1 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => props.turn(-5)}> 5 deg left</button>
-                        <button onClick={() => props.turn(5)}> 5 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => props.turn(-10)}> 10 deg left</button>
-                        <button onClick={() => props.turn(10)}> 10 deg right</button>
-                    </div>
-                    <div>
-                        <button onClick={() => props.tack()}>Tack/Gybe</button>
-                    </div>
-                    <div>{status}</div>
-                </div>
+                <TableContainer component={Paper}>
+                    <Table size={'small'} >
+                        <TableBody>
+                            <TableRow>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(-1)} variant="contained" color="primary">
+                                        1 deg left
+                                    </Button>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(1)} variant="contained" color="primary">
+                                        1 deg right
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(-5)} variant="contained" color="primary">
+                                        5 deg left
+                                    </Button>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(5)} variant="contained" color="primary">
+                                        5 deg right
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(-10)} variant="contained" color="primary">
+                                        10 deg left
+                                    </Button>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Button onClick={() => props.turn(10)} variant="contained" color="primary">
+                                        10 deg right
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell colSpan={2} align="center">
+                                    <Button onClick={() => props.tack()} variant="contained" color="primary">
+                                        Tack
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             );
-        }
+    }
 }
 
 export default AutopilotView;
