@@ -43,6 +43,23 @@ class Routes extends Component {
         });
     };
 
+    stopNavigation = () => {
+        console.log('Clear detination');
+        this.props.swaggerClient
+            .then( client => {
+                client.apis.nav.rest_api_clear_dest({},{})
+                    .then(response => {
+                        console.log(response);
+                        this.requestWpts();
+                    }).catch( error => {
+                    console.log("API error" + error);
+                })
+            }).catch( error => {
+            console.log("Client error" + error);
+        });
+    };
+
+
     componentDidMount() {
         this.requestRoutes();
     }
@@ -50,6 +67,7 @@ class Routes extends Component {
     render() {
         return ( <RouteListView loading={this.state.loading}  ok={this.state.ok}
                                 routes={this.state.routes} selectRoute={this.selectRoute}
+                                stopNavigation={this.stopNavigation}
         />);
     }
 }

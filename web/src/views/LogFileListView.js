@@ -1,27 +1,14 @@
 import React from 'react';
-import LogFileView from "./LogFileView";
+import {Button, Paper} from "@material-ui/core";
 
-function LogFileListView(props) {
-    if( props.loading ) {
-        return (<div>Loading logs ...</div>)
-    }else {
-        let logs;
-        if ( props.ok){
-            logs = props.logs.map( (log_name, i) => (
-                    <LogFileView log={log_name} key={i} />
-                )
-            );
-        }else{
-            logs = 'Failed to fetch logs';
-        }
-
+function LogFileListView() {
         return (
-            <div>
-                <a href="all_logs.zip">Get all files in one ZIP</a>
-                {logs}
-            </div>
+            <Paper>
+                <Button variant="contained" color="primary" href="all_logs.zip">
+                    Download log files in one ZIP
+                </Button>
+            </Paper>
         )
-    }
 }
 
 export default LogFileListView;

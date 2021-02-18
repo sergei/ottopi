@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@material-ui/core";
+import {Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography} from "@material-ui/core";
 import {toFixed} from "./Utils";
 
 function DestInfoView(props) {
@@ -13,7 +13,7 @@ function DestInfoView(props) {
                 return (
                     <Paper>
                         <Paper>
-                            <Typography variant="h5">{props.dest.name} {toFixed(Math.abs(props.dest.atw),1)}&#176; {direction} </Typography>
+                            <Typography variant="h5">{props.dest.name} {toFixed(Math.abs(props.dest.atw),0)}&#176; {direction} </Typography>
                         </Paper>
 
                         <TableContainer component={Paper}>
@@ -21,16 +21,13 @@ function DestInfoView(props) {
                                 <TableBody>
                                     <TableRow>
                                         <TableCell align="center"><Typography variant="h6">DTW</Typography></TableCell>
-                                        <TableCell align="center"><Typography variant="h6">{toFixed(props.dest.dtw,3)}</Typography></TableCell>
+                                        <TableCell align="center"><Typography variant="h6">{toFixed(props.dest.dtw,2)}</Typography></TableCell>
                                         <TableCell align="center"><Typography variant="h6">BTW</Typography></TableCell>
-                                        <TableCell align="center"><Typography variant="h6">{toFixed(props.dest.btw,0)}</Typography></TableCell>
+                                        <TableCell align="center"><Typography variant="h6">{toFixed(props.dest.btw,0)}&#176;</Typography></TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                        <Paper>
-                            <Button variant="contained" onClick={() => this.stopNavigation()}>Stop navigation</Button>
-                        </Paper>
                     </Paper>
                 );
             }else{

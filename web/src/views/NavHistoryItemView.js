@@ -10,9 +10,9 @@ function NavHistoryItemView(props) {
         <TableRow>
             <TableCell align="center"><Typography variant="h6"><Moment date={props.utc} format="hh:mm:ss" /></Typography></TableCell>
             <TableCell align="center">
-                <Typography variant="h6">{ is_starboard ? props.hdg.toFixed(0) : ''}</Typography>
+                <Typography variant="h6">{ is_starboard ? props.hdg.toFixed(0) + '°': ''}</Typography>
             </TableCell>
-            <TableCell align="center"><Typography variant="h6">{ !is_starboard ? props.hdg.toFixed(0) : ''}</Typography></TableCell>
+            <TableCell align="center"><Typography variant="h6">{ !is_starboard ? props.hdg.toFixed(0) + '°' : ''}</Typography></TableCell>
         </TableRow>
     );
 }

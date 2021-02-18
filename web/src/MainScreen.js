@@ -3,13 +3,13 @@ import RawInstrDisplay from "./controllers/RawInstrDisplay";
 import SwaggerClient from 'swagger-client'
 import FileUploader from "./controllers/FileUploader";
 import WayPoints from "./controllers/WayPoints";
-import LogFiles from "./controllers/LogFiles";
 import Autopilot from "./controllers/Autopilot";
 import Routes from "./controllers/Routes";
 import DestInfo from "./controllers/DestInfo";
 import NavHistory from "./controllers/NavHistory";
 import {Component} from "react";
 import MenuButtonsView from "./views/MenuButtonsView";
+import LogFileListView from "./views/LogFileListView";
 
 export const screens = {
     NAVIGATION: "navigation",
@@ -53,8 +53,8 @@ class MainScreen extends Component {
             case screens.NAVIGATION:
                 screen_jsx =
                     <div>
-                        <RawInstrDisplay swaggerClient={this.state.swaggerClient}/>
                         <DestInfo swaggerClient={this.state.swaggerClient}/>
+                        <RawInstrDisplay swaggerClient={this.state.swaggerClient}/>
                         <NavHistory swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
@@ -77,7 +77,7 @@ class MainScreen extends Component {
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Select GPX file'}/>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Select Polar file'}/>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Select SW Update package'}/>
-                        <LogFiles swaggerClient={this.state.swaggerClient} />
+                        <LogFileListView/>
                     </div>
                 break;
             default:

@@ -40,22 +40,6 @@ class DestInfo extends React.Component {
             });
         }
 
-    stopNavigation = (wpt) => {
-        console.log('Clear detination', wpt);
-        this.props.swaggerClient
-            .then( client => {
-                client.apis.nav.rest_api_clear_dest({},{})
-                    .then(response => {
-                        console.log(response);
-                        this.requestWpts();
-                    }).catch( error => {
-                    console.log("API error" + error);
-                })
-            }).catch( error => {
-            console.log("Client error" + error);
-        });
-    };
-
     render() {
         return ( <DestInfoView loading={this.state.loading}  ok={this.state.ok}
                                dest={this.state.dest}
