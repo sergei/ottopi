@@ -1,8 +1,9 @@
-import React, {Component} from 'react';
-import axios from 'axios';
-import Url from "url-parse";
+import React from 'react';
+import {Button, Paper, Typography} from "@material-ui/core";
+import {useStyles} from "./RouteListView";
 
 function FileUploaderView(props){
+    const classes = useStyles();
 
     let uploadStatus;
     if (props.finished && props.success)
@@ -12,26 +13,43 @@ function FileUploaderView(props){
     else
         uploadStatus = "";
 
+    const uploadButton = (props) => {
+        return (
+            <span>
+                <Button onClick={props.onFileUpload} variant="contained" color="primary" component="span">
+                    Upload
+                </Button>
+                {props.selectedFileName}
+            </span>
+        )
+    };
+
     if ( props.uploading){
         return (
             <div> Uploading ... </div>
         )
     }else {
+        const fileSelected = props.selectedFileName !== null;
         return (
-            <div>
-                <div>
-                    <h3>
-                        {props.label}
-                    </h3>
-                    <div>
-                        <input type="file" onChange={props.onFileChange} />
-                        <button onClick={props.onFileUpload}>
-                            Upload
-                        </button>
-                    </div>
-                    {uploadStatus}
-                </div>
-            </div>
+            <Paper>
+                    <input
+                        className={classes.input}
+                        style={{ display: 'none' }}
+                        id="raised-button-file"
+                        type="file"
+                        onChange={props.onFileChange}
+                    />
+
+                    <label htmlFor="raised-button-file">
+                        <Button variant="contained" color="secondary"  component="span" className={classes.button}>
+                            {props.label}
+                        </Button>
+                    </label>
+
+                    {fileSelected ? uploadButton(props) : ''}
+                    <Typography variant="body1">{uploadStatus}</Typography>
+
+            </Paper>
         );
     }
 }

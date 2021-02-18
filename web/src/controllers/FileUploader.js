@@ -1,13 +1,13 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import Url from "url-parse";
-import RouteListView from "../views/RouteListView";
 import FileUploaderView from "../views/FileUploaderView";
 
 class FileUploader extends Component {
     state = {
         // Initially, no file is selected
         selectedFile: null,
+        selectedFileName: null,
         uploading: false,
         finished: false,
         success: null
@@ -15,7 +15,10 @@ class FileUploader extends Component {
 
     // On file select (from the pop up)
     onFileChange = event => {
-        this.setState({ selectedFile: event.target.files[0] });
+        this.setState({
+            selectedFile: event.target.files[0],
+            selectedFileName: event.target.files[0].name,
+        });
     };
 
     // On file upload (click the upload button)
@@ -49,6 +52,7 @@ class FileUploader extends Component {
 
     render() {
         return ( <FileUploaderView label={this.props.label} finished={this.state.finished}
+                                   selectedFileName={this.state.selectedFileName}
                                    success={this.state.success} uploading={this.state.uploading}
                                    onFileChange={this.onFileChange} onFileUpload={this.onFileUpload}
         />);

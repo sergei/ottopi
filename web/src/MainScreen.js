@@ -74,9 +74,9 @@ class MainScreen extends Component {
             case screens.FILE_MANAGER:
                 screen_jsx =
                     <div>
-                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Upload GPX'}/>
-                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Upload Polar file'}/>
-                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Upload Software Update'}/>
+                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Select GPX file'}/>
+                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Select Polar file'}/>
+                        <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Select SW Update package'}/>
                         <LogFiles swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
