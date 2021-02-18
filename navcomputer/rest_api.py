@@ -111,19 +111,27 @@ def announce_current_route():
 
 def get_routes():
     navigator = Navigator.get_instance()
+    active_route, active_wpt_idx = navigator.get_active_route()
+
+    active_route_name = active_route.name if active_route is not None else ''
+
     gpx_routes = navigator.get_routes()
     routes = []
     for gpx_route in gpx_routes:
+        route_is_active = active_route_name == gpx_route.name
         wpts = []
-        for wpt in gpx_route.points:
+        for wpt_idx, wpt in enumerate(gpx_route.points):
             wpts.append({
                 'name': wpt.name,
                 'lat': wpt.latitude,
                 'lon': wpt.longitude,
+                'active': route_is_active and  active_wpt_idx == wpt_idx,
             })
         route = {
             'name': gpx_route.name,
-            'wpts': wpts
+            'wpts': wpts,
+            'active': route_is_active,
+            'active_wpt_idx': active_wpt_idx if active_route is not None else None
         }
         routes.append(route)
     return routes

@@ -3,6 +3,7 @@ import RoutePointView from "./RoutePointView";
 import {Collapse, ListItem, ListItemText} from "@material-ui/core";
 import List from "@material-ui/core/List";
 import {ExpandLess, ExpandMore} from "@material-ui/icons";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 
 function RouteView(props) {
     const [open, setOpen] = React.useState(false);
@@ -20,6 +21,7 @@ function RouteView(props) {
     return (
         <div>
             <ListItem  button onClick={handleClick}>
+                {props.active ? <ChevronRightIcon/> : ''}
                 <ListItemText primary={'Route ' + props.name} />
                 {open ? <ExpandLess /> : <ExpandMore />}
             </ListItem>

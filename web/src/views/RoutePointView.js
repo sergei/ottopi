@@ -9,8 +9,8 @@ function RoutePointView(props) {
     return (
         <ListItem button className={classes.nested}
                   onClick={ () => props.selectRoute(props.routeIdx, props.wptIdx)}>
-            <ListItemText primary={props.name} />
             {props.active ? <ChevronRightIcon/> : ''}
+            <ListItemText primary={props.name} />
         </ListItem>
     );
 }

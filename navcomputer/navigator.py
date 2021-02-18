@@ -224,6 +224,9 @@ class Navigator:
     def get_routes(self):
         return self.data_registry.get_routes()
 
+    def get_active_route(self):
+        return self.active_route, self.active_wpt_idx
+
     def tack(self):
         for listener in self.listeners:
             listener.on_speech('Tacking')
