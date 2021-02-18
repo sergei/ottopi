@@ -1,15 +1,29 @@
+# OttoPi
+
+## Introduction
+
+OttoPi is the Raspberry PI based box mounted on a sailboat. It's an interface between boat electronics and the sailor.
+Sailor can communicate with OttoPi by the following means:
+* Bluetooth remote control
+* Using third party app like [OpenCPN](https://opencpn.org/) when connected to OttoPi over Wi-Fi
+* Web browser by opening http://otto.pi/ottopi URL when connected to OttoPi over Wi-Fi
+
+OttoPi connected to the following boat electronic interfaces 
+* NMEA 0183 input 
+* NMEA 0183 output
+* B&G autopilot controller ACP NET
+
 # User facing features
 
 * Connect an external app to NMEA TCP socket to receive/send NMEA data 
 * HTTP server running Web App
   * Upload GPX (WPTs, Routes)
-  * Download ZIP (GPX,NMEA,KMZ)
+  * Download ZIP (NMEA logs)
   * Upload Polars 
   * Current nav status
     * SOG, SOW, COG, HDG, Bearing to WPT, AWA, AWS, TWD, TWS, VMG, Target VMG
   * Historic plots
-    * HDG, SPD, VMG
-  * Upload PHRF CSV
+    * HDG
   * Race Timer control (start/sync/stop) (Reverse handicap start)
   * Race timer countdown 
   * Race timer elapsed handicap time
@@ -18,22 +32,23 @@
   * Gain/Loss vs Target
   * Race Timer 
 * Bluetooth remote control 
+  * Route selection 
+    * Announce a current destination   ( Play/Stop button )
+    * Next Route/PrevRoute  ( +, - button )
+    * Next mark/Prev mark  ( >|, |< buttons )
+  * Autopilot control
+    * Tack/gybe ( Play/Stop button )
+    * Up/Down 10 degrees  ( >|, |< buttons )
+    * Up/Down 1 degree  ( +, - button )
   * Race control 
     * Start/Reset Timer (Play/Stop button)
     * Sync timer        (+ button)
     * Set committee boat ( >| button)
     * Set pin            ( |< button)
-  * Route selection 
-    * Next Route/PrevRoute ( >|, |< buttons )
-    * Select Route         ( Play/Stop button )
-    * Next mark/Prev mark  ( +, - button )
-  * Autopilot control
-    * Tack/gybe ( Play/Stop button )
-    * Up/Down 10 degrees  ( >|, |< buttons )
-    * Up/Down 1 degree  ( +, - button )
   
 
 # OttoPi box Hardware I/O
+
 * GND
 * NMEA IN
 * 12 V IN
@@ -48,6 +63,12 @@
   * Off
     
 # OttoPI REST APIs
+
+The formal [OpenAPI](https://swagger.io/specification) definition is located 
+at [navcomputer/openapi/ottopi.yaml](navcomputer/openapi/ottopi.yaml) 
+
+Here is the high level functionality
+
 * WPTs CRUD
   * Upload the GPX file with WPTs and Routes
 * Select active WPT
@@ -60,10 +81,8 @@
   * Start, Sync, Stop
   * Reverse handicap start
   * Countdown Timer status
-  * PHRF elapsed timers 
 * Log files management 
-  * List NMEA files
-  * Download NMEA file
+  * Download NMEA files
 * Autopilot NAV functions
   * Navigate to WPT
   * Select Route
@@ -73,13 +92,16 @@
 
 
 # Software components 
-* nmea_sim.py - simulator to replay NMEA log
-* navcomputer.py
-  * connects GPS serial port and NMEA serial port to TCP socket
-  * reads NMEA from the NMEA bridge 
-  * Reads user uploaded files 
-  * Read user commands (select WPT, select route, start timer)
-  * Computes nav data
+* navcomputer/nmea_sim.py - simulator to replay NMEA log useful for development
+* [navcomputer](navcomputer/main.py)
+  * Listens for NMEA data from internal GPS and external instruments
+  * Forwards the received NMEA data to connected TCP clients
+  * Runs HTTP server to process REST API calls
+  * Serves builtin [Web application](web/README.md) 
+  * Computes necessary nav data
+* [Bluetooth remote controller](bt_remote/README.md) 
+  * Listens for input from remote BT controllers
+  * Once the input is detected communicates with navcomputer over REST APIs
 
 # Raspberry PI installation 
 * Make access point https://www.raspberrypi.org/documentation/configuration/wireless/access-point-routed.md
@@ -109,8 +131,3 @@ https://www.cruisersforum.com/forums/f116/b-and-g-h1000-pilot-handheld-wires-mea
   
   Dirk
   LeaseOnLife is online now  	
-
-
-# Remote controller 
-Use BT AVRCP profile to control the autopilot and mark selection 
-This tutorial shows hoe to listen to AVRCP commands 
