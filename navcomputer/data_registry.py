@@ -85,6 +85,7 @@ class DataRegistry:
         return None
 
     def clear_active_route(self):
-        gpx_name = self.data_dir + os.sep + conf.GPX_CUR_ROUTE_NAME
-        os.unlink(gpx_name)
         self.dest_info = None
+        gpx_name = self.data_dir + os.sep + conf.GPX_CUR_ROUTE_NAME
+        if os.path.isfile(gpx_name):
+            os.unlink(gpx_name)
