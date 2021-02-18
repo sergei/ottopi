@@ -45,7 +45,7 @@ class WayPoints extends Component {
 
     render() {
         return (<WayPointsListView  loading={this.state.loading}  ok={this.state.ok}
-                                    navigateTo={this.state.navigateTo} wpts={this.state.wpts}
+                                    navigateTo={this.navigateTo} wpts={this.state.wpts}
             /> );
     }
 }

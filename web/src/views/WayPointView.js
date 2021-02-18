@@ -1,16 +1,24 @@
 import React from 'react';
+import {ListItem, ListItemIcon, ListItemText} from "@material-ui/core";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import {useStyles} from "./RouteListView";
 
 function WayPointView(props) {
-    let wpt = {
+    const classes = useStyles();
+    const wpt = {
         'name': props.name,
         'lat': props.lat,
         'lon': props.lon,
     }
-    let active = props.active ? '>' : '';
     return (
-        <div>{active} {wpt.name}
-        <button onClick={ () => props.navigateTo(wpt)}>GOTO</button>
-        </div>
+
+        <ListItem button className={classes.nested}
+                  onClick={ () => props.navigateTo(wpt)}>
+            <ListItemIcon>
+                {props.active ? <ChevronRightIcon/> : ''}
+            </ListItemIcon>
+            <ListItemText primary={props.name} />
+        </ListItem>
     );
 }
 export default WayPointView;

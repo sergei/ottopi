@@ -1,20 +1,17 @@
 import React from 'react';
+import {useStyles} from "./RouteListView";
+import {ListItem, ListItemText} from "@material-ui/core";
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 function RoutePointView(props) {
-    let wpt = {
-        'name': props.name,
-        'lat': props.lat,
-        'lon': props.lon,
-    }
-    let active = props.active ? '>' : '';
-
-    console.log("RoutePointView");
-    console.log(props);
+    const classes = useStyles();
 
     return (
-        <div>{active} {wpt.name}
-            <button onClick={ () => props.selectRoute(props.routeIdx, props.wptIdx)}>GOTO</button>
-        </div>
+        <ListItem button className={classes.nested}
+                  onClick={ () => props.selectRoute(props.routeIdx, props.wptIdx)}>
+            <ListItemText primary={props.name} />
+            {props.active ? <ChevronRightIcon/> : ''}
+        </ListItem>
     );
 }
 export default RoutePointView;
