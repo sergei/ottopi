@@ -125,7 +125,7 @@ def get_routes():
                 'name': wpt.name,
                 'lat': wpt.latitude,
                 'lon': wpt.longitude,
-                'active': route_is_active and  active_wpt_idx == wpt_idx,
+                'active': route_is_active and active_wpt_idx == wpt_idx,
             })
         route = {
             'name': gpx_route.name,
@@ -238,3 +238,45 @@ def steer(degrees):
         return {'status': 200}
     else:
         return 'Not connected', 420
+
+
+def timer_start():
+    Navigator.get_instance().timer_start()
+    return {'status': 200}
+
+
+def timer_stop():
+    Navigator.get_instance().timer_stop()
+    return {'status': 200}
+
+
+def timer_sync():
+    Navigator.get_instance().timer_sync()
+    return {'status': 200}
+
+
+def timer_phrf_upload():
+    navigator = Navigator.get_instance()
+    uploaded_file = connexion.request.files['fileName']
+    phrf_file_name = navigator.get_data_dir() + os.sep + conf.PHRF_TABLE
+    tmp_file_name = phrf_file_name + '.tmp'
+    print('Storing PHRF table to {}'.format(tmp_file_name))
+    uploaded_file.save(tmp_file_name)
+    if navigator.read_phrf_table(tmp_file_name):
+        print('PHRF validated OK, renaming to {}'.format(phrf_file_name))
+        os.rename(tmp_file_name, phrf_file_name)
+        return {'status': 200}
+    else:
+        print('PHRF validation failed')
+        return 'Invalid PHRF format', 420
+
+
+def timer_get_data():
+    navigator = Navigator.get_instance()
+    if navigator.is_timer_active():
+        return {
+            'elapsed_time': navigator.get_elapsed_time(),
+            'phrf_timers': navigator.get_phrf_timers()
+        }
+    else:
+        return {}

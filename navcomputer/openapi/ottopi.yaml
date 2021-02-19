@@ -21,6 +21,8 @@ tags:
     description: Paths to acess the builtin Web site
   - name: autopilot
     description: Autopilot control REST APIs
+  - name: timer
+    description: Start timer REST APIs
 
 paths:
 ########################################################################################################################
@@ -392,6 +394,93 @@ paths:
               schema:
                 type: string
 
+########################################################################################################################
+#  /timer
+########################################################################################################################
+  /timer/start:
+    post:
+      operationId: rest_api.timer_start
+      tags:
+        - timer
+      summary: Start timer
+      description: Start timer
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /timer/stop:
+    post:
+      operationId: rest_api.timer_stop
+      tags:
+        - timer
+      summary: Stop timer
+      description: Stop timer
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /timer/sync:
+    post:
+      operationId: rest_api.timer_sync
+      tags:
+        - timer
+      summary: Sync timer
+      description: Sync timer to the nearest integer minute
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /timer/data:
+    get:
+      operationId: rest_api.timer_get_data
+      tags:
+        - timer
+      summary: Timer data
+      description: Timer data
+      responses:
+        '200':
+          description: Timer data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerData'
+
+  /timer/phrf_table:
+    post:
+      operationId: rest_api.timer_phrf_upload
+      tags:
+        - timer
+      summary: Upload PHRF table
+      description:  Upload PHRF table in CSV format "name,phrf rating"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successfully loaded html page.
+          content:
+            text/html:   # Add the media type here
+              schema:
+                type: string
+
 
 ########################################################################################################################
 # Components
@@ -569,3 +658,28 @@ components:
           minimum: -180
           maximum: 180
           type: number
+
+    TimerData:
+      type: object
+      properties:
+        elapsed_time:
+          description: Elapsed time in seconds ( if it's a time to start)
+          type: integer
+        phrf_timers:
+          description: Corrected PHRF times
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - phrf_rating
+            properties:
+              name:
+                description: Class name
+                type: string
+              phrf_rating:
+                description: PHRF rating
+                type: integer
+              corrected_time:
+                description: Corrected time in seconds
+                type: integer

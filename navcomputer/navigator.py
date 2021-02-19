@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import gpxpy
@@ -9,6 +10,7 @@ import geomag
 
 from logger import Logger
 from bang_control import BangControl
+from phrf_table import PhrfTable
 from polars import Polars
 from leg_analyzer import LegAnalyzer
 from data_registry import DataRegistry
@@ -63,6 +65,8 @@ class Navigator:
             self.active_route = None
             self.active_wpt_idx = None
             self.last_dest_announced_at = None
+            self.race_starts_at = None
+            self.phrf_table = PhrfTable()
 
     def get_data_dir(self):
         return self.data_registry.data_dir
@@ -305,3 +309,49 @@ class Navigator:
 
     def get_history(self):
         return self.leg_analyzer.summaries
+
+    def timer_start(self):
+        now = datetime.datetime.now()
+        secs_to_start = 5 * 60
+        self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
+
+    def timer_stop(self):
+        self.race_starts_at = None
+
+    def timer_sync(self):
+        if self.race_starts_at is not None:
+            now = datetime.datetime.now()
+            secs_to_start = (now - self.race_starts_at).total_seconds()
+            if secs_to_start > 0:
+                secs_to_start = int(round(secs_to_start/60.)) * 60
+                self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
+
+    def read_phrf_table(self, file_name):
+        return self.phrf_table.read_file(file_name)
+
+    def is_timer_active(self):
+        return self.race_starts_at is not None
+
+    def get_elapsed_time(self):
+        now = datetime.datetime.now()
+        secs_to_start = (now - self.race_starts_at).total_seconds()
+        return - secs_to_start
+
+    def get_phrf_timers(self):
+        if len(self.phrf_table.table) == 0:
+            return []
+
+        if self.active_route is None:
+            return []
+
+        dist = self.active_route.length() / METERS_IN_NM
+        corrected_times = self.phrf_table.get_corrected_times(dist, self.get_elapsed_time())
+        phrf_timers = []
+        for entry in self.phrf_table.table:
+            phrf_timers.append({
+                'name': entry.name,
+                'phrf_rating': entry.phrf,
+                'corrected_time': corrected_times[entry.phrf],
+            })
+
+        return phrf_timers
