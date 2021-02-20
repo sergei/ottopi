@@ -15,6 +15,7 @@ from polars import Polars
 from leg_analyzer import LegAnalyzer
 from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
+from timer_talker import TimerTalker
 
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
@@ -67,6 +68,7 @@ class Navigator:
             self.last_dest_announced_at = None
             self.race_starts_at = None
             self.phrf_table = PhrfTable()
+            self.timer_talker = TimerTalker()
 
     def get_data_dir(self):
         return self.data_registry.data_dir
@@ -314,9 +316,11 @@ class Navigator:
         now = datetime.datetime.now()
         secs_to_start = 5 * 60
         self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
+        self.timer_talker.start_timer(secs_to_start)
 
     def timer_stop(self):
         self.race_starts_at = None
+        self.timer_talker.stop_timer()
 
     def timer_sync(self):
         if self.race_starts_at is not None:
@@ -325,6 +329,7 @@ class Navigator:
             if secs_to_start > 0:
                 secs_to_start = int(round(secs_to_start/60.)) * 60
                 self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
+                self.timer_talker.update_timer(secs_to_start)
 
     def read_phrf_table(self, file_name):
         return self.phrf_table.read_file(file_name)
@@ -334,8 +339,8 @@ class Navigator:
 
     def get_elapsed_time(self):
         now = datetime.datetime.now()
-        secs_to_start = (now - self.race_starts_at).total_seconds()
-        return - secs_to_start
+        elapsed_time = (now - self.race_starts_at).total_seconds()
+        return elapsed_time
 
     def get_phrf_timers(self):
         if len(self.phrf_table.table) == 0:

@@ -10,6 +10,7 @@ from polars import Polars
 from navigator_listener import NavigationListener
 from raw_instr_data import RawInstrData
 from navigator import Navigator
+from timer_talker import TimerTalker
 
 
 class TestStringMethods(unittest.TestCase):
@@ -150,6 +151,15 @@ class TestStringMethods(unittest.TestCase):
         target_speed, target_twa = polars.get_targets(20, -130)
         self.assertAlmostEqual(target_twa, 178.7, delta=0.01)
         self.assertAlmostEqual(target_speed, 8.14, delta=0.01)
+
+    def test_count_down(self):
+        time_talker = TimerTalker()
+        time_talker.reset_time_checker(5 * 60.)
+        for time_left_msec in range(5 * 60 * 10, 0, -1):
+            time_left_sec = float(time_left_msec) / 10
+            say_now, time_left = time_talker.check_time_left(time_left_sec)
+            if say_now:
+                self.assertAlmostEqual(time_left_msec/10, time_left, delta=0.2)
 
 
 if __name__ == '__main__':
