@@ -241,18 +241,24 @@ def steer(degrees):
 
 
 def timer_start():
-    Navigator.get_instance().timer_start()
-    return {'status': 200}
+    if Navigator.get_instance().timer_start():
+        return {'status': 200}
+    else:
+        return {'status': 420}
 
 
 def timer_stop():
-    Navigator.get_instance().timer_stop()
-    return {'status': 200}
+    if Navigator.get_instance().timer_stop():
+        return {'status': 200}
+    else:
+        return {'status': 420}
 
 
 def timer_sync():
-    Navigator.get_instance().timer_sync()
-    return {'status': 200}
+    if Navigator.get_instance().timer_sync():
+        return {'status': 200}
+    else:
+        return {'status': 420}
 
 
 def timer_phrf_upload():

@@ -316,20 +316,21 @@ class Navigator:
         now = datetime.datetime.now()
         secs_to_start = 5 * 60
         self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
-        self.timer_talker.start_timer(secs_to_start)
+        return self.timer_talker.start_timer(secs_to_start)
 
     def timer_stop(self):
         self.race_starts_at = None
-        self.timer_talker.stop_timer()
+        return self.timer_talker.stop_timer()
 
     def timer_sync(self):
         if self.race_starts_at is not None:
             now = datetime.datetime.now()
-            secs_to_start = (now - self.race_starts_at).total_seconds()
+            secs_to_start = (self.race_starts_at - now).total_seconds()
             if secs_to_start > 0:
                 secs_to_start = int(round(secs_to_start/60.)) * 60
                 self.race_starts_at = now + datetime.timedelta(0, secs_to_start)
-                self.timer_talker.update_timer(secs_to_start)
+                return self.timer_talker.update_timer(secs_to_start)
+        return False
 
     def read_phrf_table(self, file_name):
         return self.phrf_table.read_file(file_name)
