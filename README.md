@@ -112,22 +112,3 @@ Here is the high level functionality
   * https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README
 
 
-# B&G ACP wiring
-https://www.cruisersforum.com/forums/f116/b-and-g-h1000-pilot-handheld-wires-meaning-78713.html
-  On the ACP the connenctions are color coded, if you have the proper B&G cable, the wire color are the same.
-  
-  The following color combinations are the ones connected when a (momentary) switch is pressed.
-  
-  AP ON: black-white
-  AP OFF: black-brown
-  
-  +10: black-yellow
-  -10: black-blue
-  
-  +1: black-violet
-  -1: black-green
-  
-  that leaves a red wire unused, most likely for the LED, which I didn't bother to hook up.
-  
-  Dirk
-  LeaseOnLife is online now  	
