@@ -32,7 +32,7 @@ To act as a B&G remote controller we close these contacts for few hundreds of mi
 - 7 - brown  - N.O. SW7 - D6  - RPI GPIOx
 - 8 - Black (common) 
 
-# B&G ACP wiring
+### B&G ACP wiring
 
 Here is the [post found on the internet](https://www.cruisersforum.com/forums/f116/b-and-g-h1000-pilot-handheld-wires-meaning-78713.html)
 describing wiring of the ACP remote controller    
