@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import DestInfoView from "../views/DestInfoView";
 import AutopilotView from "../views/AutopilotView";
 
 class Autopilot extends Component {

@@ -7,7 +7,7 @@ with the OttoPi box
 
 The code is split into [controllers](src/controllers) code that communicates with the server and [views](src/views) code responsible to render various screens.
 
-The views are built using (Material-UI)[https://material-ui.com/] components 
+The views are built using [Material-UI](https://material-ui.com) components 
 
 The controllers use the [SwaggerClient](https://www.npmjs.com/package/swagger-client) to invoke REST APIs  
 

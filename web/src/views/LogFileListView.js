@@ -5,7 +5,7 @@ function LogFileListView() {
         return (
             <Paper>
                 <Button variant="contained" color="primary" href="all_logs.zip">
-                    Download log files in one ZIP
+                    Download log files
                 </Button>
             </Paper>
         )

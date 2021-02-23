@@ -3,4 +3,4 @@
 /mobix-web-template/
 /web/.idea/inspectionProfiles/Project_Default.xml
 navcomputer/__pycache__/
-/update/otto-pi-update.tgz
+/update/*.tgz
