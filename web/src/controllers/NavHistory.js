@@ -5,13 +5,12 @@ class NavHistory extends Component {
     // State of this component
     state = {
         loading: true, // will be true when ajax request is running
+        timer: null,
     };
 
     requestHistoryItems = () => {
-        console.log('Fetching history items ');
         this.props.swaggerClient
             .then( client => {client.apis.nav.rest_api_get_history().then(response => {
-                console.log(response)
                 this.setState( {loading:false, ok: true, items: response.body} )
             }).catch( error => {
                 console.log("API error" + error);
@@ -25,6 +24,15 @@ class NavHistory extends Component {
 
     componentDidMount() {
         this.requestHistoryItems();
+        let timer = setInterval(this.requestHistoryItems, 30000);
+        this.setState({
+            timer: timer,
+        });
+    }
+
+    componentWillUnmount() {
+        if( this.clearInterval )  // Prevent crash on sign out
+            this.clearInterval(this.state.timer);
     }
 
     render() {

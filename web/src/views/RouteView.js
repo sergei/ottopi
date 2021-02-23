@@ -14,7 +14,8 @@ function RouteView(props) {
     console.log("RouteView");
 
     const wpts = props.wpts.map( (wpt, i) => (
-            <RoutePointView {...wpt} routeIdx={props.routeIdx} wptIdx={i} selectRoute={props.selectRoute}/>
+            <RoutePointView {...wpt} routeIdx={props.routeIdx} wptIdx={i} key={i}
+                            selectRoute={props.selectRoute}/>
         )
     );
 

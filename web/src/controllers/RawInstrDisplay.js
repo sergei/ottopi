@@ -14,7 +14,7 @@ class RawInstrDisplay extends React.Component {
 
     componentDidMount() {
         this.updateInstrumentsStatus();
-        let timer = setInterval(this.updateInstrumentsStatus, 5000);
+        let timer = setInterval(this.updateInstrumentsStatus, 1000);
         this.setState({
             timer: timer,
         });
@@ -26,10 +26,8 @@ class RawInstrDisplay extends React.Component {
     }
 
     updateInstrumentsStatus = () => {
-        console.log('Fetching raw instruments');
         this.props.swaggerClient
             .then( client => {client.apis.nav.rest_api_get_raw_instr().then(response => {
-                console.log(response)
                 this.setState( {loading:false, ok: true, instr: response.body} )
             }).catch( error => {
                 console.log("API error" + error);

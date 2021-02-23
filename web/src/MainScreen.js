@@ -10,7 +10,7 @@ import NavHistory from "./controllers/NavHistory";
 import {Component} from "react";
 import MenuButtonsView from "./views/MenuButtonsView";
 import LogFileListView from "./views/LogFileListView";
-import GithubReleasesView from "./views/GithubReleasesView";
+import About from "./controllers/About";
 
 export const screens = {
     NAVIGATION: "navigation",
@@ -32,10 +32,6 @@ class MainScreen extends Component {
             specUrl =  "openapi.json";
         }
         const swaggerClient = new SwaggerClient(specUrl);
-        swaggerClient.then(client => {
-            console.log("OpenAPi spec:");
-            console.log(client.apis)
-        });
 
         this.state = {
             swaggerClient: swaggerClient,
@@ -77,9 +73,9 @@ class MainScreen extends Component {
                     <div>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Select GPX file'}/>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Select Polar file'}/>
-                        <GithubReleasesView/>
                         <FileUploader swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Select SW Update package'}/>
                         <LogFileListView/>
+                        <About swaggerClient={this.state.swaggerClient}/>
                     </div>
                 break;
             default:
