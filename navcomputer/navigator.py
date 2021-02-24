@@ -241,8 +241,11 @@ class Navigator:
         return False
 
     def steer(self, degrees):
+        sign = 'plus' if degrees > 0 else 'minus'
+        phrase = 'Steering {} {} degrees'.format(sign, abs(degrees))
+
         for listener in self.listeners:
-            listener.on_speech('Tacking')
+            listener.on_speech(phrase)
 
         if self.bang_control.is_connected():
             return self.bang_control.steer(degrees)

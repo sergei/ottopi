@@ -286,3 +286,15 @@ def timer_get_data():
         }
     else:
         return {}
+
+
+def get_bt_devices():
+    pass
+
+
+def pair_bt_device(body=None):
+    pass
+
+
+def unpair_bt_device(bd_addr):
+    pass

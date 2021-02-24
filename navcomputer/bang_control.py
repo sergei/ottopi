@@ -19,11 +19,11 @@ class BangControl:
     BUTTON_PUSH_DURATION_SEC = 0.5
 
     GPIO_MAP = {
-        AP_ON: 40,
-        AP_OFF: 38,
-        PLUS_TEN: 36,
-        MINUS_TEN: 37,
-        PLUS_ONE: 35,
+        AP_ON: 35,
+        AP_OFF: 33,
+        PLUS_TEN: 40,
+        MINUS_TEN: 36,
+        PLUS_ONE: 37,
         MINUS_ONE: 32,
     }
 

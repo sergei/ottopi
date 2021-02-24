@@ -6,7 +6,7 @@ servers:
 
 info:
   description: APIs to interact with Otto Pi
-  version: "1.0.0"
+  version: "1.0.1"
   title: Otto Pi API
   contact:
     email: spodshivalov@gmail.com
@@ -23,6 +23,8 @@ tags:
     description: Autopilot control REST APIs
   - name: timer
     description: Start timer REST APIs
+  - name: bluetooth
+    description: APIs to manage bluetooth devices
 
 paths:
 ########################################################################################################################
@@ -483,6 +485,72 @@ paths:
 
 
 ########################################################################################################################
+#  /bluetooth
+########################################################################################################################
+  /bluetooth/devices:
+    get:
+      operationId: rest_api.get_bt_devices
+      tags:
+        - bluetooth
+      summary: List bluetooth devices
+      description: List bluetooth devices
+      responses:
+        '200':
+          description: Bluetooth devices
+          content:
+            application/json:
+              schema:
+                description: List of bluetooth devices
+                type: array
+                items:
+                  $ref: '#/components/schemas/BluetoothDevice'
+
+
+  /bluetooth/pair:
+    post:
+      operationId: rest_api.pair_bt_device
+      tags:
+        - bluetooth
+      summary: Pair with BT device
+      description: Pair with BT device
+      requestBody:
+        description: Pair with BT device
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BtPairingInfo'
+      responses:
+        '200':
+          description: Successfully selected
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /bluetooth/unpair/{bd_addr}:
+    delete:
+      operationId: rest_api.unpair_bt_device
+      tags:
+        - bluetooth
+      summary: Unpair bluetooth device
+      description: Unpair bluetooth device
+      parameters:
+        - in: path
+          name: bd_addr
+          schema:
+            type: string
+          required: true
+          description: BD address
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+
+########################################################################################################################
 # Components
 ########################################################################################################################
 components:
@@ -683,3 +751,40 @@ components:
               corrected_time:
                 description: Corrected time in seconds
                 type: integer
+
+    BluetoothDevice:
+      description: Bluetooth Device
+      type: object
+      required:
+        - bd_addr
+      properties:
+        bd_addr:
+          description: Address
+          type: string
+        name:
+          description: Manufacturer assigned name
+          type: string
+        is_paired:
+          description: If device is paired
+          type: boolean
+        is_connected:
+          description: If device is paired
+          type: boolean
+        function:
+          description: Device function
+          type: string
+          enum: [route, timer, autopilot]
+
+    BtPairingInfo:
+      description: Pairing information for Bluetooth Device
+      type: object
+      required:
+        - bd_addr
+      properties:
+        bd_addr:
+          description: Address
+          type: string
+        function:
+          description: Device function
+          type: string
+          enum: [route, timer, autopilot]

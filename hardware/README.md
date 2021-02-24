@@ -23,13 +23,13 @@ To act as a B&G remote controller we close these contacts for few hundreds of mi
 
 ### B&G ACP connections
 
-- 1 - green - N.O. SW1  - D0 - RPI GPIOx
-- 2 - blue  - N.O. SW2  - D1  - RPI GPIOx
-- 3 - red  - N.O. SW3  - D2  - RPI GPIOx
-- 4 - yellow  - N.O. SW4 - D3  - RPI GPIOx
-- 5 - white  - N.O. SW5 - D4  - RPI GPIOx
-- 6 - orange  - N.O. SW6 - D5  - RPI GPIOx
-- 7 - brown  - N.O. SW7 - D6  - RPI GPIOx
+- 1 - green - N.O. SW1  - D0 - RPI PIN 32
+- 2 - blue  - N.O. SW2  - D1  - RPI PIN 36
+- 3 - red  - N.O. SW3  - D2  - RPI PIN 38
+- 4 - yellow  - N.O. SW4 - D3  - RPI PIN 40
+- 5 - white  - N.O. SW5 - D4  - RPI PIN 35  
+- 6 - orange  - N.O. SW6 - D5  - RPI PIN 37 - color substitute for violet
+- 7 - brown  - N.O. SW7 - D6  - RPI PIN 33
 - 8 - Black (common) 
 
 ### B&G ACP wiring
@@ -47,7 +47,7 @@ describing wiring of the ACP remote controller
   +10: black-yellow
   -10: black-blue
   
-  +1: black-violet
+  +1: black-violet  (orange in Javelin cable)
   -1: black-green
   
   that leaves a red wire unused, most likely for the LED, which I didn't bother to hook up.
