@@ -7,11 +7,12 @@ Sailor can communicate with OttoPi by the following means:
 * Bluetooth remote control
 * Using third party app like [OpenCPN](https://opencpn.org/) when connected to OttoPi over Wi-Fi
 * Web browser by opening http://otto.pi/ottopi URL when connected to OttoPi over Wi-Fi
+* Custom application controlling OttoPI using Rest APIs
 
-OttoPi connected to the following boat electronic interfaces 
-* NMEA 0183 input 
-* NMEA 0183 output
-* B&G autopilot controller ACP NET
+OttoPi is connected to the following boat electronic interfaces 
+* NMEA 0183 input (wind data from B&G Instruments)
+* NMEA 0183 output (to VHF GPS input, B&G autopilot NMEA input)
+* B&G autopilot controller (via remote control interface)
 
 # User facing features
 

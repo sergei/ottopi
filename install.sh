@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Host name or IP of RPI to the host
-PI=rpi
+PI=wrpi
 
 # Stop existing service
 

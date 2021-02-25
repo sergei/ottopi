@@ -35,12 +35,12 @@ function FileUploaderView(props){
                     <input
                         className={classes.input}
                         style={{ display: 'none' }}
-                        id="raised-button-file"
+                        id={props.uploadPath}
                         type="file"
                         onChange={props.onFileChange}
                     />
 
-                    <label htmlFor="raised-button-file">
+                    <label htmlFor={props.uploadPath}>
                         <Button variant="contained" color="secondary"  component="span" className={classes.button}>
                             {props.label}
                         </Button>

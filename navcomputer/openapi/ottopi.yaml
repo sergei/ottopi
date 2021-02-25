@@ -6,7 +6,7 @@ servers:
 
 info:
   description: APIs to interact with Otto Pi
-  version: "1.0.1"
+  version: "1.0.2"
   title: Otto Pi API
   contact:
     email: spodshivalov@gmail.com

@@ -51,8 +51,8 @@ class FileUploader extends Component {
     };
 
     render() {
-        return ( <FileUploaderView label={this.props.label} finished={this.state.finished}
-                                   selectedFileName={this.state.selectedFileName}
+        return ( <FileUploaderView uploadPath={this.props.uploadPath} label={this.props.label}
+                                   finished={this.state.finished} selectedFileName={this.state.selectedFileName}
                                    success={this.state.success} uploading={this.state.uploading}
                                    onFileChange={this.onFileChange} onFileUpload={this.onFileUpload}
         />);
