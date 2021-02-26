@@ -44,7 +44,7 @@ class Routes extends Component {
     };
 
     stopNavigation = () => {
-        console.log('Clear detination');
+        console.log('Clear destination');
         this.props.swaggerClient
             .then( client => {
                 client.apis.nav.rest_api_clear_dest({},{})

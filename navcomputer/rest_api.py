@@ -281,6 +281,7 @@ def timer_get_data():
     navigator = Navigator.get_instance()
     if navigator.is_timer_active():
         return {
+            'is_running':  navigator.is_timer_active(),
             'elapsed_time': navigator.get_elapsed_time(),
             'phrf_timers': navigator.get_phrf_timers()
         }

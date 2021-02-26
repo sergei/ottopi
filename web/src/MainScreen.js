@@ -11,12 +11,14 @@ import {Component} from "react";
 import MenuButtonsView from "./views/MenuButtonsView";
 import LogFileListView from "./views/LogFileListView";
 import About from "./controllers/About";
+import RaceTimer from "./controllers/RaceTimer";
 
 export const screens = {
     NAVIGATION: "navigation",
     AUTOPILOT: "autopilot",
     ROUTES: "routes",
     FILE_MANAGER: "file_manager",
+    RACE_TIMER: "race_timer",
 }
 
 class MainScreen extends Component {
@@ -77,6 +79,10 @@ class MainScreen extends Component {
                         <LogFileListView/>
                         <About swaggerClient={this.state.swaggerClient}/>
                     </div>
+                break;
+            case screens.RACE_TIMER:
+                screen_jsx =
+                    <RaceTimer swaggerClient={this.state.swaggerClient} />
                 break;
             default:
                 screen_jsx = 'Ooops';

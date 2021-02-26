@@ -730,6 +730,9 @@ components:
     TimerData:
       type: object
       properties:
+        is_running:
+          description: If timer is running
+          type: boolean
         elapsed_time:
           description: Elapsed time in seconds ( if it's a time to start)
           type: integer
