@@ -6,6 +6,7 @@ from gpxpy.gpx import GPXRoutePoint
 
 from dest_info import DestInfo
 import nmea_encoder
+from nmeaparser import NmeaParser
 from polars import Polars
 from navigator_listener import NavigationListener
 from raw_instr_data import RawInstrData
@@ -160,6 +161,22 @@ class TestStringMethods(unittest.TestCase):
             say_now, time_left = time_talker.check_time_left(time_left_sec)
             if say_now:
                 self.assertAlmostEqual(time_left_msec/10, time_left, delta=0.2)
+
+    def test_parse_vwr(self):
+        nmea = '$IIVWR,039,R,11.2,N,05.7,M,020.8,K'
+        nmea_parser = NmeaParser(None)
+        nmea_parser.set_nmea_sentence(nmea)
+        self.assertAlmostEqual(nmea_parser.awa, 39, delta=0.1)
+        self.assertAlmostEqual(nmea_parser.aws, 11.2, delta=0.1)
+
+    def test_tws_twa(self):
+        tws, twa = Navigator.compute_tws_twa(aws=10, awa=60, bs=5)
+        self.assertAlmostEqual(tws, 8.7, delta=0.1)
+        self.assertAlmostEqual(twa, 90, delta=0.5)
+
+        tws, twa = Navigator.compute_tws_twa(aws=10, awa=-20, bs=5)
+        self.assertAlmostEqual(tws, 5.6, delta=0.1)
+        self.assertAlmostEqual(twa, -38, delta=0.5)
 
 
 if __name__ == '__main__':

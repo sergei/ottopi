@@ -36,18 +36,23 @@ class Replay(NavigationListener):
         self.speech_style = simplekml.Style()
         self.speech_style.labelstyle.color = simplekml.Color.yellow  # Make the text red
         self.speech_style.labelstyle.scale = 2
-        self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/arts.png'
+        self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/electronics.png'
 
         self.last_coords = None
 
-    def run(self):
+    def run(self, with_prefix):
         log_list = sorted(glob.glob(self.replay_dir + os.sep + 'log-*.nmea'))
         log_list += sorted(glob.glob(self.replay_dir + os.sep + '*.log'))
 
         for log in log_list:
             with open(log, 'r') as f:
+                print('Replaying {}'.format(log))
                 for nmea in f:
-                    self.nmea_parser.set_nmea_sentence(nmea)
+                    if with_prefix:
+                        if nmea.startswith('>'):
+                            self.nmea_parser.set_nmea_sentence(nmea[2:])
+                    else:
+                        self.nmea_parser.set_nmea_sentence(nmea)
         kml_file = self.log_dir + os.sep + "replay.kml"
         print('Saving {}'.format(kml_file))
         self.kml.save(kml_file)

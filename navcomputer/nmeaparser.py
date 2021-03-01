@@ -71,6 +71,8 @@ class NmeaParser:
             self.parse_rmb(t)
         elif t[0].endswith('RMC'):
             self.parse_rmc(t)
+        elif t[0].endswith('VWR'):
+            self.parse_vwr(t)
 
     def parse_mwv(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle """
@@ -98,6 +100,13 @@ class NmeaParser:
                 self.twa_t = time.time()
                 self.tws = None
                 self.tws_t = time.time()
+
+    def parse_vwr(self, t):
+        awa = float(t[1])
+        self.awa = awa if t[2] == 'R' else -awa
+        self.awa_t = time.time()
+        self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
+        self.aws_t = time.time()
 
     def parse_vhw(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_vhw_water_speed_and_heading """

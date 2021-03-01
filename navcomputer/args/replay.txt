@@ -1,3 +1,4 @@
---replay-dir=~/ttt/playback/2011-12-10-BYC-Midwinters
+--replay-dir=~/debuglog/ottopi/data/logs
 --log-dir=~/tmp/ottopi/replays
 --data-dir=~/tmp/ottopi/gpx
+--with-prefix

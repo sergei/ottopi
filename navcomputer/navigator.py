@@ -17,28 +17,12 @@ from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 from timer_talker import TimerTalker
 
-ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
-
 METERS_IN_NM = 1852.
 
+BROKEN_SOW_SPD_THR = 4  # SOG must be greater than that while SOW is zero for SOW to be invalidated
+BROKEN_SOW_CNT_THR = 60  # The test above must pass that many times for SOW to be invalidated
 
-class Targets:
-    def __init__(self, polars, tws, twa, sow):
-        if sow is None or twa is None:
-            self.boat_vmg = None
-        else:
-            self.boat_vmg = sow * math.cos(math.radians(twa))
-
-        if tws is None or twa is None:
-            self.target_sow = None
-            self.target_vmg = None
-            self.target_twa = None
-        else:
-            self.target_sow, self.target_twa = polars.get_targets(tws, twa)
-            if self.target_sow is not None and self.target_twa is not None:
-                self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
-            else:
-                self.target_vmg = None
+ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
 
 class Navigator:
@@ -60,7 +44,7 @@ class Navigator:
             self.data_registry = DataRegistry()
             self.bang_control = BangControl()
             self.polars = Polars()
-            self.leg_analyzer = LegAnalyzer()
+            self.leg_analyzer = LegAnalyzer(self.polars)
             self.mag_decl = None
             self.listeners = []
             self.active_route = None
@@ -69,6 +53,8 @@ class Navigator:
             self.race_starts_at = None
             self.phrf_table = PhrfTable()
             self.timer_talker = TimerTalker()
+            self.sow_is_broken = False
+            self.sow_broken_cnt = 0
 
     def get_data_dir(self):
         return self.data_registry.data_dir
@@ -113,10 +99,24 @@ class Navigator:
 
     def set_raw_instr_data(self, raw_instr_data):
         Logger.set_utc(raw_instr_data.utc)
+
+        # Validate input data
+        self.validate_data(raw_instr_data)
+
+        # We might need to compute true wind angle, since some instruments don't have it in NMEA stream
+        if raw_instr_data.twa is None and raw_instr_data.tws is None:
+            if raw_instr_data.awa is not None and raw_instr_data.aws is not None:
+                bs = raw_instr_data.sow if raw_instr_data.sow is not None else raw_instr_data.sog
+                if bs is not None:
+                    raw_instr_data.tws, raw_instr_data.twa = Navigator.compute_tws_twa(aws=raw_instr_data.aws,
+                                                                                       awa=raw_instr_data.awa, bs=bs)
+
+        # Store validated instruments data
         self.data_registry.set_raw_instr_data(raw_instr_data)
 
-        targets = Targets(self.polars, raw_instr_data.tws, raw_instr_data.twa, raw_instr_data.sow)
-        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data, targets)
+        # Update the leg stats
+        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data)
+
         if leg_summary is not None:
             for listener in self.listeners:
                 listener.on_leg_summary(leg_summary)
@@ -154,7 +154,7 @@ class Navigator:
                     dest_info.stw = raw_instr_data.sog * math.cos(math.radians(dest_info.atw))
 
                 # Get angle to waypoint (up or down relative to the wind)
-                if raw_instr_data.awa is not None:
+                if raw_instr_data.awa is not None and dest_info.atw is not None:
                     # If wind angle and angle to waypoint have the same sign, then waypoint is upwind
                     dest_info.atw_up = dest_info.atw * raw_instr_data.awa > 0
 
@@ -369,3 +369,48 @@ class Navigator:
             })
 
         return phrf_timers
+
+    @staticmethod
+    def compute_tws_twa(aws, awa, bs):
+        """ Compute True wind angle and direction
+        """
+        # Compute true wind speed
+        cos_awa = math.cos(math.radians(awa))
+        tws = aws * aws + bs * bs - 2 * aws * bs * cos_awa
+
+        # Do sanity test, if TWS is too small assume it's the same as apparent wind
+        if tws < 1:
+            return aws, awa
+
+        tws = math.sqrt(tws)
+        r = (aws * cos_awa - bs) / tws
+
+        # Just a sanity test before doing cosine
+        if r > 1:
+            r = 1
+        elif r < -1:
+            r = -1
+
+        twa_rad = math.acos(r)
+        # Assign the same sign as awa
+        if awa < 0:
+            twa_rad = - twa_rad
+
+        return tws, math.degrees(twa_rad)
+
+    def validate_data(self, raw_instr_data):
+        # Javelin has the water speed sensor that always reads zero. Invalidate it if see the discrepancy with GPS SOG
+        if raw_instr_data.sow is not None:
+            if raw_instr_data.sow == 0 and raw_instr_data.sog > BROKEN_SOW_SPD_THR:
+                self.sow_broken_cnt += 1
+
+            if raw_instr_data.sow > 0:
+                self.sow_broken_cnt = 0
+
+            if self.sow_broken_cnt > BROKEN_SOW_CNT_THR:
+                self.sow_is_broken = True
+            else:
+                self.sow_is_broken = False
+
+        if self.sow_is_broken:
+            raw_instr_data.sow = None
