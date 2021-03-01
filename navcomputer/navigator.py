@@ -147,10 +147,11 @@ class Navigator:
                 # Get angle to waypoint (left or right)
                 if raw_instr_data.hdg is not None:
                     dest_info.atw = dest_info.btw - raw_instr_data.hdg  # Both angles are magnetic
-                else:
+                elif raw_instr_data.cog is not None:
                     dest_info.atw = course_true - raw_instr_data.cog  # Both angles are true
 
-                dest_info.stw = raw_instr_data.sog * math.cos(math.radians(dest_info.atw))
+                if dest_info.atw is not None:
+                    dest_info.stw = raw_instr_data.sog * math.cos(math.radians(dest_info.atw))
 
                 # Get angle to waypoint (up or down relative to the wind)
                 if raw_instr_data.awa is not None:
@@ -263,12 +264,16 @@ class Navigator:
                 s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
                                                           abs(dest_info.atw),
                                                           'up' if dest_info.atw_up else 'down')
-            else:
+            elif dest_info.atw is not None:
                 s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
                                                                  abs(dest_info.atw),
                                                                  'right' if dest_info.atw > 0 else 'left')
-            for listener in self.listeners:
-                listener.on_speech(s)
+            else:
+                s = None
+
+            if s is not None:
+                for listener in self.listeners:
+                    listener.on_speech(s)
 
     def say_leg_summary(self, leg_summary):
         phrase = ''
