@@ -21,7 +21,8 @@ class LegSummary:
 
 
 class WindShift:
-    def __init__(self, detected, shift_deg, is_lift):
+    def __init__(self, utc, detected, shift_deg, is_lift):
+        self.utc = utc
         self.detected = detected
         self.shift_deg = shift_deg
         self.is_lift = is_lift
@@ -203,7 +204,7 @@ class LegAnalyzer:
                     # Veer on a starboard tack is a lift
                     # Backing on a port tack is a lift as well
                     is_lift = shift_deg * instr_data.twa > 0
-                    wind_shift = WindShift(wind_shift_detected, shift_deg, is_lift)
+                    wind_shift = WindShift(instr_data.utc, wind_shift_detected, shift_deg, is_lift)
                     self.twds.clear()
                     # print(wind_shift.__dict__, instr_data.twa)
                     return wind_shift

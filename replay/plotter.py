@@ -22,6 +22,8 @@ class Plotter:
         self.target_sow = []
         self.bs = []
         self.target_twa = []
+        self.wind_shift_utc = []
+        self.wind_shift_text = []
 
     def show(self):
         print('Preparing the plots')
@@ -42,6 +44,9 @@ class Plotter:
         twd = self.unwrap_deg(hdg + twa)
         ax2.plot(self.utc, hdg, '.')
         ax2.plot(self.utc, twd, '.')
+        for i in range(len(self.wind_shift_utc)):
+            ax2.text(self.wind_shift_utc[i], -50, self.wind_shift_text[i], rotation=45)
+
         ax2.xaxis.set_major_formatter(fmt)
         ax2.legend(['HDG', 'TWD'])
         plt.ylabel('Degrees')
@@ -89,3 +94,10 @@ class Plotter:
         self.target_sow.append(targets.target_sow)
         self.bs.append(targets.bs)
         self.target_twa.append(targets.target_twa)
+
+    def on_wind_shift(self, wind_shift):
+        self.wind_shift_utc.append(wind_shift.utc)
+        # angle_direction = 'Lift' if wind_shift.is_lift else 'Header'
+        wind_direction = 'Veer' if wind_shift.shift_deg > 0 else 'Back'
+        phrase = '{} {:.0f}'.format(wind_direction, abs(wind_shift.shift_deg))
+        self.wind_shift_text.append(phrase)

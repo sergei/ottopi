@@ -46,6 +46,9 @@ class Replay(NavigationListener):
     def on_leg_summary(self, leg_summary):
         self.kml_writer.add_leg_summary(leg_summary)
 
+    def on_wind_shift(self, leg_summary):
+        self.plotter.on_wind_shift(leg_summary)
+
     def on_speech(self, s):
         print(s)
         self.kml_writer.add_speech(s)

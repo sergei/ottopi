@@ -19,3 +19,6 @@ class NavigationListener:
 
     def on_leg_summary(self, leg_summary):
         pass
+
+    def on_wind_shift(self, wind_shift):
+        pass
