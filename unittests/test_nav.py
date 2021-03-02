@@ -14,7 +14,7 @@ from navigator import Navigator
 from timer_talker import TimerTalker
 
 
-class TestStringMethods(unittest.TestCase):
+class TestNav(unittest.TestCase):
 
     def test_dest_info(self):
         test_class = self

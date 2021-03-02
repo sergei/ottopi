@@ -5,6 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/bt_remote" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/navcomputer" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/replay" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/unittests" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/navcomputer/data" />
+      <excludeFolder url="file://$MODULE_DIR$/unittests/data" />
+      <excludeFolder url="file://$MODULE_DIR$/web/.idea/inspectionProfiles" />
+      <excludeFolder url="file://$MODULE_DIR$/web/build" />
+      <excludeFolder url="file://$MODULE_DIR$/web/node_modules" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
