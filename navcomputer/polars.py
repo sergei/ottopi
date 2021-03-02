@@ -9,25 +9,34 @@ class Polars:
     def is_valid(self):
         return self.valid
 
-    def read_table(self, file_name):
-        file_name = os.path.expanduser(file_name)
-        if os.path.isfile(file_name):
+    def read_table(self, file):
+        if isinstance(file, str):
+            file = os.path.expanduser(file)
+            if os.path.isfile(file):
+                try:
+                    with open(file, 'r') as f:
+                        self.parse_file(f)
+                except Exception as e:
+                    print(e)
+        else:
             try:
-                with open(file_name, 'r') as f:
-                    polars = {}
-                    for line in f:
-                        t = line.split()
-                        tws = int(t[0])
-                        wind_amp = dict()
-                        polars[tws] = wind_amp
-                        for i in range(1, len(t), 2):
-                            twa = float(t[i])
-                            bs = float(t[i+1])
-                            wind_amp[twa] = bs
-                    self.polars = polars
-                    self.valid = True
+                self.parse_file(file)
             except Exception as e:
                 print(e)
+
+    def parse_file(self, f):
+        polars = {}
+        for line in f:
+            t = line.split()
+            tws = int(t[0])
+            wind_amp = dict()
+            polars[tws] = wind_amp
+            for i in range(1, len(t), 2):
+                twa = float(t[i])
+                bs = float(t[i + 1])
+                wind_amp[twa] = bs
+        self.polars = polars
+        self.valid = True
 
     def get_targets(self, tws, twa):
         """

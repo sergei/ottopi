@@ -1,3 +1,4 @@
+import io
 import os
 import unittest
 import datetime
@@ -8,6 +9,7 @@ from gpxpy.gpx import GPXRoutePoint
 from dest_info import DestInfo
 import nmea_encoder
 from nmeaparser import NmeaParser
+from polar_table import POLARS
 from polars import Polars
 from navigator_listener import NavigationListener
 from raw_instr_data import RawInstrData
@@ -95,7 +97,8 @@ class TestNav(unittest.TestCase):
 
         self.assertFalse(polars.is_valid())
 
-        polars.read_table(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'data/J105.txt')
+        polar_file = io.StringIO(POLARS)
+        polars.read_table(polar_file)
 
         # Upwind
         # Lowest wind in the table
