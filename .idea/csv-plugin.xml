@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/navcomputer/polars.py">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/navcomputer/test.py">
           <value>
             <Attribute>

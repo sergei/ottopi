@@ -5,3 +5,4 @@
 navcomputer/__pycache__/
 /update/*.tgz
 /unittests/data/
+/.coverage
