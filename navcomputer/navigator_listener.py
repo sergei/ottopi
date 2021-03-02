@@ -8,7 +8,13 @@ class NavigationListener:
     def on_speech(self, speech):
         pass
 
-    def on_dest_info(self, raw_instr_data, dest_info):
+    def on_instr_data(self, instr_data):
+        pass
+
+    def on_targets(self, targets):
+        pass
+
+    def on_dest_info(self, instr_data, dest_info):
         pass
 
     def on_leg_summary(self, leg_summary):

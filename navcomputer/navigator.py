@@ -25,6 +25,30 @@ BROKEN_SOW_CNT_THR = 60  # The test above must pass that many times for SOW to b
 ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
 
+class Targets:
+    def __init__(self, polars, tws, twa, sow, sog):
+        self.bs = sow if sow is not None else sog
+
+        if self.bs is None or twa is None:
+            self.boat_vmg = None
+        else:
+            # Compute VMG
+            self.boat_vmg = self.bs * math.cos(math.radians(twa))
+
+        if self.bs is None or twa is None:
+            self.target_sow = None
+            self.target_vmg = None
+            self.target_twa = None
+        else:
+            # Compute target speed and angle
+            self.target_sow, self.target_twa = polars.get_targets(tws, twa)
+            if self.target_sow is not None and self.target_twa is not None:
+                # Compute target vmg
+                self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
+            else:
+                self.target_vmg = None
+
+
 class Navigator:
     __instance = None
 
@@ -44,7 +68,7 @@ class Navigator:
             self.data_registry = DataRegistry()
             self.bang_control = BangControl()
             self.polars = Polars()
-            self.leg_analyzer = LegAnalyzer(self.polars)
+            self.leg_analyzer = LegAnalyzer()
             self.mag_decl = None
             self.listeners = []
             self.active_route = None
@@ -114,8 +138,17 @@ class Navigator:
         # Store validated instruments data
         self.data_registry.set_raw_instr_data(raw_instr_data)
 
+        for listener in self.listeners:
+            listener.on_instr_data(raw_instr_data)
+
+        # Compute target values
+        targets = Targets(self.polars, raw_instr_data.tws, raw_instr_data.twa, raw_instr_data.sow, raw_instr_data.sog)
+
+        for listener in self.listeners:
+            listener.on_targets(targets)
+
         # Update the leg stats
-        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data)
+        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data, targets)
 
         if leg_summary is not None:
             for listener in self.listeners:

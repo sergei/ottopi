@@ -7,30 +7,6 @@ METERS_IN_NM = 1852.
 TURN_DURATION = 20  # Analyze that many points for the turn duration
 
 
-class Targets:
-    def __init__(self, polars, tws, twa, sow, sog):
-        bs = sow if sow is not None else sog
-
-        if bs is None or twa is None:
-            self.boat_vmg = None
-        else:
-            # Compute VMG
-            self.boat_vmg = bs * math.cos(math.radians(twa))
-
-        if bs is None or twa is None:
-            self.target_sow = None
-            self.target_vmg = None
-            self.target_twa = None
-        else:
-            # Compute target speed and angle
-            self.target_sow, self.target_twa = polars.get_targets(tws, twa)
-            if self.target_sow is not None and self.target_twa is not None:
-                # Compute target vmg
-                self.target_vmg = self.target_sow * math.cos(math.radians(self.target_twa))
-            else:
-                self.target_vmg = None
-
-
 class LegSummary:
     def __init__(self, utc=None, orig=None, dest=None, avg_boat_twa=None, avg_hdg=None, delta_dist_wind_m=None,
                  avg_delta_twa=None, delta_boat_speed_perc=None):
@@ -58,17 +34,12 @@ class LegAnalyzer:
     TWDS_LEN = 40  # Length of running window to analyze for shifts
     SHIFT_THR_DEG = 10  # Detect shifts greater than that
 
-    def __init__(self, polars):
-        self.polars = polars
+    def __init__(self):
         self.hist = []
         self.summaries = []
         self.twds = deque()
 
-    def update(self, instr_data):
-
-        # Compute target values
-        targets = Targets(self.polars, instr_data.tws, instr_data.twa, instr_data.sow, instr_data.sog)
-
+    def update(self, instr_data, targets):
         summary = None
 
         # See if any maneuver was done
