@@ -3,7 +3,7 @@ import threading
 
 try:
     import RPi.GPIO as GPIO
-except ModuleNotFoundError:
+except (ModuleNotFoundError, RuntimeError):
     print("B&G autopilot is not attached")
 
 
@@ -36,7 +36,7 @@ class BangControl:
             GPIO.output(list(BangControl.GPIO_MAP.values()), GPIO.LOW)
             self.bang_connected = True
             self.bang_thread = None
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, RuntimeError):
             self.bang_connected = False
             print("B&G autopilot is not attached")
 
