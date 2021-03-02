@@ -1,0 +1,15 @@
+language: python
+python:
+  - 3.8
+before_install:
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest
+  - pip install codecov
+install:
+  - pip install -r navcomputer/requirements.txt
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)/navcomputer/
+script: pytest unittests/ # run tests
+after_success:
+  - codecov # submit coverage

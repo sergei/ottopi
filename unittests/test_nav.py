@@ -1,3 +1,4 @@
+import os
 import unittest
 import datetime
 
@@ -94,7 +95,7 @@ class TestNav(unittest.TestCase):
 
         self.assertFalse(polars.is_valid())
 
-        polars.read_table('data/J105.txt')
+        polars.read_table(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'data/J105.txt')
 
         # Upwind
         # Lowest wind in the table
