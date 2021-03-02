@@ -11,5 +11,6 @@ install:
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)/navcomputer/
 script: pytest unittests/ # run tests
+
 after_success:
   - codecov # submit coverage
