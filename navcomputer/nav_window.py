@@ -1,6 +1,42 @@
 from collections import deque
 
 
+class SlidingWindow:
+    def __init__(self, maxlen):
+        self.max_len = maxlen
+        self.q = deque(maxlen=maxlen)
+        self.sum = 0.
+
+    def clear(self):
+        self.q.clear()
+        self.sum = 0.
+
+    def append(self, v):
+        if len(self.q) < self.max_len:
+            old_v = 0
+        else:
+            old_v = self.q.popleft()
+
+        self.sum -= old_v
+        self.q.append(v)
+        self.sum += v
+
+    def len(self):
+        return len(self.q)
+
+    def get_avg(self):
+        return self.sum / len(self.q)
+
+    def get_sum(self):
+        return self.sum
+
+    def sum_halves(self):
+        half_win = int(self.max_len / 2)
+        sum_before = sum(list(self.q)[:half_win])
+        sum_after = sum(list(self.q)[half_win:])
+        return sum_before, sum_after
+
+
 class NavWindow:
     STATE_UNKNOWN = 0
     STATE_STRAIGHT = 1  # Sailing on the same point of sail
@@ -16,47 +52,34 @@ class NavWindow:
 
     """ This class implements the sliding window of nav data to perform averaging opeartions"""
     def __init__(self):
-        self.sog = deque(maxlen=self.WIN_LEN)
-        self.sog_sum = 0.
-        self.up_down = deque(maxlen=self.WIN_LEN)  # 1 - upwind, -1 - downwind, 0 - reach
-        self.up_down_sum = 0
+        self.sog = SlidingWindow(maxlen=self.WIN_LEN)
+        self.up_down = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - upwind, -1 - downwind, 0 - reach
+        self.sb_pr = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - starboard, -1 - port, 0 - head to wind or ddw
 
     def reset(self):
         self.sog.clear()
-        self.sog_sum = 0.
         self.up_down.clear()
-        self.up_down_sum = 0.
+        self.sb_pr.clear()
 
     def update(self, instr_data):
-        if len(self.sog) < self.WIN_LEN:
-            oldest_sog = 0
-            oldest_up_down = 0
-        else:
-            oldest_sog = self.sog.popleft()
-            oldest_up_down = self.up_down.popleft()
-
-        self.sog_sum -= oldest_sog
         self.sog.append(instr_data.sog)
-        self.sog_sum += instr_data.sog
 
         up_down = 1 if abs(instr_data.awa) < 70 else -1 if abs(instr_data.awa) > 110 else 0
-        self.up_down_sum -= oldest_up_down
         self.up_down.append(up_down)
-        self.up_down_sum += up_down
 
-        if len(self.sog) < self.WIN_LEN:
+        awa = instr_data.awa
+        sb_pr = 1 if 5 < awa < 175 else -1 if -175 < awa < -5 else 0
+        self.sb_pr.append(sb_pr)
+
+        if self.sog.len() < self.WIN_LEN:
             return self.STATE_UNKNOWN
 
-        avg_sog = self.sog_sum / self.WIN_LEN
-        if avg_sog < self.SOG_THR:
+        if self.sog.get_avg() < self.SOG_THR:
             self.reset()
             return self.STATE_UNKNOWN
 
-        if abs(self.up_down_sum) < self.TURN_THR1:  # Suspected rounding either to or bottom mark
-            half_win = int(self.WIN_LEN / 2)
-            sum_before = sum(list(self.up_down)[:half_win])
-            sum_after = sum(list(self.up_down)[half_win:])
-            # Check if went straight on both sides of the window
+        if abs(self.up_down.get_sum()) < self.TURN_THR1:  # Suspected rounding either top or bottom mark
+            sum_before, sum_after = self.up_down.sum_halves()
             if abs(sum_before) > self.TURN_THR1 and abs(sum_after) > self.TURN_THR2:
                 if sum_after > 0:
                     self.reset()
@@ -64,5 +87,11 @@ class NavWindow:
                 else:
                     self.reset()
                     return self.STATE_ROUNDED_TOP
+
+        if abs(self.sb_pr.get_sum()) < self.TURN_THR1:  # Suspected tacking or gybing
+            sum_before, sum_after = self.sb_pr.sum_halves()
+            if abs(sum_before) > self.TURN_THR1 and abs(sum_after) > self.TURN_THR2:
+                self.reset()
+                return self.STATE_TACKED
 
         return self.STATE_UNKNOWN

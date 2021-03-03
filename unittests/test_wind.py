@@ -3,7 +3,7 @@ import unittest
 
 from gpxpy.geo import Location
 
-from BoatModel import BoatModel
+from boat_model import BoatModel
 from nav_window import NavWindow
 
 
@@ -51,6 +51,23 @@ class TestWind(unittest.TestCase):
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
             state = nav_window.update(instr_data)
             if state == NavWindow.STATE_ROUNDED_BOTTOM:
+                rounding_cnt += 1
+
+        # There must be only one event of rounding top mark
+        self.assertEqual(1, rounding_cnt)
+
+        # Now do the tack
+        boat_model = BoatModel(twd=0, tws=10, cog=30, sog=5, speed_rms=0.5, angle_rms=1)
+        # After two minutes bear away rounding
+        boat_model.update(120, cog=-30)
+        nav_window = NavWindow()
+
+        # Analyze the four minutes of sailing
+        duration = 240
+        rounding_cnt = 0
+        for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
+            state = nav_window.update(instr_data)
+            if state == NavWindow.STATE_TACKED:
                 rounding_cnt += 1
 
         # There must be only one event of rounding top mark
