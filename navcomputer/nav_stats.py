@@ -59,7 +59,7 @@ class SlidingWindow:
         return len(self.q) == self.max_len
 
 
-class NavWindow:
+class NavStats:
 
     WIN_LEN = 60  # Length of the sliding window
     HALF_WIN = int(WIN_LEN / 2)

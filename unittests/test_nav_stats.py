@@ -6,13 +6,13 @@ import random
 from gpxpy.geo import Location
 
 from boat_model import BoatModel
-from nav_window import NavWindow, NavWndEventsListener
+from nav_stats import NavStats, NavWndEventsListener
 from navigator import Targets
 from polar_table import POLARS
 from polars import Polars
 
 
-class TestWind(unittest.TestCase):
+class TestNavStats(unittest.TestCase):
 
     def test_short_window(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -38,9 +38,9 @@ class TestWind(unittest.TestCase):
         events_listener = EventsListener()
 
         targets = Targets()
-        nav_window = NavWindow(events_listener)
-        for instr_data in boat_model.intsr_data(start_utc, start_loc, NavWindow.WIN_LEN-1):
-            nav_window.update(instr_data, targets)
+        nav_stats = NavStats(events_listener)
+        for instr_data in boat_model.intsr_data(start_utc, start_loc, NavStats.WIN_LEN - 1):
+            nav_stats.update(instr_data, targets)
 
     def test_windward_rounding(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -69,12 +69,12 @@ class TestWind(unittest.TestCase):
 
         events_listener = EventsListener()
         targets = Targets()
-        nav_window = NavWindow(events_listener)
+        nav_stats = NavStats(events_listener)
 
         # Analyze the four minutes of sailing
         duration = 240
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
-            nav_window.update(instr_data, targets)
+            nav_stats.update(instr_data, targets)
 
     def test_leeward_rounding(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -105,12 +105,12 @@ class TestWind(unittest.TestCase):
 
         events_listener = EventsListener()
         targets = Targets()
-        nav_window = NavWindow(events_listener)
+        nav_stats = NavStats(events_listener)
 
         # Analyze the four minutes of sailing
         duration = 240
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
-            nav_window.update(instr_data, targets)
+            nav_stats.update(instr_data, targets)
 
     def test_tack(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -140,12 +140,12 @@ class TestWind(unittest.TestCase):
 
         events_listener = EventsListener()
         targets = Targets()
-        nav_window = NavWindow(events_listener)
+        nav_stats = NavStats(events_listener)
 
         # Analyze the four minutes of sailing
         duration = 240
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
-            nav_window.update(instr_data, targets)
+            nav_stats.update(instr_data, targets)
 
     def test_gybe(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -175,12 +175,12 @@ class TestWind(unittest.TestCase):
 
         events_listener = EventsListener()
         targets = Targets()
-        nav_window = NavWindow(events_listener)
+        nav_stats = NavStats(events_listener)
 
         # Analyze the four minutes of sailing
         duration = 240
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
-            nav_window.update(instr_data, targets)
+            nav_stats.update(instr_data, targets)
 
     def test_full_course(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -263,10 +263,10 @@ class TestWind(unittest.TestCase):
         polars.read_table(polar_file)
         self.assertTrue(polars.is_valid())
 
-        nav_window = NavWindow(events_listener)
+        nav_stats = NavStats(events_listener)
         for instr_data in boat_model.intsr_data(start_utc, start_loc, t):
             targets = Targets(polars, instr_data.tws, instr_data.twa, instr_data.sow, instr_data.sog)
-            nav_window.update(instr_data, targets)
+            nav_stats.update(instr_data, targets)
 
         self.assertEqual(1, tack_cnt)
         self.assertEqual(1, gybe_cnt)
@@ -275,14 +275,14 @@ class TestWind(unittest.TestCase):
         self.assertEqual(3, wind_shift_cnt)
 
     def test_compute_avg_twd(self):
-        nav_window = NavWindow()
+        nav_stats = NavStats()
 
         # Fill with angles around the wrap point
         for i in range(1000):
             twd = random.gauss(0, 1) % 360
-            nav_window.stats_twd.append(twd)
+            nav_stats.stats_twd.append(twd)
 
-        avg_twd = nav_window.compute_avg_twd()
+        avg_twd = nav_stats.compute_avg_twd()
         if avg_twd > 180:
             self.assertAlmostEqual(360., avg_twd, delta=1)
         else:
