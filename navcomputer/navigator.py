@@ -157,7 +157,7 @@ class Navigator:
         if wind_shift is not None:
             self.say_wind_shift(wind_shift)
             for listener in self.listeners:
-                listener.on_wind_shift(wind_shift)
+                listener.event_callbacks(wind_shift)
 
         if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
             if self.mag_decl is None:
