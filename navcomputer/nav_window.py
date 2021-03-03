@@ -50,26 +50,43 @@ class NavWindow:
     TURN_THR1 = WIN_LEN / 10  # Threshold to detect roundings and tacks
     TURN_THR2 = WIN_LEN / 4   # Threshold to detect roundings and tacks
 
+    STRAIGHT_THR = WIN_LEN - TURN_THR1
+
     """ This class implements the sliding window of nav data to perform averaging opeartions"""
     def __init__(self):
         self.sog = SlidingWindow(maxlen=self.WIN_LEN)
         self.up_down = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - upwind, -1 - downwind, 0 - reach
         self.sb_pr = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - starboard, -1 - port, 0 - head to wind or ddw
+        self.twd = SlidingWindow(maxlen=self.WIN_LEN)
 
     def reset(self):
         self.sog.clear()
         self.up_down.clear()
         self.sb_pr.clear()
+        self.twd.clear()
 
     def update(self, instr_data):
-        self.sog.append(instr_data.sog)
+        twa = instr_data.twa
+        sog = instr_data.sog
+        hdg = instr_data.hdg
 
-        up_down = 1 if abs(instr_data.awa) < 70 else -1 if abs(instr_data.awa) > 110 else 0
+        # Must have all data
+        if twa is None or sog is None or hdg is None:
+            self.reset()
+            return self.STATE_UNKNOWN
+
+        # Update the queues
+        self.sog.append(sog)
+
+        up_down = 1 if abs(twa) < 70 else -1 if abs(twa) > 110 else 0
         self.up_down.append(up_down)
 
-        awa = instr_data.awa
-        sb_pr = 1 if 5 < awa < 175 else -1 if -175 < awa < -5 else 0
+        sb_pr = 1 if 5 < twa < 175 else -1 if -175 < twa < -5 else 0
         self.sb_pr.append(sb_pr)
+
+        self.twd.append(twa + hdg)
+
+        # Analyse the queues
 
         if self.sog.len() < self.WIN_LEN:
             return self.STATE_UNKNOWN
@@ -93,5 +110,8 @@ class NavWindow:
             if abs(sum_before) > self.TURN_THR1 and abs(sum_after) > self.TURN_THR2:
                 self.reset()
                 return self.STATE_TACKED
+
+        if abs(self.up_down.get_sum()) > self.STRAIGHT_THR and abs(self.sb_pr.get_sum()) > self.STRAIGHT_THR:
+            return self.STATE_STRAIGHT
 
         return self.STATE_UNKNOWN
