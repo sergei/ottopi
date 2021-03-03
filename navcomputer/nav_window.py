@@ -16,7 +16,7 @@ class NavWndEventsListener:
     def on_wind_shift(self, utc, loc, shift_deg, new_twd):
         pass
 
-    def on_target_update(self, utc, loc, distance_delta, twa_angle_delta):
+    def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
         pass
 
 
@@ -90,9 +90,9 @@ class NavWindow:
         self.ref_twd = None
         self.stats_twd = SlidingWindow(maxlen=self.WIN_LEN)
         # Target performance analysis
-        self.stats_vmg_diff = deque(maxlen=self.WIN_LEN)
-        self.stats_speed_diff = deque(maxlen=self.WIN_LEN)
-        self.stats_point_diff = deque(maxlen=self.WIN_LEN)
+        self.stats_vmg_diff = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_speed_diff = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_point_diff = SlidingWindow(maxlen=self.WIN_LEN)
 
     def reset(self):
         self.turns_sog.clear()
@@ -113,16 +113,30 @@ class NavWindow:
         self.stats_speed_diff.clear()
         self.stats_point_diff.clear()
 
-    def update(self, instr_data):
+    def update(self, instr_data, targets):
         twa = instr_data.twa
         sog = instr_data.sog
         hdg = instr_data.hdg
         utc = instr_data.utc
 
-        # Must have all data
+        # Must have all this data
         if twa is None or sog is None or hdg is None or instr_data.lat is None or utc is None:
             self.reset()
             return
+
+        # The targets data is optional
+        if targets.boat_vmg is not None and targets.target_vmg is not None:
+            vmg_diff = targets.boat_vmg - targets.target_vmg
+        else:
+            vmg_diff = None
+        if targets.bs is not None and targets.target_sow is not None:
+            stats_speed_diff = targets.bs - targets.target_sow
+        else:
+            stats_speed_diff = None
+        if twa is not None and targets.target_twa is not None:
+            stats_point_diff = abs(twa) - abs(targets.target_twa)
+        else:
+            stats_point_diff = None
 
         up_down = 1 if abs(twa) < 70 else -1 if abs(twa) > 110 else 0
         sb_pr = 1 if 5 < twa < 175 else -1 if -175 < twa < -5 else 0
@@ -130,14 +144,20 @@ class NavWindow:
         loc = Location(instr_data.lat, instr_data.lon)
 
         # Update the queues
+        self.turns_utc.append(utc)
+        self.turns_loc.append(loc)
         self.turns_sog.append(sog)
         self.turns_up_down.append(up_down)
         self.turns_sb_pr.append(sb_pr)
-        self.stats_twd.append(twd)
+
         self.stats_utc.append(utc)
         self.stats_loc.append(loc)
-        self.turns_utc.append(utc)
-        self.turns_loc.append(loc)
+        self.stats_twd.append(twd)
+
+        if vmg_diff is not None and stats_speed_diff is not None and stats_point_diff is not None:
+            self.stats_vmg_diff.append(vmg_diff)
+            self.stats_speed_diff.append(stats_speed_diff)
+            self.stats_point_diff.append(stats_point_diff)
 
         # Analyse the queues
 
@@ -170,20 +190,28 @@ class NavWindow:
                     self.event_callbacks.on_tack(utc, loc, is_tack, distance_loss_m)
                 self.reset()
 
-        if abs(self.turns_up_down.get_sum()) > self.STRAIGHT_THR and abs(self.turns_sb_pr.get_sum()) > self.STRAIGHT_THR \
+        if abs(self.turns_up_down.get_sum()) > self.STRAIGHT_THR \
+                and abs(self.turns_sb_pr.get_sum()) > self.STRAIGHT_THR \
                 and self.stats_twd.is_full():
-            # Compute average TWD
+
+            utc = self.stats_utc[-1]
+            loc = self.stats_loc[-1]
+
+            # Check for wind shift
             avg_twd = self.compute_avg_twd()
             if self.ref_twd is None:
                 self.ref_twd = avg_twd
 
             wind_shift = avg_twd - self.ref_twd
             if abs(wind_shift) > self.WIND_SHIFT_THR:
-                utc = self.stats_utc[-1]
-                loc = self.stats_loc[-1]
                 if self.event_callbacks is not None:
                     self.event_callbacks.on_wind_shift(utc, loc, wind_shift, avg_twd)
                 self.ref_twd = avg_twd
+
+            # Compute target stats
+            distance_delta_m, speed_delta, twa_angle_delta = self.compute_target_stats()
+            if self.event_callbacks is not None and distance_delta_m is not None:
+                self.event_callbacks.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
 
             # Reset stats windows
             self.clear_stats_queues()
@@ -209,3 +237,13 @@ class NavWindow:
         duration_sec = self.turns_sog.len()
         distance_loss_m = (avg_sog_before - avg_sog_after) * METERS_IN_NM / 3600. * duration_sec
         return distance_loss_m
+
+    def compute_target_stats(self):
+        distance_delta_m = speed_delta = twa_angle_delta = None
+        if self.stats_vmg_diff.len() > 0:
+            duration_sec = self.stats_vmg_diff.len()
+            distance_delta_m = self.stats_vmg_diff.get_avg() * METERS_IN_NM / 3600. * duration_sec
+            speed_delta = self.stats_speed_diff.get_avg()
+            twa_angle_delta = self.stats_point_diff.get_avg()
+
+        return distance_delta_m, speed_delta, twa_angle_delta

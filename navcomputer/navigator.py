@@ -25,7 +25,7 @@ ARRIVAL_CIRCLE_M = 100  # Probably good enough given chart and GPS accuracy
 
 
 class Targets:
-    def __init__(self, polars, tws, twa, sow, sog):
+    def __init__(self, polars=None, tws=None, twa=None, sow=None, sog=None):
         self.bs = sow if sow is not None else sog
 
         if self.bs is None or twa is None:
