@@ -183,16 +183,21 @@ class TestWind(unittest.TestCase):
 
         # Sail diamond course, start on port
         t = 0
-        boat_model = BoatModel(twd=0, tws=10, cog=30, sog=5, speed_rms=0.5, angle_rms=1)
+        boat_model = BoatModel(twd=0, tws=10, cog=30, sog=10, speed_rms=0.5, angle_rms=1)
 
         # Wind shift
         t += 120
         boat_model.update(t, twd=5, cog=35)
+
         # Now do the tack
         t += 120
-        boat_model.update(t, cog=-25)
+        boat_model.update(t, cog=-25, sog=5)
+        # Sail slower for 10 seconds and go back to normal speed
+        t += 10
+        boat_model.update(t, sog=10)
+
         # Wind shift
-        t += 120
+        t += 110
         boat_model.update(t, twd=0, cog=-30)
         # Now do the windward rounding
         t += 120
@@ -223,6 +228,7 @@ class TestWind(unittest.TestCase):
             def on_tack(self, utc, loc, is_tack, distance_loss):
                 nonlocal tack_cnt, gybe_cnt
                 if is_tack:
+                    test_class.assertGreater(distance_loss, 1)
                     tack_cnt += 1
                 else:
                     gybe_cnt += 1
@@ -260,7 +266,7 @@ class TestWind(unittest.TestCase):
         # Fill with angles around th wrap point
         for i in range(1000):
             twd = random.gauss(0, 1) % 360
-            nav_window.twd.append(twd)
+            nav_window.stats_twd.append(twd)
 
         avg_twd = nav_window.compute_avg_twd()
         if avg_twd > 180:
