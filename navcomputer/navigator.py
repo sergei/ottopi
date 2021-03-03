@@ -5,6 +5,7 @@ import gpxpy
 from gpxpy import geo
 from gpxpy.gpx import GPXRoutePoint
 
+from const import METERS_IN_NM
 from dest_info import DestInfo
 import geomag
 
@@ -16,8 +17,6 @@ from leg_analyzer import LegAnalyzer
 from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 from timer_talker import TimerTalker
-
-METERS_IN_NM = 1852.
 
 BROKEN_SOW_SPD_THR = 4  # SOG must be greater than that while SOW is zero for SOW to be invalidated
 BROKEN_SOW_CNT_THR = 60  # The test above must pass that many times for SOW to be invalidated

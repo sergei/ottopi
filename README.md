@@ -1,4 +1,5 @@
-# OttoPi
+# OttoPi [![Build Status](https://travis-ci.com/sergei/ottopi.svg?branch=master)](https://travis-ci.com/sergei/ottopi)
+
 
 ## Introduction
 

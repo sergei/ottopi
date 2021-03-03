@@ -3,7 +3,8 @@ from collections import deque
 
 from gpxpy.gpx import GPXRoutePoint
 
-METERS_IN_NM = 1852.
+from const import METERS_IN_NM
+
 TURN_DURATION = 20  # Analyze that many points for the turn duration
 
 

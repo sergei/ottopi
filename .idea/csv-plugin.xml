@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/navcomputer/nav_window.py">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/navcomputer/navigator.py">
           <value>
             <Attribute>
@@ -39,6 +46,13 @@
           </value>
         </entry>
         <entry key="/unittests/test_nav.py">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/unittests/test_wind.py">
           <value>
             <Attribute>
               <option name="separator" value="," />
