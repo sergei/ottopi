@@ -1,5 +1,6 @@
 import datetime
 import unittest
+import random
 
 from gpxpy.geo import Location
 
@@ -108,34 +109,43 @@ class TestWind(unittest.TestCase):
         boat_model = BoatModel(twd=0, tws=10, cog=30, sog=5, speed_rms=0.5, angle_rms=1)
 
         # Wind shift
-        t += 60
+        t += 120
         boat_model.update(t, twd=5, cog=35)
         # Now do the tack
-        t += 60
+        t += 120
         boat_model.update(t, cog=-25)
         # Wind shift
-        t += 60
+        t += 120
         boat_model.update(t, twd=0, cog=-30)
         # Now do the windward rounding
-        t += 60
+        t += 120
         boat_model.update(t, cog=-150)
         # Wind shift
-        t += 60
+        t += 120
         boat_model.update(t, twd=-5, cog=-155)
         # Gybe
-        t += 60
+        t += 120
         boat_model.update(t, cog=145)
         # Now do the leeward rounding
-        t += 60
+        t += 120
         boat_model.update(t, cog=25)
-        t += 60
+        t += 120
 
         tack_cnt = 0
         wm_cnt = 0
         lm_cnt = 0
         straight_cnt = 0
 
-        nav_window = NavWindow()
+        wind_shift_cnt = 0
+
+        wind_shifts = [5, -5, -5]
+
+        def on_wind_shift(wind_shift):
+            nonlocal wind_shift_cnt, wind_shifts, self
+            self.assertAlmostEqual(wind_shift, wind_shifts[wind_shift_cnt], delta=1)
+            wind_shift_cnt += 1
+
+        nav_window = NavWindow(on_wind_shift)
         for instr_data in boat_model.intsr_data(start_utc, start_loc, t):
             state = nav_window.update(instr_data)
             if state == NavWindow.STATE_TACKED:
@@ -151,7 +161,23 @@ class TestWind(unittest.TestCase):
         self.assertEqual(1, wm_cnt)
         self.assertEqual(1, lm_cnt)
 
+        self.assertEqual(3, wind_shift_cnt)
+
         self.assertGreater(straight_cnt, 0)
+
+    def test_compute_avg_twd(self):
+        nav_window = NavWindow()
+
+        # Fill with angles around th wrap point
+        for i in range(1000):
+            twd = random.gauss(0, 1) % 360
+            nav_window.twd.append(twd)
+
+        avg_twd = nav_window.compute_avg_twd()
+        if avg_twd > 180:
+            self.assertAlmostEqual(360., avg_twd, delta=1)
+        else:
+            self.assertAlmostEqual(0, avg_twd, delta=1)
 
 
 if __name__ == '__main__':
