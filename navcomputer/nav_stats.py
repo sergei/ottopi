@@ -1,3 +1,4 @@
+import datetime
 import math
 from collections import deque
 
@@ -7,19 +8,20 @@ from const import METERS_IN_NM
 
 
 class NavStatsEventsListener:
-    def on_tack(self, utc, loc, is_tack, distance_loss_m):
+    def on_tack(self, utc: datetime, loc: Location, is_tack: bool, distance_loss_m: float):
         pass
 
-    def on_mark_rounding(self, utc, loc, is_windward):
+    def on_mark_rounding(self, utc: datetime, loc: Location, is_windward: bool):
         pass
 
-    def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
+    def on_wind_shift(self, utc: datetime, loc: Location, shift_deg: float, new_twd: float, is_lift: bool):
         pass
 
-    def on_history_update(self, utc, loc_from, loc_to, avg_hdg, avg_twa):
+    def on_history_update(self, utc: datetime, loc_from: Location, loc_to: Location, avg_hdg: float, avg_twa: float):
         pass
 
-    def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+    def on_target_update(self, utc: datetime, loc: Location, distance_delta_m: float, speed_delta: float,
+                         twa_angle_delta: float):
         pass
 
 

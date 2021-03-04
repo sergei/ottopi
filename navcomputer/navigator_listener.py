@@ -36,10 +36,10 @@ class NavigationListener:
     def __init__(self):
         pass
 
-    def on_nmea(self, nmea):
+    def on_nmea(self, nmea: str):
         pass
 
-    def on_speech(self, speech):
+    def on_speech(self, speech: str):
         pass
 
     def on_instr_data(self, instr_data: RawInstrData):

@@ -16,6 +16,7 @@ from phrf_table import PhrfTable
 from polars import Polars
 from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
+from speech_moderator import SpeechEntryType, SpeechEntry, SpeechModerator
 from timer_talker import TimerTalker
 
 BROKEN_SOW_SPD_THR = 4  # SOG must be greater than that while SOW is zero for SOW to be invalidated
@@ -49,8 +50,9 @@ class Targets:
 
 
 class StatsEventsListener(NavStatsEventsListener):
-    def __init__(self, listeners, nav_history):
+    def __init__(self, listeners, speech_moderator: SpeechModerator, nav_history):
         self.listeners = listeners
+        self.speech_moderator = speech_moderator
         self.nav_history = nav_history
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
@@ -58,8 +60,7 @@ class StatsEventsListener(NavStatsEventsListener):
         direction = 'lost' if distance_loss_m > 0 else 'gained'
 
         phrase = 'You {} {:.0f} meters on this {}'.format(direction, distance_loss_m, maneuver)
-        for listener in self.listeners:
-            listener.on_speech(phrase)
+        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
 
     def on_mark_rounding(self, utc, loc, is_windward):
         pass
@@ -69,8 +70,8 @@ class StatsEventsListener(NavStatsEventsListener):
         wind_direction = 'veered' if shift_deg > 0 else 'backed'
         phrase = 'Wind {} by {:.0f} degrees. You got {} '.format(wind_direction, abs(shift_deg),
                                                                  angle_direction)
-        for listener in self.listeners:
-            listener.on_speech(phrase)
+
+        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
 
         wind_shift = WindShift(utc, shift_deg, is_lift)
         for listener in self.listeners:
@@ -96,8 +97,7 @@ class StatsEventsListener(NavStatsEventsListener):
         direction = 'higher' if twa_angle_delta < 0 else 'lower'
         phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(twa_angle_delta), direction)
 
-        for listener in self.listeners:
-            listener.on_speech(phrase)
+        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_UPDATE, utc, phrase))
 
 
 class Navigator:
@@ -123,14 +123,14 @@ class Navigator:
             self.listeners = []
             self.active_route = None
             self.active_wpt_idx = None
-            self.last_dest_announced_at = None
             self.race_starts_at = None
             self.phrf_table = PhrfTable()
             self.timer_talker = TimerTalker()
             self.sow_is_broken = False
             self.sow_broken_cnt = 0
             self.nav_history = []
-            self.stats_listener = StatsEventsListener(self.listeners, self.nav_history)
+            self.speech_moderator = SpeechModerator(self.listeners)
+            self.stats_listener = StatsEventsListener(self.listeners, self.speech_moderator, self.nav_history)
             self.nav_stats = NavStats(self.stats_listener)
 
     def get_data_dir(self):
@@ -259,6 +259,8 @@ class Navigator:
 
                 self.data_registry.set_dest_info(dest_info)
 
+        self.speech_moderator.say_something(raw_instr_data.utc)
+
     def clear_dest(self):
         self.data_registry.clear_active_route()
         self.active_route = None
@@ -331,27 +333,20 @@ class Navigator:
         return False
 
     def say_dest_info(self, dest_info, raw_instr_data, say_now=False):
-        if self.last_dest_announced_at is not None:
-            since_last_speech = (raw_instr_data.utc - self.last_dest_announced_at).total_seconds()
+        if dest_info.atw_up is not None:
+            s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
+                                                      abs(dest_info.atw),
+                                                      'up' if dest_info.atw_up else 'down')
+        elif dest_info.atw is not None:
+            s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
+                                                             abs(dest_info.atw),
+                                                             'right' if dest_info.atw > 0 else 'left')
         else:
-            since_last_speech = 3600
+            s = None
 
-        if since_last_speech >= 60 or say_now:
-            self.last_dest_announced_at = raw_instr_data.utc
-            if dest_info.atw_up is not None:
-                s = 'Mark {} is {:.0f} degrees {}'.format(dest_info.wpt.name,
-                                                          abs(dest_info.atw),
-                                                          'up' if dest_info.atw_up else 'down')
-            elif dest_info.atw is not None:
-                s = 'Mark {} is {:.0f} degrees to the {}'.format(dest_info.wpt.name,
-                                                                 abs(dest_info.atw),
-                                                                 'right' if dest_info.atw > 0 else 'left')
-            else:
-                s = None
-
-            if s is not None:
-                for listener in self.listeners:
-                    listener.on_speech(s)
+        if s is not None:
+            entry_type = SpeechEntryType.DEST_UPDATE if not say_now else SpeechEntryType.NAV_EVENT
+            self.speech_moderator.add_entry(SpeechEntry(entry_type, raw_instr_data.utc, s))
 
     def next_wpt(self, dest_info):
         if dest_info.is_in_circle:
