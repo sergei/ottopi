@@ -13,7 +13,10 @@ class NavWndEventsListener:
     def on_mark_rounding(self, utc, loc, is_windward):
         pass
 
-    def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+    def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
+        pass
+
+    def on_history_update(self, utc, loc, avg_hdg, avg_twa):
         pass
 
     def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -89,6 +92,8 @@ class NavStats:
         # Wind shift analysis
         self.ref_twd = None
         self.stats_twd = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_twa = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_hdg = SlidingWindow(maxlen=self.WIN_LEN)
         # Target performance analysis
         self.stats_vmg_diff = SlidingWindow(maxlen=self.WIN_LEN)
         self.stats_speed_diff = SlidingWindow(maxlen=self.WIN_LEN)
@@ -109,6 +114,8 @@ class NavStats:
         self.stats_utc.clear()
         self.stats_loc.clear()
         self.stats_twd.clear()
+        self.stats_twa.clear()
+        self.stats_hdg.clear()
         self.stats_vmg_diff.clear()
         self.stats_speed_diff.clear()
         self.stats_point_diff.clear()
@@ -153,6 +160,8 @@ class NavStats:
         self.stats_utc.append(utc)
         self.stats_loc.append(loc)
         self.stats_twd.append(twd)
+        self.stats_twa.append(twa)
+        self.stats_hdg.append(hdg)
 
         if vmg_diff is not None and stats_speed_diff is not None and stats_point_diff is not None:
             self.stats_vmg_diff.append(vmg_diff)
@@ -197,15 +206,23 @@ class NavStats:
             utc = self.stats_utc[-1]
             loc = self.stats_loc[-1]
 
+            # Update stats
+            avg_hdg = self.compute_avg_angle(self.stats_hdg.q, unsigned=True)
+            avg_twa = self.compute_avg_angle(self.stats_twa.q, unsigned=False)
+            if self.event_callbacks is not None:
+                self.event_callbacks.on_history_update(utc, loc, avg_hdg, avg_twa)
+
             # Check for wind shift
-            avg_twd = self.compute_avg_twd()
+            avg_twd = self.compute_avg_angle(self.stats_twd.q, unsigned=True)
             if self.ref_twd is None:
                 self.ref_twd = avg_twd
 
             wind_shift = avg_twd - self.ref_twd
+            is_lift = wind_shift * avg_twa > 0
+
             if abs(wind_shift) > self.WIND_SHIFT_THR:
                 if self.event_callbacks is not None:
-                    self.event_callbacks.on_wind_shift(utc, loc, wind_shift, avg_twd)
+                    self.event_callbacks.on_wind_shift(utc, loc, wind_shift, avg_twd, is_lift)
                 self.ref_twd = avg_twd
 
             # Compute target stats
@@ -217,16 +234,20 @@ class NavStats:
             self.clear_stats_queues()
             return
 
-    def compute_avg_twd(self):
+    @staticmethod
+    def compute_avg_angle(angles, unsigned=True):
         # To deal with wrapping around problem do it in cartesian system
         east_sum = 0
         north_sum = 0
-        for twd in self.stats_twd.q:
-            east_sum += math.cos(math.radians(twd))
-            north_sum += math.sin(math.radians(twd))
+        for angle in angles:
+            east_sum += math.cos(math.radians(angle))
+            north_sum += math.sin(math.radians(angle))
 
-        avg_twd = math.degrees(math.atan2(north_sum, east_sum)) % 360.
-        return avg_twd
+        avg_angle = math.degrees(math.atan2(north_sum, east_sum))
+        if unsigned:
+            avg_angle = avg_angle % 360.
+
+        return avg_angle
 
     def compute_tack_efficiency(self, tack_idx):
         before_tack_idx = tack_idx - self.TURN_THR1

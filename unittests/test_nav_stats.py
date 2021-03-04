@@ -29,7 +29,7 @@ class TestNavStats(unittest.TestCase):
             def on_mark_rounding(self, utc, loc, is_windward):
                 test_class.fail()  # Must not be here
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 test_class.fail()  # Must not be here
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -61,7 +61,7 @@ class TestNavStats(unittest.TestCase):
                 self.count += 1
                 test_class.assertEqual(self.count, 1)
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 test_class.fail()  # Must not be here
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -97,7 +97,7 @@ class TestNavStats(unittest.TestCase):
                 self.count += 1
                 test_class.assertEqual(self.count, 1)
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 test_class.fail()  # Must not be here
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -132,7 +132,7 @@ class TestNavStats(unittest.TestCase):
             def on_mark_rounding(self, utc, loc, is_windward):
                 test_class.fail()  # Must not be here
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 test_class.fail()  # Must not be here
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -167,7 +167,7 @@ class TestNavStats(unittest.TestCase):
             def on_mark_rounding(self, utc, loc, is_windward):
                 test_class.fail()  # Must not be here
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 test_class.fail()  # Must not be here
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -246,14 +246,18 @@ class TestNavStats(unittest.TestCase):
                 else:
                     lm_cnt += 1
 
-            def on_wind_shift(self, utc, loc, shift_deg, new_twd):
+            def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
                 nonlocal wind_shift_cnt, wind_shifts
                 test_class.assertAlmostEqual(shift_deg, wind_shifts[wind_shift_cnt], delta=1)
+                test_class.assertFalse(is_lift)
                 wind_shift_cnt += 1
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
                 test_class.assertGreater(twa_angle_delta, 0)  # We are always lower
                 test_class.assertLess(speed_delta, 0)  # We are always slower
+
+            def on_history_update(self, utc, loc, avg_hdg, avg_twa):
+                pass
 
         events_listener = EventsListener()
 
@@ -274,19 +278,34 @@ class TestNavStats(unittest.TestCase):
         self.assertEqual(1, lm_cnt)
         self.assertEqual(3, wind_shift_cnt)
 
-    def test_compute_avg_twd(self):
-        nav_stats = NavStats()
+    def test_compute_avg_angle(self):
 
-        # Fill with angles around the wrap point
-        for i in range(1000):
-            twd = random.gauss(0, 1) % 360
-            nav_stats.stats_twd.append(twd)
+        # Fill with angles around the [359,0] wrap point
+        angles = []
+        for i in range(100):
+            angle = random.gauss(0, 1) % 360
+            angles.append(angle)
 
-        avg_twd = nav_stats.compute_avg_twd()
+        avg_twd = NavStats.compute_avg_angle(angles, unsigned=True)
         if avg_twd > 180:
             self.assertAlmostEqual(360., avg_twd, delta=1)
         else:
             self.assertAlmostEqual(0, avg_twd, delta=1)
+
+        # Fill with angles around the [-180,1800] wrap point
+        angles = []
+        for i in range(50):
+            angle = random.gauss(-180, 1)
+            angles.append(angle)
+        for i in range(50):
+            angle = random.gauss(180, 1)
+            angles.append(angle)
+
+        avg_twd = NavStats.compute_avg_angle(angles, unsigned=False)
+        if avg_twd > 0:
+            self.assertAlmostEqual(180., avg_twd, delta=1)
+        else:
+            self.assertAlmostEqual(-180, avg_twd, delta=1)
 
 
 if __name__ == '__main__':
