@@ -17,16 +17,12 @@ class DestInfo:
 
 
 class HistoryItem:
-    def __init__(self, utc=None, orig=None, dest=None, avg_boat_twa=None, avg_hdg=None, delta_dist_wind_m=None,
-                 avg_delta_twa=None, delta_boat_speed_perc=None):
+    def __init__(self, utc=None, orig=None, dest=None, avg_boat_twa=None, avg_hdg=None):
         self.utc = utc
         self.orig = orig
         self.dest = dest
         self.avg_boat_twa = avg_boat_twa
         self.avg_hdg = avg_hdg
-        self.delta_dist_wind_m = delta_dist_wind_m
-        self.avg_delta_twa = avg_delta_twa
-        self.delta_boat_speed_perc = delta_boat_speed_perc
 
 
 class WindShift:

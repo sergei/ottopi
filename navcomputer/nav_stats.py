@@ -73,7 +73,7 @@ class NavStats:
 
     STRAIGHT_THR = WIN_LEN - TURN_THR1
 
-    WIND_SHIFT_THR = 4
+    WIND_SHIFT_THR = 10
 
     """ This class implements the sliding window of nav data to perform averaging opeartions"""
     def __init__(self, stats_listener=None):

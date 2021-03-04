@@ -280,12 +280,19 @@ class TestNavStats(unittest.TestCase):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
         start_loc = Location(37., -122)
 
+        wind_shift_num = 0
+        wind_shifts = [12, -12, -12]
+        wind_offset = []
+        for i in range(0, len(wind_shifts)):
+            wind_offset.append(sum(wind_shifts[0:i+1]))
+
         # Sail diamond course, start on port
         t = 0
         boat_model = BoatModel(twd=0, tws=10, cog=45, sog=5, speed_rms=0.5, angle_rms=1)
         # Wind shift
         t += 120
-        boat_model.update(t, twd=5, cog=50)
+        boat_model.update(t, twd=0 + wind_offset[wind_shift_num], cog=45 + wind_offset[wind_shift_num])
+        wind_shift_num += 1
 
         # Now do the tack
         t += 120
@@ -296,14 +303,18 @@ class TestNavStats(unittest.TestCase):
 
         # Wind shift
         t += 110
-        boat_model.update(t, twd=0, cog=-45)
+        boat_model.update(t, twd=0 + wind_offset[wind_shift_num], cog=-45 + wind_offset[wind_shift_num])
+        wind_shift_num += 1
+
         # Now do the windward rounding
         # Sail slower and lower
         t += 120
         boat_model.update(t, cog=-150)
         # Wind shift
         t += 120
-        boat_model.update(t, twd=-5, cog=-155)
+        boat_model.update(t, twd=0 + wind_offset[wind_shift_num], cog=-150 + wind_offset[wind_shift_num])
+        wind_shift_num += 1
+
         # Gybe
         t += 120
         boat_model.update(t, cog=145)
@@ -318,8 +329,6 @@ class TestNavStats(unittest.TestCase):
         lm_cnt = 0
 
         wind_shift_cnt = 0
-
-        wind_shifts = [5, -5, -5]
 
         test_class = self
 
@@ -368,7 +377,7 @@ class TestNavStats(unittest.TestCase):
         self.assertEqual(1, gybe_cnt)
         self.assertEqual(1, wm_cnt)
         self.assertEqual(1, lm_cnt)
-        self.assertEqual(3, wind_shift_cnt)
+        self.assertEqual(wind_shift_num, wind_shift_cnt)
 
     def test_compute_avg_angle(self):
 

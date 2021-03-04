@@ -54,7 +54,12 @@ class StatsEventsListener(NavStatsEventsListener):
         self.nav_history = nav_history
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
-        pass
+        maneuver = 'tack' if is_tack else 'gybe'
+        direction = 'lost' if distance_loss_m > 0 else 'gained'
+
+        phrase = 'You {} {:.0f} meters on this {}'.format(direction, distance_loss_m, maneuver)
+        for listener in self.listeners:
+            listener.on_speech(phrase)
 
     def on_mark_rounding(self, utc, loc, is_windward):
         pass
