@@ -118,7 +118,7 @@ def main(args):
         from replay import Replay
         replay = Replay(args.replay_dir, args.log_dir, nmea_parser)
         navigator.add_listener(replay)
-        replay.run()
+        replay.run(args.with_prefix)
         return
 
     navigator.add_listener(Speaker.get_instance())
@@ -176,5 +176,7 @@ if __name__ == '__main__':
     parser.add_argument("--tcp-server-port", help="TCP port for incoming connections", required=False)
     parser.add_argument("--http-server-port", help="HTTP server port", required=False)
     parser.add_argument("--replay-dir", help="Replay logs found in this directory", required=False)
+    parser.add_argument("--with-prefix", help="Analyze prefix in the files being replayed", default=False,
+                        action='store_true', required=False)
 
     main(parser.parse_args())

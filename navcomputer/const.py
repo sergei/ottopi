@@ -1,0 +1,1 @@
+METERS_IN_NM = 1852.

@@ -1,16 +1,8 @@
-import glob
-import os
 import simplekml
-from navigator_listener import NavigationListener
 
 
-class Replay(NavigationListener):
-    def __init__(self, replay_dir, log_dir, nmea_parser):
-        super().__init__()
-        self.replay_dir = os.path.expanduser(replay_dir)
-        self.log_dir = os.path.expanduser(log_dir)
-        self.nmea_parser = nmea_parser
-        self.last_dest_wpt = None  # Last WPT received from RMB message
+class KmlWriter:
+    def __init__(self):
         self.kml = simplekml.Kml()
         self.route_folder = self.kml.newfolder(name="Route")
         self.wpts_folder = self.kml.newfolder(name="Wpts")
@@ -36,24 +28,17 @@ class Replay(NavigationListener):
         self.speech_style = simplekml.Style()
         self.speech_style.labelstyle.color = simplekml.Color.yellow  # Make the text red
         self.speech_style.labelstyle.scale = 2
-        self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/arts.png'
+        self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/electronics.png'
 
+        self.last_dest_wpt = None  # Last WPT received from RMB message
         self.last_coords = None
 
-    def run(self):
-        log_list = sorted(glob.glob(self.replay_dir + os.sep + 'log-*.nmea'))
-        log_list += sorted(glob.glob(self.replay_dir + os.sep + '*.log'))
-
-        for log in log_list:
-            with open(log, 'r') as f:
-                for nmea in f:
-                    self.nmea_parser.set_nmea_sentence(nmea)
-        kml_file = self.log_dir + os.sep + "replay.kml"
-        print('Saving {}'.format(kml_file))
+    def save(self, kml_file):
         self.kml.save(kml_file)
 
-    def on_dest_info(self, raw_instr_data, dest_info):
+    def add_route_point(self, raw_instr_data, dest_info):
         self.last_coords = (raw_instr_data.lon, raw_instr_data.lat)
+
         point = self.route_folder.newpoint(name="", coords=[self.last_coords])
         point.style = self.trk_pt_style
 
@@ -72,10 +57,10 @@ class Replay(NavigationListener):
             if new_dest:
                 self.last_dest_wpt = dest_info.wpt
                 point = self.wpts_folder.newpoint(name=dest_info.wpt.name,
-                                          coords=[(dest_info.wpt.longitude, dest_info.wpt.latitude)])
+                                                  coords=[(dest_info.wpt.longitude, dest_info.wpt.latitude)])
                 point.style = self.mark_style
 
-    def on_leg_summary(self, leg_summary):
+    def add_leg_summary(self, leg_summary):
         dest = self.summary_folder.newpoint(name="", coords=[(leg_summary.dest.longitude, leg_summary.dest.latitude)])
         dest.style = self.summary_style
         description = ""
@@ -89,8 +74,7 @@ class Replay(NavigationListener):
         ls.extrude = 1
         ls.altitudemode = simplekml.AltitudeMode.relativetoground
 
-    def on_speech(self, s):
-        print(s)
+    def add_speech(self, s):
         if self.last_coords is not None:
             point = self.speech_folder.newpoint(name="", coords=[self.last_coords])
             point.style = self.speech_style

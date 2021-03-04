@@ -1,11 +1,11 @@
+import io
 import unittest
 import datetime
 
 import gpxpy
 from gpxpy.gpx import GPXRoutePoint
 
-from dest_info import DestInfo
-import nmea_encoder
+from polar_table import POLARS
 from polars import Polars
 from navigator_listener import NavigationListener
 from raw_instr_data import RawInstrData
@@ -13,7 +13,7 @@ from navigator import Navigator
 from timer_talker import TimerTalker
 
 
-class TestStringMethods(unittest.TestCase):
+class TestNav(unittest.TestCase):
 
     def test_dest_info(self):
         test_class = self
@@ -64,36 +64,13 @@ class TestStringMethods(unittest.TestCase):
         navigator.set_raw_instr_data(instr_data)
         navigator.remove_listener(listener)
 
-    def test_encode_bwr(self):
-        utc = datetime.datetime(2020, 5, 17, 11, 45, 57, tzinfo=datetime.timezone.utc)
-        instr_data = RawInstrData(t=0, utc=utc, lat=37.864374, lon=-122.376500,
-                                  sog=10, cog=200, awa=30, aws=15, twa=45, tws=10, sow=5, hdg=214)
-        dest_info = DestInfo()
-        dest_info.wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
-        dest_info.xte = 0.455
-        dest_info.dtw = 0.92
-        dest_info.btw = 228
-        nmea = nmea_encoder.encode_bwr(instr_data, dest_info)
-        self.assertEqual(nmea, "$OPBWR,114557,3751.86244,N,12222.59000,W,,T,228.0,M,0.920,N,DEST,*0D\r\n")
-
-    def test_encode_rmb(self):
-        dest_info = DestInfo()
-        dest_info.wpt = GPXRoutePoint(name="DEST", latitude=37.864374, longitude=-122.376500)
-        dest_info.org_wpt = GPXRoutePoint(name="ORIG", latitude=37.864374, longitude=-122.376500)
-        dest_info.xte = 0.455
-        dest_info.dtw = 0.92
-        dest_info.stw = 1.2345567
-        dest_info.btw_true = 214
-        dest_info.is_in_circle = True
-        nmea = nmea_encoder.encode_rmb(dest_info)
-        self.assertEqual(nmea, "$OPRMB,A,0.455,R,ORIG,DEST,3751.86244,N,12222.59000,W,0.920,214.0,1.2,A,*26\r\n")
-
     def test_polars(self):
         polars = Polars()
 
         self.assertFalse(polars.is_valid())
 
-        polars.read_table('data/J105.txt')
+        polar_file = io.StringIO(POLARS)
+        polars.read_table(polar_file)
 
         # Upwind
         # Lowest wind in the table
@@ -160,6 +137,15 @@ class TestStringMethods(unittest.TestCase):
             say_now, time_left = time_talker.check_time_left(time_left_sec)
             if say_now:
                 self.assertAlmostEqual(time_left_msec/10, time_left, delta=0.2)
+
+    def test_tws_twa(self):
+        tws, twa = Navigator.compute_tws_twa(aws=10, awa=60, bs=5)
+        self.assertAlmostEqual(tws, 8.7, delta=0.1)
+        self.assertAlmostEqual(twa, 90, delta=0.5)
+
+        tws, twa = Navigator.compute_tws_twa(aws=10, awa=-20, bs=5)
+        self.assertAlmostEqual(tws, 5.6, delta=0.1)
+        self.assertAlmostEqual(twa, -38, delta=0.5)
 
 
 if __name__ == '__main__':
