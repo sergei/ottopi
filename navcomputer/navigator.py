@@ -54,6 +54,7 @@ class StatsEventsListener(NavStatsEventsListener):
         self.listeners = listeners
         self.speech_moderator = speech_moderator
         self.nav_history = nav_history
+        self.avg_twd = None
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
         maneuver = 'tack' if is_tack else 'gybe'
@@ -81,6 +82,7 @@ class StatsEventsListener(NavStatsEventsListener):
         orig_wpt = GPXRoutePoint(name='', latitude=loc_from.latitude, longitude=loc_from.longitude)
         dest_wpt = GPXRoutePoint(name='', latitude=loc.latitude, longitude=loc.longitude)
         history_item = HistoryItem(utc=utc, orig=orig_wpt, dest=dest_wpt, avg_boat_twa=avg_twa, avg_hdg=avg_hdg)
+        self.avg_twd = (avg_hdg + avg_twa) % 360
 
         self.nav_history.append(history_item)
         for listener in self.listeners:
@@ -244,6 +246,24 @@ class Navigator:
 
                     loc = geo.Location(latitude=raw_instr_data.lat, longitude=raw_instr_data.lon)
                     dest_info.xte = geo.distance_from_line(loc, orig_wpt, dest_wpt) / METERS_IN_NM
+                else:
+                    dest_info.bod = None
+                    dest_info.xte = None
+
+                    # Compute wind angle at what we would be sailing from current WPT to the next one
+                if self.active_wpt_idx < self.active_route.get_points_no() - 1 \
+                        and self.stats_listener.avg_twd is not None:
+                    flw_wpt = self.active_route.points[self.active_wpt_idx+1]
+                    next_hdg = geo.get_course(dest_wpt.latitude, dest_wpt.longitude,
+                                              flw_wpt.latitude, flw_wpt.longitude) - self.mag_decl
+                    flw_twa = (self.stats_listener.avg_twd - next_hdg) % 360
+                    if flw_twa > 180:
+                        flw_twa -= 360
+                    dest_info.flw_twa = flw_twa
+                    dest_info.flw_wpt = flw_wpt
+                else:
+                    dest_info.flw_twa = None
+                    dest_info.flw_wpt = None
 
                 for listener in self.listeners:
                     listener.on_dest_info(raw_instr_data, dest_info)
@@ -343,6 +363,22 @@ class Navigator:
                                                              'right' if dest_info.atw > 0 else 'left')
         else:
             s = None
+
+        if dest_info.flw_twa is not None and s is not None:
+            if abs(dest_info.flw_twa) < 45:
+                point_of_sail = 'beat'
+            elif abs(dest_info.flw_twa) > 145:
+                point_of_sail = 'run'
+            else:
+                point_of_sail = 'reach'
+
+            if dest_info.flw_twa < 0:
+                board = 'port'
+            else:
+                board = 'starboard'
+
+            s += ' followed by {name} on {board} {point_of_sail}'.format(name=dest_info.flw_wpt.name, board=board,
+                                                                         point_of_sail=point_of_sail)
 
         if s is not None:
             entry_type = SpeechEntryType.DEST_UPDATE if not say_now else SpeechEntryType.NAV_EVENT

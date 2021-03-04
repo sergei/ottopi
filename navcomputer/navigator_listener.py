@@ -5,6 +5,7 @@ class DestInfo:
     def __init__(self):
         self.wpt = None  # Destination waypoint
         self.org_wpt = None  # Origin waypoint
+        self.flw_wpt = None  # Waypoint following the destination
         self.dtw = None  # Distance to waypoint (Nautical miles)
         self.btw = None  # Bearing to waypoint (magnetic degrees)
         self.btw_true = None  # Bearing to waypoint (true degrees)
@@ -14,6 +15,7 @@ class DestInfo:
         self.bod = None  # Bearing origin to destination
         self.stw = None  # Velocity towards waypoint
         self.is_in_circle = False  # Arrival Circle Entered
+        self.flw_twa = None  # True wind angle from the destination waypoint to the following one
 
 
 class HistoryItem:
