@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/navcomputer/leg_analyzer.py">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/navcomputer/nav_window.py">
           <value>
             <Attribute>

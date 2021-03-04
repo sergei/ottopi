@@ -43,7 +43,7 @@ class Replay(NavigationListener):
     def on_dest_info(self, raw_instr_data, dest_info):
         self.kml_writer.add_route_point(raw_instr_data, dest_info)
 
-    def on_leg_summary(self, leg_summary):
+    def on_history_item(self, leg_summary):
         self.kml_writer.add_leg_summary(leg_summary)
 
     def on_wind_shift(self, leg_summary):

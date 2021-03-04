@@ -3,7 +3,7 @@ import datetime
 
 from gpxpy.gpx import GPXRoutePoint
 
-from dest_info import DestInfo
+from navigator_listener import DestInfo
 import nmea_encoder
 from nmeaparser import NmeaParser
 from raw_instr_data import RawInstrData

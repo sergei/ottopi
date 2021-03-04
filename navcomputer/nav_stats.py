@@ -6,7 +6,7 @@ from gpxpy.geo import Location
 from const import METERS_IN_NM
 
 
-class NavWndEventsListener:
+class NavStatsEventsListener:
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
         pass
 
@@ -16,7 +16,7 @@ class NavWndEventsListener:
     def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
         pass
 
-    def on_history_update(self, utc, loc, avg_hdg, avg_twa):
+    def on_history_update(self, utc, loc_from, loc_to, avg_hdg, avg_twa):
         pass
 
     def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
@@ -76,8 +76,8 @@ class NavStats:
     WIND_SHIFT_THR = 4
 
     """ This class implements the sliding window of nav data to perform averaging opeartions"""
-    def __init__(self, event_callbacks=None):
-        self.event_callbacks = event_callbacks
+    def __init__(self, stats_listener=None):
+        self.stats_listener = stats_listener
 
         # Queues to analyze the turns
         self.turns_utc = deque(maxlen=self.WIN_LEN)
@@ -183,8 +183,8 @@ class NavStats:
                 utc = self.turns_utc[self.HALF_WIN]
                 loc = self.turns_loc[self.HALF_WIN]
                 is_windward = sum_after < 0
-                if self.event_callbacks is not None:
-                    self.event_callbacks.on_mark_rounding(utc, loc, is_windward)
+                if self.stats_listener is not None:
+                    self.stats_listener.on_mark_rounding(utc, loc, is_windward)
                 self.reset()
 
         if abs(self.turns_sb_pr.get_sum()) < self.TURN_THR1:  # Suspected tacking or gybing
@@ -195,8 +195,8 @@ class NavStats:
                 loc = self.turns_loc[tack_idx]
                 is_tack = abs(twa) < 90
                 distance_loss_m = self.compute_tack_efficiency(tack_idx)
-                if self.event_callbacks is not None:
-                    self.event_callbacks.on_tack(utc, loc, is_tack, distance_loss_m)
+                if self.stats_listener is not None:
+                    self.stats_listener.on_tack(utc, loc, is_tack, distance_loss_m)
                 self.reset()
 
         if abs(self.turns_up_down.get_sum()) > self.STRAIGHT_THR \
@@ -204,13 +204,14 @@ class NavStats:
                 and self.stats_twd.is_full():
 
             utc = self.stats_utc[-1]
+            loc_from = self.stats_loc[0]
             loc = self.stats_loc[-1]
 
             # Update stats
             avg_hdg = self.compute_avg_angle(self.stats_hdg.q, unsigned=True)
             avg_twa = self.compute_avg_angle(self.stats_twa.q, unsigned=False)
-            if self.event_callbacks is not None:
-                self.event_callbacks.on_history_update(utc, loc, avg_hdg, avg_twa)
+            if self.stats_listener is not None:
+                self.stats_listener.on_history_update(utc, loc_from, loc, avg_hdg, avg_twa)
 
             # Check for wind shift
             avg_twd = self.compute_avg_angle(self.stats_twd.q, unsigned=True)
@@ -221,14 +222,14 @@ class NavStats:
             is_lift = wind_shift * avg_twa > 0
 
             if abs(wind_shift) > self.WIND_SHIFT_THR:
-                if self.event_callbacks is not None:
-                    self.event_callbacks.on_wind_shift(utc, loc, wind_shift, avg_twd, is_lift)
+                if self.stats_listener is not None:
+                    self.stats_listener.on_wind_shift(utc, loc, wind_shift, avg_twd, is_lift)
                 self.ref_twd = avg_twd
 
             # Compute target stats
             distance_delta_m, speed_delta, twa_angle_delta = self.compute_target_stats()
-            if self.event_callbacks is not None and distance_delta_m is not None:
-                self.event_callbacks.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
+            if self.stats_listener is not None and distance_delta_m is not None:
+                self.stats_listener.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
 
             # Reset stats windows
             self.clear_stats_queues()

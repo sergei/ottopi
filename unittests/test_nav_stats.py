@@ -6,7 +6,7 @@ import random
 from gpxpy.geo import Location
 
 from boat_model import BoatModel
-from nav_stats import NavStats, NavWndEventsListener
+from nav_stats import NavStats, NavStatsEventsListener
 from navigator import Targets
 from polar_table import POLARS
 from polars import Polars
@@ -22,7 +22,7 @@ class TestNavStats(unittest.TestCase):
         test_class = self
 
         # Make sure state doesn't change until we have full window
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             def on_tack(self, utc, loc, is_tack, distance_loss):
                 test_class.fail()  # Must not be here
 
@@ -50,7 +50,7 @@ class TestNavStats(unittest.TestCase):
         boat_model.update(120, cog=-150)
         test_class = self
 
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             count = 0
 
             def on_tack(self, utc, loc, is_tack, distance_loss):
@@ -86,7 +86,7 @@ class TestNavStats(unittest.TestCase):
 
         test_class = self
 
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             count = 0
 
             def on_tack(self, utc, loc, is_tack, distance_loss):
@@ -121,7 +121,7 @@ class TestNavStats(unittest.TestCase):
         boat_model.update(120, cog=-30)
         test_class = self
 
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             count = 0
 
             def on_tack(self, utc, loc, is_tack, distance_loss):
@@ -156,7 +156,7 @@ class TestNavStats(unittest.TestCase):
         boat_model.update(120, cog=-150)
         test_class = self
 
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             count = 0
 
             def on_tack(self, utc, loc, is_tack, distance_loss):
@@ -230,7 +230,7 @@ class TestNavStats(unittest.TestCase):
 
         test_class = self
 
-        class EventsListener(NavWndEventsListener):
+        class EventsListener(NavStatsEventsListener):
             def on_tack(self, utc, loc, is_tack, distance_loss):
                 nonlocal tack_cnt, gybe_cnt
                 if is_tack:
@@ -256,7 +256,7 @@ class TestNavStats(unittest.TestCase):
                 test_class.assertGreater(twa_angle_delta, 0)  # We are always lower
                 test_class.assertLess(speed_delta, 0)  # We are always slower
 
-            def on_history_update(self, utc, loc, avg_hdg, avg_twa):
+            def on_history_update(self, utc, loc_from, loc, avg_hdg, avg_twa):
                 pass
 
         events_listener = EventsListener()

@@ -6,14 +6,14 @@ from gpxpy import geo
 from gpxpy.gpx import GPXRoutePoint
 
 from const import METERS_IN_NM
-from dest_info import DestInfo
+from nav_stats import NavStatsEventsListener, NavStats
+from navigator_listener import DestInfo, WindShift, HistoryItem
 import geomag
 
 from logger import Logger
 from bang_control import BangControl
 from phrf_table import PhrfTable
 from polars import Polars
-from leg_analyzer import LegAnalyzer
 from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 from timer_talker import TimerTalker
@@ -48,6 +48,53 @@ class Targets:
                 self.target_vmg = None
 
 
+class StatsEventsListener(NavStatsEventsListener):
+    def __init__(self, listeners, nav_history):
+        self.listeners = listeners
+        self.nav_history = nav_history
+
+    def on_tack(self, utc, loc, is_tack, distance_loss_m):
+        pass
+
+    def on_mark_rounding(self, utc, loc, is_windward):
+        pass
+
+    def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
+        angle_direction = 'lifted' if is_lift else 'headed'
+        wind_direction = 'veered' if shift_deg > 0 else 'backed'
+        phrase = 'Wind {} by {:.0f} degrees. You got {} '.format(wind_direction, abs(shift_deg),
+                                                                 angle_direction)
+        for listener in self.listeners:
+            listener.on_speech(phrase)
+
+        wind_shift = WindShift(utc, shift_deg, is_lift)
+        for listener in self.listeners:
+            listener.on_wind_shift(wind_shift)
+
+    def on_history_update(self, utc, loc_from, loc, avg_hdg, avg_twa):
+        orig_wpt = GPXRoutePoint(name='', latitude=loc_from.latitude, longitude=loc_from.longitude)
+        dest_wpt = GPXRoutePoint(name='', latitude=loc.latitude, longitude=loc.longitude)
+        history_item = HistoryItem(utc=utc, orig=orig_wpt, dest=dest_wpt, avg_boat_twa=avg_twa, avg_hdg=avg_hdg)
+
+        self.nav_history.append(history_item)
+        for listener in self.listeners:
+            listener.on_history_item(history_item)
+
+    def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+        phrase = ''
+        direction = 'gained' if distance_delta_m > 0 else 'lost'
+        phrase += 'You {} {:.0f} meters to the target boat. '.format(direction, abs(distance_delta_m))
+
+        direction = 'faster' if speed_delta > 0 else 'slower'
+        phrase += 'You were {:.1f} knots {} than target. '.format(abs(speed_delta), direction)
+
+        direction = 'higher' if twa_angle_delta > 0 else 'lower'
+        phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(twa_angle_delta), direction)
+
+        for listener in self.listeners:
+            listener.on_speech(phrase)
+
+
 class Navigator:
     __instance = None
 
@@ -67,7 +114,6 @@ class Navigator:
             self.data_registry = DataRegistry()
             self.bang_control = BangControl()
             self.polars = Polars()
-            self.leg_analyzer = LegAnalyzer()
             self.mag_decl = None
             self.listeners = []
             self.active_route = None
@@ -78,6 +124,9 @@ class Navigator:
             self.timer_talker = TimerTalker()
             self.sow_is_broken = False
             self.sow_broken_cnt = 0
+            self.nav_history = []
+            self.stats_listener = StatsEventsListener(self.listeners, self.nav_history)
+            self.nav_stats = NavStats(self.stats_listener)
 
     def get_data_dir(self):
         return self.data_registry.data_dir
@@ -147,17 +196,7 @@ class Navigator:
             listener.on_targets(targets)
 
         # Update the leg stats
-        leg_summary, wind_shift = self.leg_analyzer.update(raw_instr_data, targets)
-
-        if leg_summary is not None:
-            for listener in self.listeners:
-                listener.on_leg_summary(leg_summary)
-            self.say_leg_summary(leg_summary)
-
-        if wind_shift is not None:
-            self.say_wind_shift(wind_shift)
-            for listener in self.listeners:
-                listener.event_callbacks(wind_shift)
+        self.nav_stats.update(raw_instr_data, targets)
 
         if raw_instr_data.lat is not None and raw_instr_data.lon is not None:
             if self.mag_decl is None:
@@ -309,35 +348,6 @@ class Navigator:
                 for listener in self.listeners:
                     listener.on_speech(s)
 
-    def say_leg_summary(self, leg_summary):
-        phrase = ''
-        if leg_summary.delta_dist_wind_m is not None:
-            direction = 'gained' if leg_summary.delta_dist_wind_m > 0 else 'lost'
-            phrase += 'You {} {:.0f} meters to the target boat. '.format(direction,
-                                                                         abs(leg_summary.delta_dist_wind_m))
-
-        if leg_summary.delta_boat_speed_perc is not None:
-            direction = 'faster' if leg_summary.delta_boat_speed_perc > 0 else 'slower'
-            phrase += 'You were {:.0f} percent {} than target. '.format(abs(leg_summary.delta_boat_speed_perc),
-                                                                        direction)
-
-        if leg_summary.avg_delta_twa is not None:
-            direction = 'higher' if leg_summary.avg_delta_twa > 0 else 'lower'
-            phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(leg_summary.avg_delta_twa),
-                                                                                direction)
-
-        if len(phrase) > 0:
-            for listener in self.listeners:
-                listener.on_speech(phrase)
-
-    def say_wind_shift(self, wind_shift):
-        angle_direction = 'lifted' if wind_shift.is_lift else 'headed'
-        wind_direction = 'veered' if wind_shift.shift_deg > 0 else 'backed'
-        phrase = 'Wind {} by {:.0f} degrees. You got {} '.format(wind_direction, abs(wind_shift.shift_deg),
-                                                                 angle_direction)
-        for listener in self.listeners:
-            listener.on_speech(phrase)
-
     def next_wpt(self, dest_info):
         if dest_info.is_in_circle:
             if self.active_wpt_idx >= len(self.active_route.points) - 1:
@@ -352,7 +362,7 @@ class Navigator:
                 listener.on_speech(phrase)
 
     def get_history(self):
-        return self.leg_analyzer.summaries
+        return self.nav_history
 
     def timer_start(self):
         now = datetime.datetime.now()
