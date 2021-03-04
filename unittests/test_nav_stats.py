@@ -182,12 +182,105 @@ class TestNavStats(unittest.TestCase):
         for instr_data in boat_model.intsr_data(start_utc, start_loc, duration):
             nav_stats.update(instr_data, targets)
 
+    def test_targets(self):
+        test_class = self
+        mag = -14
+
+        # Sail upwind slower and lower than targets on port
+        boat_model = BoatModel(twd=0, tws=10, cog=45-mag, sog=5, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertGreater(twa_angle_delta, 0)  # > 0 means lower
+                test_class.assertLess(speed_delta, 0)
+                test_class.assertLess(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+        # Sail upwind slower and lower than targets on starboard
+        boat_model = BoatModel(twd=0, tws=10, cog=-45-mag, sog=5, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertGreater(twa_angle_delta, 0)  # > 0 means lower
+                test_class.assertLess(speed_delta, 0)
+                test_class.assertLess(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+        # Sail upwind faster and higher than targets on port
+        boat_model = BoatModel(twd=0, tws=10, cog=30-mag, sog=7, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertLess(twa_angle_delta, 0)  # < 0 means higher
+                test_class.assertGreater(speed_delta, 0)
+                test_class.assertGreater(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+        # Sail upwind faster and higher than targets on starboard
+        boat_model = BoatModel(twd=0, tws=10, cog=-30-mag, sog=7, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertLess(twa_angle_delta, 0)  # < 0 means higher
+                test_class.assertGreater(speed_delta, 0)
+                test_class.assertGreater(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+        # Sail downwind slower and higher than targets on port
+        boat_model = BoatModel(twd=0, tws=10, cog=130-mag, sog=5, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertLess(twa_angle_delta, 0)  # < 0 means higher
+                test_class.assertLess(speed_delta, 0)
+                test_class.assertLess(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+        # Sail downwind faster and lower than targets on port
+        boat_model = BoatModel(twd=0, tws=10, cog=170-mag, sog=10, speed_rms=0.5, angle_rms=1)
+
+        class EventsListener(NavStatsEventsListener):
+            def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+                test_class.assertGreater(twa_angle_delta, 0)  # > 0 means lower
+                test_class.assertGreater(speed_delta, 0)
+                test_class.assertGreater(distance_delta_m, 0)
+
+        events_listener = EventsListener()
+        nav_stats = NavStats(events_listener)
+        self.sail_boat(boat_model, nav_stats)
+
+    def sail_boat(self, boat_model, nav_stats):
+        start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
+        start_loc = Location(37., -122)
+        polars = Polars()
+        self.assertFalse(polars.is_valid())
+        polar_file = io.StringIO(POLARS)
+        polars.read_table(polar_file)
+        self.assertTrue(polars.is_valid())
+        for instr_data in boat_model.intsr_data(start_utc, start_loc, 120):
+            targets = Targets(polars, instr_data.tws, instr_data.twa, instr_data.sow, instr_data.sog)
+            nav_stats.update(instr_data, targets)
+
     def test_full_course(self):
         start_utc = datetime.datetime(year=2021, month=1, day=1, hour=0, minute=0, second=0)
         start_loc = Location(37., -122)
 
         # Sail diamond course, start on port
-        # Sail slower and lower than targets
         t = 0
         boat_model = BoatModel(twd=0, tws=10, cog=45, sog=5, speed_rms=0.5, angle_rms=1)
         # Wind shift
@@ -253,8 +346,7 @@ class TestNavStats(unittest.TestCase):
                 wind_shift_cnt += 1
 
             def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
-                test_class.assertGreater(twa_angle_delta, 0)  # We are always lower
-                test_class.assertLess(speed_delta, 0)  # We are always slower
+                pass
 
             def on_history_update(self, utc, loc_from, loc, avg_hdg, avg_twa):
                 pass

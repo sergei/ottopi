@@ -88,7 +88,7 @@ class StatsEventsListener(NavStatsEventsListener):
         direction = 'faster' if speed_delta > 0 else 'slower'
         phrase += 'You were {:.1f} knots {} than target. '.format(abs(speed_delta), direction)
 
-        direction = 'higher' if twa_angle_delta > 0 else 'lower'
+        direction = 'higher' if twa_angle_delta < 0 else 'lower'
         phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(twa_angle_delta), direction)
 
         for listener in self.listeners:

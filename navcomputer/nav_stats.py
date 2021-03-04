@@ -206,6 +206,7 @@ class NavStats:
             utc = self.stats_utc[-1]
             loc_from = self.stats_loc[0]
             loc = self.stats_loc[-1]
+            is_downwind = self.turns_up_down.get_sum() < 0
 
             # Update stats
             avg_hdg = self.compute_avg_angle(self.stats_hdg.q, unsigned=True)
@@ -218,7 +219,10 @@ class NavStats:
             if self.ref_twd is None:
                 self.ref_twd = avg_twd
 
-            wind_shift = avg_twd - self.ref_twd
+            wind_shift = (avg_twd - self.ref_twd) % 360
+            if wind_shift > 180:
+                wind_shift -= 360
+
             is_lift = wind_shift * avg_twa > 0
 
             if abs(wind_shift) > self.WIND_SHIFT_THR:
@@ -227,7 +231,7 @@ class NavStats:
                 self.ref_twd = avg_twd
 
             # Compute target stats
-            distance_delta_m, speed_delta, twa_angle_delta = self.compute_target_stats()
+            distance_delta_m, speed_delta, twa_angle_delta = self.compute_target_stats(is_downwind)
             if self.stats_listener is not None and distance_delta_m is not None:
                 self.stats_listener.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
 
@@ -244,9 +248,9 @@ class NavStats:
             east_sum += math.cos(math.radians(angle))
             north_sum += math.sin(math.radians(angle))
 
-        avg_angle = math.degrees(math.atan2(north_sum, east_sum))
-        if unsigned:
-            avg_angle = avg_angle % 360.
+        avg_angle = math.degrees(math.atan2(north_sum, east_sum)) % 360
+        if not unsigned and avg_angle > 180:
+            avg_angle = avg_angle - 360.
 
         return avg_angle
 
@@ -260,12 +264,15 @@ class NavStats:
         distance_loss_m = (avg_sog_before - avg_sog_after) * METERS_IN_NM / 3600. * duration_sec
         return distance_loss_m
 
-    def compute_target_stats(self):
+    def compute_target_stats(self, is_downwind):
         distance_delta_m = speed_delta = twa_angle_delta = None
         if self.stats_vmg_diff.len() > 0:
             duration_sec = self.stats_vmg_diff.len()
-            distance_delta_m = self.stats_vmg_diff.get_avg() * METERS_IN_NM / 3600. * duration_sec
             speed_delta = self.stats_speed_diff.get_avg()
+
+            distance_delta_m = self.stats_vmg_diff.get_avg() * METERS_IN_NM / 3600. * duration_sec
             twa_angle_delta = self.stats_point_diff.get_avg()
+            if is_downwind:  # Since VMG is negative
+                distance_delta_m = - distance_delta_m
 
         return distance_delta_m, speed_delta, twa_angle_delta

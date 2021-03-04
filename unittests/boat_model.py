@@ -51,15 +51,14 @@ class BoatModel:
                 idx += 1
 
             utc = start_utc + datetime.timedelta(0, t)
-            twa = (twd - cog) % 360
+            hdg = cog - mag_decl
+            twa = (twd - hdg) % 360
             if twa > 180:
                 twa -= 360
             cos_twa = math.cos(math.radians(twa))
             aws = math.sqrt(sog * sog + tws * tws + 2 * sog * tws * cos_twa)
             awa = math.degrees(math.acos((tws * cos_twa + sog) / aws))
             awa = awa if twa > 0 else -awa
-
-            hdg = cog - mag_decl
 
             instr_data = RawInstrData(utc=utc, lat=loc.latitude, lon=loc.longitude,
                                       cog=self.noisy_dir(cog), sog=self.noisy_speed(sog),
