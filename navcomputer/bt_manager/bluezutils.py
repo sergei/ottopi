@@ -49,4 +49,4 @@ def find_device_in_objects(objects, device_address, adapter_pattern=None):
             obj = bus.get_object(SERVICE_NAME, path)
             return dbus.Interface(obj, DEVICE_INTERFACE)
 
-    raise Exception("Bluetooth device not found")
+    raise LookupError("Bluetooth device not found")

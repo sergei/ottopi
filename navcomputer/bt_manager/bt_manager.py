@@ -1,4 +1,6 @@
+import sys
 import time
+from optparse import OptionParser
 from typing import List
 
 import dbus
@@ -59,23 +61,54 @@ class BtManager:
         dev_manager = DeviceManager()
         dev_manager.connect(bt_addr)
 
+    @staticmethod
+    def disconnect_device(bt_addr: str):
+        dev_manager = DeviceManager()
+        dev_manager.disconnect(bt_addr)
+
     def is_busy(self):
         return self.bt_scanner.is_busy()
 
 
 if __name__ == '__main__':
+    parser = OptionParser()
+    (options, args) = parser.parse_args()
+
+    if len(args) == 0:
+        print('Please specify the command')
+        sys.exit(0)
+
     bt_manager = BtManager()
 
-    for d in bt_manager.get_cached_devices_list():
-        print(d)
-
-    bt_manager.perform_scan()
-    while bt_manager.is_busy():
-        time.sleep(1)
-
-    for d in bt_manager.get_scanned_devices():
-        print(d)
-
-    bt_manager.connect_device('11:22:33:ED:3D:27')
-    # bt_manager.pair_device('11:22:33:ED:3D:27')
-    # bt_manager.remove_device('11:22:33:ED:3D:27')
+    cmd = args[0]
+    if cmd == 'devices':
+        for d in bt_manager.get_cached_devices_list():
+            print(d)
+    elif cmd == 'scan':
+        bt_manager.perform_scan()
+        while bt_manager.is_busy():
+            time.sleep(1)
+        for d in bt_manager.get_scanned_devices():
+            print(d)
+    elif cmd == 'connect':
+        if len(args) > 1:
+            bt_manager.connect_device(args[1])
+        else:
+            print('Please specify address')
+    elif cmd == 'disconnect':
+        if len(args) > 1:
+            bt_manager.disconnect_device(args[1])
+        else:
+            print('Please specify address')
+    elif cmd == 'pair':
+        if len(args) > 1:
+            bt_manager.pair_device(args[1])
+        else:
+            print('Please specify address')
+    elif cmd == 'remove':
+        if len(args) > 1:
+            bt_manager.remove_device(args[1])
+        else:
+            print('Please specify address')
+    else:
+        print('Unknown command')

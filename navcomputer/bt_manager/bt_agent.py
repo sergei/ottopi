@@ -118,18 +118,10 @@ class DeviceManager:
                              "org.bluez.Device1")
         dev.Connect()
 
-    def remove(self, bt_addr):
-        device = bluezutils.find_device(bt_addr)
-        dev_path = device.object_path
-        dev = dbus.Interface(self.bus.get_object("org.bluez", dev_path),
+    def dev_disconnect(self, path):
+        dev = dbus.Interface(self.bus.get_object("org.bluez", path),
                              "org.bluez.Device1")
-        adapter = bluezutils.find_adapter()
-        adapter.RemoveDevice(dev)
-
-    def connect(self, bt_addr):
-        device = bluezutils.find_device(bt_addr)
-        dev_path = device.object_path
-        self.dev_connect(dev_path)
+        dev.Disconnect()
 
     def pair_reply(self):
         print("Device paired")
@@ -154,10 +146,13 @@ class DeviceManager:
         manager = dbus.Interface(obj, "org.bluez.AgentManager1")
         manager.RegisterAgent(agent_path, cap)
 
-        print("Agent registered")
+        try:
+            self.device = bluezutils.find_device(bt_addr)
+            self.dev_path = self.device.object_path
+        except LookupError as e:
+            print(e)
+            return
 
-        self.device = bluezutils.find_device(bt_addr)
-        self.dev_path = self.device.object_path
         agent.set_exit_on_release(False)
 
         self.device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=60000)
@@ -166,6 +161,30 @@ class DeviceManager:
 
         # adapter.UnregisterAgent(path)
         # print("Agent unregistered")
+
+    def remove(self, bt_addr):
+        device = bluezutils.find_device(bt_addr)
+        dev_path = device.object_path
+        dev = dbus.Interface(self.bus.get_object("org.bluez", dev_path),
+                             "org.bluez.Device1")
+        adapter = bluezutils.find_adapter()
+        adapter.RemoveDevice(dev)
+
+    def connect(self, bt_addr):
+        try:
+            device = bluezutils.find_device(bt_addr)
+            dev_path = device.object_path
+            self.dev_connect(dev_path)
+        except (dbus.exceptions.DBusException, LookupError) as e:
+            print(e)
+
+    def disconnect(self, bt_addr):
+        try:
+            device = bluezutils.find_device(bt_addr)
+            dev_path = device.object_path
+            self.dev_disconnect(dev_path)
+        except (dbus.exceptions.DBusException, LookupError) as e:
+            print(e)
 
 
 if __name__ == '__main__':
