@@ -1,78 +1,67 @@
+import time
+from typing import List
+
 import dbus
 
-
-def extract_objects(object_list):
-    out_list = ""
-    for obj in object_list:
-        val = str(obj)
-        out_list = out_list + val[val.rfind("/") + 1:] + " "
-    return out_list
+from bt_device import BtDevFromProperties, BtDevice
+from bt_scanner import BtScanner
 
 
-def extract_uuids(uuid_list):
-    out_list = ""
-    for uuid in uuid_list:
-        if uuid.endswith("-0000-1000-8000-00805f9b34fb"):
-            if uuid.startswith("0000"):
-                val = "0x" + uuid[4:8]
-            else:
-                val = "0x" + uuid[0:8]
-        else:
-            val = str(uuid)
-        out_list = out_list + val + " "
-    return out_list
+class BtManager:
+    bt_scanner: BtScanner
 
+    def __init__(self):
+        self.bt_scanner = BtScanner()
 
-def list_devices():
-    bus = dbus.SystemBus()
+    def perform_scan(self):
+        self.bt_scanner.scan()
 
-    manager = dbus.Interface(bus.get_object("org.bluez", "/"),
-                             "org.freedesktop.DBus.ObjectManager")
-    objects = manager.GetManagedObjects()
-    all_devices = [str(path) for path, interfaces in objects.items() if
-                   "org.bluez.Device1" in interfaces.keys()]
+    def get_scanned_devices(self) -> List[BtDevice]:
+        return self.bt_scanner.bt_dev_list
 
-    for path, interfaces in objects.items():
-        if "org.bluez.Adapter1" not in interfaces.keys():
-            continue
+    @staticmethod
+    def get_cached_devices_list() -> List[BtDevice]:
+        bt_dev_list = []
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        bus = dbus.SystemBus()
 
-        print("[ " + path + " ]")
+        manager = dbus.Interface(bus.get_object("org.bluez", "/"),
+                                 "org.freedesktop.DBus.ObjectManager")
+        objects = manager.GetManagedObjects()
+        all_devices = [str(path) for path, interfaces in objects.items() if
+                       "org.bluez.Device1" in interfaces.keys()]
 
-        properties = interfaces["org.bluez.Adapter1"]
-        for key in properties.keys():
-            value = properties[key]
-            if key == "UUIDs":
-                uuid_list = extract_uuids(value)
-                print("    %s = %s" % (key, uuid_list))
-            else:
-                print("    %s = %s" % (key, value))
+        for path, interfaces in objects.items():
+            if "org.bluez.Adapter1" not in interfaces.keys():
+                continue
+            device_list = [x for x in all_devices if x.startswith(path + "/")]
+            for dev_path in device_list:
+                dev = objects[dev_path]
+                properties = dev["org.bluez.Device1"]
+                bt_device = BtDevFromProperties(properties)
+                bt_dev_list.append(bt_device)
 
-        device_list = [d for d in all_devices if d.startswith(path + "/")]
+        return bt_dev_list
 
-        for dev_path in device_list:
-            print("    [ " + dev_path + " ]")
+    def pair_device(self, bt_addr: str):
+        pass
 
-            dev = objects[dev_path]
-            properties = dev["org.bluez.Device1"]
+    def remove_device(self, bt_addr: str):
+        pass
 
-            for key in properties.keys():
-                value = properties[key]
-                if key == "UUIDs":
-                    uuid_list = extract_uuids(value)
-                    print("        %s = %s" % (key, uuid_list))
-                elif key == "Class":
-                    print("        %s = 0x%06x" % (key, value))
-                elif key == "Vendor":
-                    print("        %s = 0x%04x" % (key, value))
-                elif key == "Product":
-                    print("        %s = 0x%04x" % (key, value))
-                elif key == "Version":
-                    print("        %s = 0x%04x" % (key, value))
-                else:
-                    print("        %s = %s" % (key, value))
-
-        print("")
+    def is_busy(self):
+        return self.bt_scanner.is_busy()
 
 
 if __name__ == '__main__':
-    list_devices()
+    bt_manager = BtManager()
+
+    for d in bt_manager.get_cached_devices_list():
+        print(d)
+
+    bt_manager.perform_scan()
+    while bt_manager.is_busy():
+        time.sleep(1)
+
+    for d in bt_manager.get_scanned_devices():
+        print(d)
