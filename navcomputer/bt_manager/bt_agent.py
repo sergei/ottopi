@@ -104,7 +104,9 @@ class DeviceManager:
 
     @staticmethod
     def ask(prompt):
-        return input(prompt)
+        print(prompt)
+        print("Answering 'yes'")
+        return 'yes'
 
     def set_trusted(self, path):
         props = dbus.Interface(self.bus.get_object("org.bluez", path),
@@ -115,6 +117,19 @@ class DeviceManager:
         dev = dbus.Interface(self.bus.get_object("org.bluez", path),
                              "org.bluez.Device1")
         dev.Connect()
+
+    def remove(self, bt_addr):
+        device = bluezutils.find_device(bt_addr)
+        dev_path = device.object_path
+        dev = dbus.Interface(self.bus.get_object("org.bluez", dev_path),
+                             "org.bluez.Device1")
+        adapter = bluezutils.find_adapter()
+        adapter.RemoveDevice(dev)
+
+    def connect(self, bt_addr):
+        device = bluezutils.find_device(bt_addr)
+        dev_path = device.object_path
+        self.dev_connect(dev_path)
 
     def pair_reply(self):
         print("Device paired")
@@ -141,7 +156,7 @@ class DeviceManager:
 
         print("Agent registered")
 
-        self.device = bluezutils.find_device(bt_addr, options.adapter_pattern)
+        self.device = bluezutils.find_device(bt_addr)
         self.dev_path = self.device.object_path
         agent.set_exit_on_release(False)
 

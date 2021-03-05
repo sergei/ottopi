@@ -3,6 +3,7 @@ from typing import List
 
 import dbus
 
+from bt_agent import DeviceManager
 from bt_device import BtDevFromProperties, BtDevice
 from bt_scanner import BtScanner
 
@@ -43,11 +44,20 @@ class BtManager:
 
         return bt_dev_list
 
-    def pair_device(self, bt_addr: str):
-        pass
+    @staticmethod
+    def pair_device(bt_addr: str):
+        dev_manager = DeviceManager()
+        dev_manager.pair(bt_addr, 'KeyboardDisplay')
 
-    def remove_device(self, bt_addr: str):
-        pass
+    @staticmethod
+    def remove_device(bt_addr: str):
+        dev_manager = DeviceManager()
+        dev_manager.remove(bt_addr)
+
+    @staticmethod
+    def connect_device(bt_addr: str):
+        dev_manager = DeviceManager()
+        dev_manager.connect(bt_addr)
 
     def is_busy(self):
         return self.bt_scanner.is_busy()
@@ -65,3 +75,7 @@ if __name__ == '__main__':
 
     for d in bt_manager.get_scanned_devices():
         print(d)
+
+    bt_manager.connect_device('11:22:33:ED:3D:27')
+    # bt_manager.pair_device('11:22:33:ED:3D:27')
+    # bt_manager.remove_device('11:22:33:ED:3D:27')
