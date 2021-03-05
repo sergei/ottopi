@@ -11,6 +11,7 @@ import gpxpy
 from gpxpy.gpx import GPXRoutePoint
 
 import conf
+from bt_manager import BtManager
 from logger import Logger
 from navigator import Navigator
 from polars import Polars
@@ -281,7 +282,7 @@ def timer_get_data():
     navigator = Navigator.get_instance()
     if navigator.is_timer_active():
         return {
-            'is_running':  navigator.is_timer_active(),
+            'is_running': navigator.is_timer_active(),
             'elapsed_time': navigator.get_elapsed_time(),
             'phrf_timers': navigator.get_phrf_timers()
         }
@@ -290,12 +291,67 @@ def timer_get_data():
 
 
 def get_bt_devices():
-    pass
+    bt_manager = BtManager()
+    devices_list = bt_manager.get_cached_devices_list()
+    bt_devices = bt_devices_to_json(devices_list)
+
+    return bt_devices
+
+
+def bt_devices_to_json(devices_list):
+    bt_devices = []
+    for d in devices_list:
+        bt_devices.append({
+            'bd_addr': d.addr,
+            'name': d.name,
+            'is_paired': d.paired,
+            'is_connected': d.connected,
+            'function': 'none',
+        })
+    return bt_devices
 
 
 def pair_bt_device(body=None):
-    pass
+    bd_addr = body['bd_addr']
+    function = body['function']
+    bt_manager = BtManager()
+    bt_manager.pair_device(bd_addr)
+    for d in bt_manager.get_cached_devices_list():
+        if d.addr == bd_addr:
+            if d.paired:
+                return {'paired': 200}
+
+    return {'failed': 420}
 
 
 def unpair_bt_device(bd_addr):
-    pass
+    bt_manager = BtManager()
+    bt_manager.remove_device(bd_addr)
+    for d in bt_manager.get_cached_devices_list():
+        if d.addr == bd_addr:
+            if d.paired:
+                return {'still paired': 420}
+
+    return {'removed': 200}
+
+
+def get_bt_scan_result():
+    bt_manager = BtManager()
+    if bt_manager.is_busy():
+        return {
+            'in_progress': True,
+            'devices': []
+        }
+    else:
+        devices_list = bt_manager.get_scanned_devices()
+        bt_devices = bt_devices_to_json(devices_list)
+        return {
+            'in_progress': False,
+            'devices': bt_devices
+        }
+
+
+def start_scan():
+    bt_manager = BtManager()
+    bt_manager.perform_scan()
+    return {'removed': 200}

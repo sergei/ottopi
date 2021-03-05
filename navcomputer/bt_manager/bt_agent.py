@@ -151,7 +151,6 @@ class DeviceManager:
             self.dev_path = self.device.object_path
         except LookupError as e:
             print(e)
-            return
 
         agent.set_exit_on_release(False)
 
@@ -163,12 +162,15 @@ class DeviceManager:
         # print("Agent unregistered")
 
     def remove(self, bt_addr):
-        device = bluezutils.find_device(bt_addr)
-        dev_path = device.object_path
-        dev = dbus.Interface(self.bus.get_object("org.bluez", dev_path),
-                             "org.bluez.Device1")
-        adapter = bluezutils.find_adapter()
-        adapter.RemoveDevice(dev)
+        try:
+            device = bluezutils.find_device(bt_addr)
+            dev_path = device.object_path
+            dev = dbus.Interface(self.bus.get_object("org.bluez", dev_path),
+                                 "org.bluez.Device1")
+            adapter = bluezutils.find_adapter()
+            adapter.RemoveDevice(dev)
+        except (dbus.exceptions.DBusException, LookupError) as e:
+            print(e)
 
     def connect(self, bt_addr):
         try:

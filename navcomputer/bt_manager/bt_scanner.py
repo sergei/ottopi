@@ -22,12 +22,15 @@ class BtScanner:
         self.is_running = False
         self.bt_dev_list = []
 
-    def scan(self, timeout=5000):
+    def scan(self, timeout=10000):
         self.t = threading.Thread(target=self.__scan, name='bt_scan_thread', args=[timeout])
         self.t.start()
         self.is_running = True
 
     def is_busy(self):
+        if self.t is None:
+            return False
+
         if not self.t.is_alive() and not self.is_running:
             self.t.join()
             return False
@@ -91,17 +94,29 @@ class BtScanner:
                 self.devices[path] = interfaces["org.bluez.Device1"]
 
         adapter = bluezutils.find_adapter()
-        adapter.StartDiscovery()
+        try:
+            print('StartDiscovery()')
+            adapter.StartDiscovery()
 
-        self.mainloop = GLib.MainLoop()
-        GLib.timeout_add(timeout, self.stop_timer)
-        self.mainloop.run()
+            self.mainloop = GLib.MainLoop()
+            GLib.timeout_add(timeout, self.stop_timer)
+            self.mainloop.run()
+        except (dbus.exceptions.DBusException, LookupError) as e:
+            print(e)
+
         self.is_running = False
 
+        self.bt_dev_list.clear()
         for path in self.devices:
             props = self.devices[path]
             bt_device = BtDevFromProperties(props)
             self.bt_dev_list.append(bt_device)
+
+        try:
+            print('StopDiscovery()')
+            adapter.StopDiscovery()
+        except (dbus.exceptions.DBusException, LookupError) as e:
+            print(e)
 
 
 def print_device(addr, properties):

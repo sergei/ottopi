@@ -12,9 +12,10 @@ from bt_scanner import BtScanner
 
 class BtManager:
     bt_scanner: BtScanner
+    bt_scanner = BtScanner()
 
     def __init__(self):
-        self.bt_scanner = BtScanner()
+        pass
 
     def perform_scan(self):
         self.bt_scanner.scan()

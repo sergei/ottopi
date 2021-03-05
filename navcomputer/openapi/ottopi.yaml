@@ -61,7 +61,7 @@ paths:
           schema:
             type: string
             format: path
-          required: false
+          required: true
           description: url path
       responses:
         '200':
@@ -492,11 +492,11 @@ paths:
       operationId: rest_api.get_bt_devices
       tags:
         - bluetooth
-      summary: List bluetooth devices
-      description: List bluetooth devices
+      summary: List paired bluetooth devices
+      description: List paired bluetooth devices
       responses:
         '200':
-          description: Bluetooth devices
+          description: Paired Bluetooth devices
           content:
             application/json:
               schema:
@@ -504,6 +504,45 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BluetoothDevice'
+
+
+  /bluetooth/scan:
+    get:
+      operationId: rest_api.get_bt_scan_result
+      tags:
+        - bluetooth
+      summary: Scan status
+      description: Scan status
+      responses:
+        '200':
+          description: Scan status
+          content:
+            application/json:
+              schema:
+                description: Scan Status
+                type: object
+                properties:
+                  in_progress:
+                    description: If scan is still in progress
+                    type: boolean
+                  devices:
+                    description: List of bluetooth devices
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BluetoothDevice'
+    post:
+      operationId: rest_api.start_scan
+      tags:
+        - bluetooth
+      summary: List bluetooth devices
+      description: List bluetooth devices
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
 
 
   /bluetooth/pair:
@@ -776,13 +815,14 @@ components:
         function:
           description: Device function
           type: string
-          enum: [route, timer, autopilot]
+          enum: [route, timer, autopilot, none]
 
     BtPairingInfo:
       description: Pairing information for Bluetooth Device
       type: object
       required:
         - bd_addr
+        - function
       properties:
         bd_addr:
           description: Address

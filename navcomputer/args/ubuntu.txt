@@ -1,0 +1,4 @@
+--tcp-server-port=54321
+--http-server-port=5555
+--log-dir=~/tmp/ottopi/logs
+--data-dir=~/tmp/ottopi/gpx

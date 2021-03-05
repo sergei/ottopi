@@ -123,8 +123,9 @@ def main(args):
 
     navigator.add_listener(Speaker.get_instance())
     inputs = []
-    for s in args.inputs:
-        inputs += s.split()
+    if args.inputs is not None:
+        for s in args.inputs:
+            inputs += s.split()
 
     sel = selectors.DefaultSelector()
     interfaces = []
