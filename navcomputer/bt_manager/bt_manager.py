@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 from optparse import OptionParser
@@ -6,7 +7,7 @@ from typing import List
 import dbus
 
 from bt_agent import DeviceManager
-from bt_device import BtDevFromProperties, BtDevice
+from bt_device import BtDevFromProperties, BtDevice, BtRemoteFunction
 from bt_scanner import BtScanner
 
 
@@ -14,17 +15,34 @@ class BtManager:
     bt_scanner: BtScanner
     bt_scanner = BtScanner()
 
-    def __init__(self):
-        pass
+    def __init__(self, conf_name: str = None):
+        self.conf_name = conf_name
+        self.dev_func_map = self.load_bt_dev_map(conf_name)
+
+    @staticmethod
+    def load_bt_dev_map(conf_name):
+        dev_map = {}
+        if conf_name is not None:
+            try:
+                with open(conf_name, 'r') as f:
+                    dev_map = json.load(f)
+            except Exception as e:
+                print(e)
+        return dev_map
 
     def perform_scan(self):
         self.bt_scanner.scan()
 
+    def fill_dev_functions(self, dev_list: List[BtDevice]):
+        for dev in dev_list:
+            if dev.addr in self.dev_func_map:
+                dev.function = self.dev_func_map[dev.addr]
+
     def get_scanned_devices(self) -> List[BtDevice]:
+        self.fill_dev_functions(self.bt_scanner.bt_dev_list)
         return self.bt_scanner.bt_dev_list
 
-    @staticmethod
-    def get_cached_devices_list() -> List[BtDevice]:
+    def get_cached_devices_list(self) -> List[BtDevice]:
         bt_dev_list = []
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         bus = dbus.SystemBus()
@@ -45,17 +63,29 @@ class BtManager:
                 bt_device = BtDevFromProperties(properties)
                 bt_dev_list.append(bt_device)
 
+        self.fill_dev_functions(bt_dev_list)
         return bt_dev_list
 
-    @staticmethod
-    def pair_device(bt_addr: str):
+    def pair_device(self, bt_addr: str, function: BtRemoteFunction):
         dev_manager = DeviceManager()
         dev_manager.pair(bt_addr, 'KeyboardDisplay')
+        self.dev_func_map[bt_addr] = function
+        self.update_conf_file()
 
-    @staticmethod
-    def remove_device(bt_addr: str):
+    def remove_device(self, bt_addr: str):
         dev_manager = DeviceManager()
         dev_manager.remove(bt_addr)
+        self.dev_func_map.pop(bt_addr)
+        self.update_conf_file()
+
+    def update_conf_file(self):
+        if self.conf_name is not None:
+            try:
+                with open(self.conf_name, 'w') as f:
+                    print('Updating {}'.format(self.conf_name))
+                    json.dump(self.dev_func_map, f)
+            except Exception as e:
+                print(e)
 
     @staticmethod
     def connect_device(bt_addr: str):
@@ -103,7 +133,7 @@ if __name__ == '__main__':
             print('Please specify address')
     elif cmd == 'pair':
         if len(args) > 1:
-            bt_manager.pair_device(args[1])
+            bt_manager.pair_device(args[1], BtRemoteFunction.ROUTE)
         else:
             print('Please specify address')
     elif cmd == 'remove':

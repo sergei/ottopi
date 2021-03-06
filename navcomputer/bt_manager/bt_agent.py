@@ -149,14 +149,11 @@ class DeviceManager:
         try:
             self.device = bluezutils.find_device(bt_addr)
             self.dev_path = self.device.object_path
+            agent.set_exit_on_release(False)
+            self.device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=60000)
+            self.mainloop.run()
         except LookupError as e:
             print(e)
-
-        agent.set_exit_on_release(False)
-
-        self.device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=60000)
-
-        self.mainloop.run()
 
         # adapter.UnregisterAgent(path)
         # print("Agent unregistered")

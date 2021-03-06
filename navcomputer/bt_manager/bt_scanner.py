@@ -40,9 +40,12 @@ class BtScanner:
     def stop_timer(self):
         print('Scan timer expired')
         self.mainloop.quit()
-        return True
+        return False
 
     def interfaces_added(self, path, interfaces):
+        if "org.bluez.Device1" not in interfaces:
+            return
+
         properties = interfaces["org.bluez.Device1"]
         if not properties:
             return

@@ -11,6 +11,7 @@ import gpxpy
 from gpxpy.gpx import GPXRoutePoint
 
 import conf
+from bt_device import BtRemoteFunction
 from bt_manager import BtManager
 from logger import Logger
 from navigator import Navigator
@@ -291,11 +292,29 @@ def timer_get_data():
 
 
 def get_bt_devices():
-    bt_manager = BtManager()
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+
+    bt_manager = BtManager(bt_conf_name)
     devices_list = bt_manager.get_cached_devices_list()
     bt_devices = bt_devices_to_json(devices_list)
 
     return bt_devices
+
+
+FUNC_STR_TO_ENUM = {
+    'route': BtRemoteFunction.ROUTE,
+    'timer': BtRemoteFunction.TIMER,
+    'autopilot': BtRemoteFunction.AUTOPILOT,
+    'unassigned': BtRemoteFunction.NONE
+}
+
+FUNC_ENUM_TO_STR = {
+    BtRemoteFunction.ROUTE: 'route',
+    BtRemoteFunction.TIMER: 'timer',
+    BtRemoteFunction.AUTOPILOT: 'autopilot',
+    BtRemoteFunction.NONE: 'unassigned'
+}
 
 
 def bt_devices_to_json(devices_list):
@@ -306,7 +325,7 @@ def bt_devices_to_json(devices_list):
             'name': d.name,
             'is_paired': d.paired,
             'is_connected': d.connected,
-            'function': 'none',
+            'function': FUNC_ENUM_TO_STR[d.function],
         })
     return bt_devices
 
@@ -314,8 +333,14 @@ def bt_devices_to_json(devices_list):
 def pair_bt_device(body=None):
     bd_addr = body['bd_addr']
     function = body['function']
-    bt_manager = BtManager()
-    bt_manager.pair_device(bd_addr)
+    if function not in FUNC_STR_TO_ENUM:
+        return {'not supported': 420}
+
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+    bt_manager = BtManager(bt_conf_name)
+
+    bt_manager.pair_device(bd_addr, FUNC_STR_TO_ENUM[function])
     for d in bt_manager.get_cached_devices_list():
         if d.addr == bd_addr:
             if d.paired:
@@ -325,7 +350,10 @@ def pair_bt_device(body=None):
 
 
 def unpair_bt_device(bd_addr):
-    bt_manager = BtManager()
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+    bt_manager = BtManager(bt_conf_name)
+
     bt_manager.remove_device(bd_addr)
     for d in bt_manager.get_cached_devices_list():
         if d.addr == bd_addr:
@@ -336,7 +364,10 @@ def unpair_bt_device(bd_addr):
 
 
 def get_bt_scan_result():
-    bt_manager = BtManager()
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+    bt_manager = BtManager(bt_conf_name)
+
     if bt_manager.is_busy():
         return {
             'in_progress': True,
@@ -352,6 +383,9 @@ def get_bt_scan_result():
 
 
 def start_scan():
-    bt_manager = BtManager()
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+    bt_manager = BtManager(bt_conf_name)
+
     bt_manager.perform_scan()
     return {'removed': 200}

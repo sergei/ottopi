@@ -1,3 +1,13 @@
+from enum import Enum
+
+
+class BtRemoteFunction(str, Enum):
+    NONE = 'none'
+    ROUTE = 'route'
+    TIMER = 'timer'
+    AUTOPILOT = 'autopilot'
+
+
 class BtDevice:
 
     def __init__(self, addr: str, name: str, paired: bool, connected: bool):
@@ -5,6 +15,7 @@ class BtDevice:
         self.name = name
         self.paired = paired
         self.connected = connected
+        self.function = BtRemoteFunction.NONE
 
     def __str__(self):
         connected = 'connected' if self.connected else ''

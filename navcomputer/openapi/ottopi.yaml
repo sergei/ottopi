@@ -830,4 +830,4 @@ components:
         function:
           description: Device function
           type: string
-          enum: [route, timer, autopilot]
+          enum: [route, timer, autopilot, unassigned]
