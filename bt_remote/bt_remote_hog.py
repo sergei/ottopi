@@ -57,12 +57,16 @@ class HogBtRemote(BtRemote):
 
             device = evdev.InputDevice(input_device.path)
             print('Opened {}'.format(device))
-            for event in device.read_loop():
-                if event.type == evdev.ecodes.EV_KEY:
+            try:
+                for event in device.read_loop():
                     print(evdev.categorize(event))
-                    if event.value == 1 and event.code in self.BUTTONS_MAP:
-                        bt_event = self.BUTTONS_MAP.get(event.code)
-                        event_handler(bt_event)
+                    if event.type == evdev.ecodes.EV_KEY:
+                        if event.value == 1 and event.code in self.BUTTONS_MAP:
+                            bt_event = self.BUTTONS_MAP.get(event.code)
+                            event_handler(bt_event)
+            except OSError:
+                time.sleep(1)
+                continue
 
     def stop(self):
         self.keep_running = False
