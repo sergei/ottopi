@@ -15,5 +15,8 @@ class BtRemote:
     def connect(self):
         pass
 
-    def poll_device(self, event_handler):
+    def start_polling(self):
+        pass
+
+    def stop(self):
         pass
