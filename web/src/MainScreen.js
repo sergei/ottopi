@@ -12,6 +12,7 @@ import MenuButtonsView from "./views/MenuButtonsView";
 import LogFileListView from "./views/LogFileListView";
 import About from "./controllers/About";
 import RaceTimer from "./controllers/RaceTimer";
+import BtDevices from "./controllers/BtDevices";
 
 export const screens = {
     NAVIGATION: "navigation",
@@ -77,6 +78,7 @@ class MainScreen extends Component {
                         <FileUploader key="2" swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Select Polar file'}/>
                         <FileUploader key="3" swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Select SW Update package'}/>
                         <LogFileListView/>
+                        <BtDevices swaggerClient={this.state.swaggerClient}  />
                         <About swaggerClient={this.state.swaggerClient}/>
                     </div>
                 break;
