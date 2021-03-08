@@ -15,14 +15,12 @@ class RawInstrDisplay extends React.Component {
     componentDidMount() {
         this.updateInstrumentsStatus();
         let timer = setInterval(this.updateInstrumentsStatus, 1000);
-        this.setState({
-            timer: timer,
-        });
+        this.setState({timer: timer});
     }
 
     componentWillUnmount() {
-        if( this.clearInterval )  // Prevent crash on sign out
-            this.clearInterval(this.state.timer);
+        if ( typeof clearInterval === "function")
+            clearInterval(this.state.timer);
     }
 
     updateInstrumentsStatus = () => {

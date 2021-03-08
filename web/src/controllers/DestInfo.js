@@ -20,8 +20,8 @@ class DestInfo extends React.Component {
     }
 
     componentWillUnmount() {
-        if( this.clearInterval )  // Prevent crash on sign out
-            this.clearInterval(this.state.timer);
+        if ( typeof clearInterval === "function")
+            clearInterval(this.state.timer);
     }
 
     updateDestStatus = () => {
