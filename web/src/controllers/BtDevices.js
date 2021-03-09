@@ -76,8 +76,8 @@ class BtDevices extends Component {
                 this.setState( {loading:false, ok: false} )
             })
             }).catch( error => {
-            console.log("Client error" + error);
-            this.setState( {loading:false, ok: false} )
+                console.log("Client error" + error);
+                this.setState( {loading:false, ok: false} )
         });
     };
 
@@ -92,29 +92,49 @@ class BtDevices extends Component {
                 this.setState( {loading:false, ok: false, deviceListPending: false, } )
             })
             }).catch( error => {
-            console.log("Client error" + error);
-            this.setState( {loading:false, ok: false, deviceListPending: false, } )
+                console.log("Client error" + error);
+                this.setState( {loading:false, ok: false, deviceListPending: false, } )
         });
     };
 
-    // pairAs = (bt_addr, remote_func) => {
-    //     console.log('Requested pairing ', bt_addr, bt_addr);
-    //     let route = this.state.routes[routeIdx];
-    //     route.active = true;
-    //     route.active_wpt_idx = wptIdx;
-    //     this.props.swaggerClient
-    //         .then( client => {
-    //             client.apis.nav.rest_api_select_route({}, {requestBody:route})
-    //                 .then(response => {
-    //                     console.log(response);
-    //                     this.requestRoutes();
-    //                 }).catch( error => {
-    //                 console.log("API error" + error);
-    //             })
-    //         }).catch( error => {
-    //         console.log("Client error" + error);
-    //     });
-    // };
+    pairAs = (bd_addr, remote_func) => {
+        console.log('Requested pairing ', bd_addr, remote_func);
+        this.setState( {loading:true, ok: false})
+        this.props.swaggerClient
+            .then( client => {
+                client.apis.bluetooth.rest_api_pair_bt_device({},
+                    {requestBody: {bd_addr: bd_addr, function: remote_func}})
+                    .then(response => {
+                        console.log(response);
+                        this.requestCachedDevices();
+                    }).catch( error => {
+                        console.log("API error" + error);
+                        this.setState( {loading:false, ok: false} )
+                })
+            }).catch( error => {
+                console.log("Client error" + error);
+                this.setState( {loading:false, ok: false} )
+        });
+    };
+
+    unPair = (bd_addr) => {
+        console.log('Requested unpairing ', bd_addr);
+        this.setState( {loading:true, ok: false})
+        this.props.swaggerClient
+            .then( client => {
+                client.apis.bluetooth.rest_api_unpair_bt_device({bd_addr}, {})
+                    .then(response => {
+                        console.log(response);
+                        this.requestCachedDevices();
+                    }).catch( error => {
+                        console.log("API error" + error);
+                        this.setState( {loading:false, ok: false} )
+                })
+            }).catch( error => {
+                console.log("Client error" + error);
+                this.setState( {loading:false, ok: false} )
+        });
+    };
 
 
     render() {

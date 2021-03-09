@@ -1,18 +1,20 @@
 import React from 'react';
-import WayPointView from "./WayPointView";
 import {useStyles} from "./RouteListView";
 import List from "@material-ui/core/List";
 import {Button, Paper, Typography} from "@material-ui/core";
+import BtDeviceView from "./BtDeviceView";
 
 function BtDevicesListView (props){
     const classes = useStyles();
 
     if( props.loading ) {
         return (<div>Loading BT devices ...</div>)
+    }else if (props.scanIsActive) {
+        return (<div>Scan in progress ...</div>)
     }else {
         if( props.ok){
              const devices = props.devices.map( (device, i) => (
-                    <WayPointView {...device} key={i} pairAs={props.pairAs} unPair={props.unPair}/>
+                    <BtDeviceView {...device} key={i} pairAs={props.pairAs} unPair={props.unPair}/>
                 )
             );
             return (
