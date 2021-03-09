@@ -67,13 +67,13 @@ class BtManager:
         return bt_dev_list
 
     def pair_device(self, bt_addr: str, function: BtRemoteFunction):
-        dev_manager = DeviceManager()
+        dev_manager = DeviceManager.get_instance()
         dev_manager.pair(bt_addr, 'KeyboardDisplay')
         self.dev_func_map[bt_addr] = function
         self.update_conf_file()
 
     def remove_device(self, bt_addr: str):
-        dev_manager = DeviceManager()
+        dev_manager = DeviceManager.get_instance()
         dev_manager.remove(bt_addr)
         self.dev_func_map.pop(bt_addr)
         self.update_conf_file()
@@ -89,12 +89,12 @@ class BtManager:
 
     @staticmethod
     def connect_device(bt_addr: str):
-        dev_manager = DeviceManager()
+        dev_manager = DeviceManager.get_instance()
         dev_manager.connect(bt_addr)
 
     @staticmethod
     def disconnect_device(bt_addr: str):
-        dev_manager = DeviceManager()
+        dev_manager = DeviceManager.get_instance()
         dev_manager.disconnect(bt_addr)
 
     def is_busy(self):

@@ -95,12 +95,28 @@ class Agent(dbus.service.Object):
 
 
 class DeviceManager:
+
+    __instance = None
+
+    @staticmethod
+    def get_instance():
+        """ Static access method """
+        if DeviceManager.__instance is None:
+            DeviceManager()
+        return DeviceManager.__instance
+
     def __init__(self):
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        self.mainloop = GObject.MainLoop()
-        self.bus = dbus.SystemBus()
-        self.device = None
-        self.dev_path = None
+        """ Virtually private constructor.  """
+        if DeviceManager.__instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            DeviceManager.__instance = self
+            dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+            self.mainloop = GObject.MainLoop()
+            self.bus = dbus.SystemBus()
+            self.device = None
+            self.dev_path = None
+            self.agent = Agent(self.bus, AGENT_PATH, self)
 
     @staticmethod
     def ask(prompt):
@@ -140,23 +156,23 @@ class DeviceManager:
         self.mainloop.quit()
 
     def pair(self, bt_addr, cap):
-        agent_path = AGENT_PATH
-        agent = Agent(self.bus, agent_path, self)
         obj = self.bus.get_object(BUS_NAME, "/org/bluez")
         manager = dbus.Interface(obj, "org.bluez.AgentManager1")
-        manager.RegisterAgent(agent_path, cap)
+        manager.RegisterAgent(AGENT_PATH, cap)
+        print('Agent registered')
 
         try:
             self.device = bluezutils.find_device(bt_addr)
             self.dev_path = self.device.object_path
-            agent.set_exit_on_release(False)
+            self.agent.set_exit_on_release(True)
             self.device.Pair(reply_handler=self.pair_reply, error_handler=self.pair_error, timeout=60000)
             self.mainloop.run()
         except LookupError as e:
             print(e)
 
-        # adapter.UnregisterAgent(path)
-        # print("Agent unregistered")
+        print('Unregistering the agent ...')
+        manager.UnregisterAgent(self.agent)
+        print('Done unregistering the agent')
 
     def remove(self, bt_addr):
         try:
