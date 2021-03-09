@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import time
 
 import conf
@@ -19,8 +20,9 @@ def main(args):
     while True:
         bt_dev_map = BtManager.load_bt_dev_map(bt_conf_name)
         new_devices = set(bt_dev_map.keys())
+        print('New devices {}'.format(new_devices))
+        print('Old devices {}'.format(old_devices))
         if old_devices != new_devices:
-
             # Determine what devices to add and what to remove
             removed_devices = old_devices - new_devices
             added_devices = new_devices - old_devices
@@ -45,7 +47,7 @@ def main(args):
 
                 if rest_client is not None:
                     clients[bt_addr] = HogBtRemote(bt_addr, rest_client.on_remote_key)
-                    print('Starting polling device {} {} was added'.format(bt_addr, bt_remote_func))
+                    print('Starting polling device {} for {} control'.format(bt_addr, bt_remote_func))
                     clients[bt_addr].start_polling()
 
         # Sleep before reading config again
@@ -56,4 +58,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("--data-dir", help="Directory to keep all data",  required=True)
 
+    sys.path.append('../navcomputer/')
     main(parser.parse_args())

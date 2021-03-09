@@ -66,16 +66,20 @@ class BtManager:
         self.fill_dev_functions(bt_dev_list)
         return bt_dev_list
 
-    def pair_device(self, bt_addr: str, function: BtRemoteFunction):
-        dev_manager = DeviceManager.get_instance()
-        dev_manager.pair(bt_addr, 'KeyboardDisplay')
-        self.dev_func_map[bt_addr] = function
+    def pair_device(self, bd_addr: str, function: BtRemoteFunction):
+        # Check if device is already paired, then we just change the map settings
+        if bd_addr not in self.dev_func_map:
+            dev_manager = DeviceManager.get_instance()
+            dev_manager.pair(bd_addr)
+
+        self.dev_func_map[bd_addr] = function
         self.update_conf_file()
 
     def remove_device(self, bt_addr: str):
         dev_manager = DeviceManager.get_instance()
         dev_manager.remove(bt_addr)
-        self.dev_func_map.pop(bt_addr)
+        if bt_addr in self.dev_func_map:
+            self.dev_func_map.pop(bt_addr)
         self.update_conf_file()
 
     def update_conf_file(self):

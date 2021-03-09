@@ -363,6 +363,20 @@ def unpair_bt_device(bd_addr):
     return {'removed': 200}
 
 
+def connect_bt_device(bd_addr):
+    navigator = Navigator.get_instance()
+    bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME
+    bt_manager = BtManager(bt_conf_name)
+
+    bt_manager.connect_device(bd_addr)
+    for d in bt_manager.get_cached_devices_list():
+        if d.addr == bd_addr:
+            if d.connected:
+                return {'still connected': 420}
+
+    return {'removed': 200}
+
+
 def get_bt_scan_result():
     navigator = Navigator.get_instance()
     bt_conf_name = navigator.get_data_dir() + os.sep + conf.BT_CONF_NAME

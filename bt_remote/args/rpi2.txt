@@ -1,2 +1,0 @@
---bt-addr-acp=C7:A3:E8:B2:B1:EB
---bt-addr-route=/dev/input/event0

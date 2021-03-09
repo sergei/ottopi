@@ -155,11 +155,14 @@ class DeviceManager:
 
         self.mainloop.quit()
 
-    def pair(self, bt_addr, cap):
+    def pair(self, bt_addr):
         obj = self.bus.get_object(BUS_NAME, "/org/bluez")
         manager = dbus.Interface(obj, "org.bluez.AgentManager1")
-        manager.RegisterAgent(AGENT_PATH, cap)
-        print('Agent registered')
+        try:
+            manager.RegisterAgent(AGENT_PATH, 'KeyboardDisplay')
+            print('Agent registered')
+        except dbus.exceptions.DBusException as e:
+            print('Agent registration error e'.format(e))
 
         try:
             self.device = bluezutils.find_device(bt_addr)
@@ -171,8 +174,11 @@ class DeviceManager:
             print(e)
 
         print('Unregistering the agent ...')
-        manager.UnregisterAgent(self.agent)
-        print('Done unregistering the agent')
+        try:
+            manager.UnregisterAgent(self.agent)
+            print('Done unregistering the agent')
+        except dbus.exceptions.DBusException as e:
+            print('Agent un-registration error e'.format(e))
 
     def remove(self, bt_addr):
         try:
@@ -221,4 +227,4 @@ if __name__ == '__main__':
 
     if len(args) > 0:
         device_manager = DeviceManager()
-        device_manager.pair(args[0], capability)
+        device_manager.pair(args[0])

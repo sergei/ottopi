@@ -1,1 +1,1 @@
---bt-addr-route=/dev/input/event0
+--data-dir=/home/pi/data/gpx

@@ -13,9 +13,9 @@ ssh pi@${PI} 'sudo systemctl stop ottopi-update.service'
 ssh pi@${PI} 'sudo systemctl disable ottopi-update.service'
 
 # Build server app
-pushd web
+pushd web || exit
 yarn build
-popd
+popd || exit
 
 # Copy navcomputer to RPI
 ssh pi@${PI} 'mkdir -p ottopi'

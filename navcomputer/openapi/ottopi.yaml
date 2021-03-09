@@ -6,7 +6,7 @@ servers:
 
 info:
   description: APIs to interact with Otto Pi
-  version: "1.0.2"
+  version: "1.0.4"
   title: Otto Pi API
   contact:
     email: spodshivalov@gmail.com
@@ -573,6 +573,28 @@ paths:
         - bluetooth
       summary: Unpair bluetooth device
       description: Unpair bluetooth device
+      parameters:
+        - in: path
+          name: bd_addr
+          schema:
+            type: string
+          required: true
+          description: BD address
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /bluetooth/connect/{bd_addr}:
+    post:
+      operationId: rest_api.connect_bt_device
+      tags:
+        - bluetooth
+      summary: Connect to bluetooth device
+      description: Connect to  bluetooth device
       parameters:
         - in: path
           name: bd_addr

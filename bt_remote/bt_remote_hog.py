@@ -1,13 +1,14 @@
 import threading
 import time
+from urllib.parse import quote
 
 # noinspection PyUnresolvedReferences
 import evdev
 # noinspection PyUnresolvedReferences
 from evdev import ecodes
 
-from bt_manager import BtManager
 from bt_remote import BtRemote
+from rest_client import RestClient
 
 
 class HogBtRemote(BtRemote):
@@ -30,18 +31,18 @@ class HogBtRemote(BtRemote):
 
     def __init__(self, addr: str, event_handler):
         super().__init__(addr)
-        self.t = threading.Thread(target=self.__poll_device, name='flask_server', args=[event_handler])
+        self.t = threading.Thread(target=self.__poll_device, name='bt_remote_hog', args=[event_handler])
         self.keep_running = True
 
     def start_polling(self):
         self.t.start()
 
     def __poll_device(self, event_handler):
-        bt_manager = BtManager()
+        bt_manager_client = RestClient()
 
         while self.keep_running:
             print('Connecting to device {}'.format(self.addr))
-            bt_manager.connect_device(self.addr)
+            bt_manager_client.post('bluetooth/connect/{bd_addr}'.format(bd_addr=quote(self.addr)), {})
             print('Looking for event device')
             devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
             input_device = None
@@ -52,7 +53,7 @@ class HogBtRemote(BtRemote):
 
             if input_device is None:
                 print('Device is not found, trying again')
-                time.sleep(1)
+                time.sleep(10)
                 continue
 
             device = evdev.InputDevice(input_device.path)
