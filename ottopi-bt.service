@@ -9,7 +9,6 @@ Restart=always
 RestartSec=1
 User=pi
 WorkingDirectory=/home/pi/ottopi/bt_remote
-Environment="PYTHONPATH=../navcomputer/:../navcomputer/bt_manager"
 ExecStart=/usr/bin/python3 /home/pi/ottopi/bt_remote/main.py @/home/pi/ottopi/bt_remote/args/rpi.txt
 StandardOutput=syslog
 StandardError=syslog

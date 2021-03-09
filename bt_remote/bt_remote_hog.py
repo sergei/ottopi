@@ -1,6 +1,5 @@
 import threading
 import time
-from urllib.parse import quote
 
 # noinspection PyUnresolvedReferences
 import evdev
@@ -9,6 +8,7 @@ from evdev import ecodes
 
 from bt_remote import BtRemote
 from rest_client import RestClient
+from rest_client_bt_mgr import RestClientBtMgr
 
 
 class HogBtRemote(BtRemote):
@@ -31,19 +31,22 @@ class HogBtRemote(BtRemote):
 
     def __init__(self, addr: str, event_handler):
         super().__init__(addr)
-        self.t = threading.Thread(target=self.__poll_device, name='bt_remote_hog', args=[event_handler])
+        self.t = threading.Thread(target=self.__poll_device, name='bt_remote_hog', args=[])
         self.keep_running = True
+        self.event_handler = event_handler
 
     def start_polling(self):
         self.t.start()
 
-    def __poll_device(self, event_handler):
-        bt_manager_client = RestClient()
+    def set_event_handler(self, event_handler):
+        self.event_handler = event_handler
+
+    def __poll_device(self):
+        bt_manager_client = RestClientBtMgr()
 
         while self.keep_running:
-            print('Connecting to device {}'.format(self.addr))
-            bt_manager_client.post('bluetooth/connect/{bd_addr}'.format(bd_addr=quote(self.addr)), {})
-            print('Looking for event device')
+            event_handler = self.event_handler
+            bt_manager_client.connect_to(self.addr)
             devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
             input_device = None
             for d in devices:
