@@ -1,10 +1,12 @@
 import argparse
 import time
 
+from bt_device import BtRemoteFunction
 from bt_manager import BtManager
 from rest_client_bang_acp import BangAcpRestClient
 from bt_remote_hog import HogBtRemote
 from rest_client_routes import RoutesRestClient
+from rest_client_start_timer import StartTimerRestClient
 
 
 def get_device_map(bt_manager):
@@ -76,10 +78,12 @@ def main(args):
 
 def find_event_handler(bt_remote_func):
     rest_client = None
-    if bt_remote_func == 'route':
+    if bt_remote_func == BtRemoteFunction.ROUTE:
         rest_client = RoutesRestClient()
-    elif bt_remote_func == 'autopilot':
+    elif bt_remote_func == BtRemoteFunction.AUTOPILOT:
         rest_client = BangAcpRestClient()
+    elif bt_remote_func == BtRemoteFunction.TIMER:
+        rest_client = StartTimerRestClient()
     else:
         print('Unsupported BT remote function {}'.format(bt_remote_func))
     return rest_client
