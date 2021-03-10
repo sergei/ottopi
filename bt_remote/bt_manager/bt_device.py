@@ -10,10 +10,11 @@ class BtRemoteFunction(str, Enum):
 
 class BtDevice:
 
-    def __init__(self, addr: str, name: str, paired: bool, connected: bool):
+    def __init__(self, addr: str, name: str, paired: bool, trusted: bool, connected: bool):
         self.addr = addr
         self.name = name
         self.paired = paired
+        self.trusted = trusted
         self.connected = connected
         self.function = BtRemoteFunction.NONE
 
@@ -30,4 +31,4 @@ def BtDevFromProperties(props):
     paired = props["Paired"] if "Paired" in props else False
     trusted = props["Trusted"] if "Trusted" in props else False
     connected = props["Connected"] if "Connected" in props else False
-    return BtDevice(addr, name, paired and trusted, connected)
+    return BtDevice(addr, name, paired, trusted, connected)
