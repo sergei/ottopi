@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import time
 from optparse import OptionParser
@@ -10,14 +11,54 @@ from bt_agent import DeviceManager
 from bt_device import BtDevFromProperties, BtDevice, BtRemoteFunction
 from bt_scanner import BtScanner
 
+BT_CONF_NAME = 'bt_conf.json'
+
 
 class BtManager:
     bt_scanner: BtScanner
-    bt_scanner = BtScanner()
+    dev_manager: DeviceManager
 
-    def __init__(self, conf_name: str = None):
-        self.conf_name = conf_name
-        self.dev_func_map = self.load_bt_dev_map(conf_name)
+    __instance = None
+
+    @staticmethod
+    def get_instance():
+        """ Static access method """
+        if BtManager.__instance is None:
+            BtManager()
+        return BtManager.__instance
+
+    @staticmethod
+    def load_instance(conf_dir):
+        instance = BtManager.get_instance()
+        instance.load_config(conf_dir)
+        return instance
+
+    def __init__(self):
+        """ Virtually private constructor.  """
+        if BtManager.__instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            BtManager.__instance = self
+            self.conf_name = None
+            self.dev_func_map = None
+            self.bt_scanner = BtScanner()
+            self.dev_manager = DeviceManager()
+
+    def load_config(self, conf_dir: str = None):
+        self.conf_name = os.path.expanduser(conf_dir + os.sep + BT_CONF_NAME)
+        self.dev_func_map = self.load_bt_dev_map(self.conf_name)
+
+    def reread_config(self):
+        self.dev_func_map = self.load_bt_dev_map(self.conf_name)
+
+    def update_conf_file(self):
+        if self.conf_name is not None:
+            try:
+                with open(self.conf_name, 'w') as f:
+                    print('Updating {}'.format(self.conf_name))
+                    json.dump(self.dev_func_map, f)
+            except Exception as e:
+                print(e)
 
     @staticmethod
     def load_bt_dev_map(conf_name):
@@ -34,6 +75,7 @@ class BtManager:
         self.bt_scanner.scan()
 
     def fill_dev_functions(self, dev_list: List[BtDevice]):
+        self.reread_config()
         for dev in dev_list:
             if dev.addr in self.dev_func_map:
                 dev.function = self.dev_func_map[dev.addr]
@@ -69,37 +111,22 @@ class BtManager:
     def pair_device(self, bd_addr: str, function: BtRemoteFunction):
         # Check if device is already paired, then we just change the map settings
         if bd_addr not in self.dev_func_map:
-            dev_manager = DeviceManager.get_instance()
-            dev_manager.pair(bd_addr)
+            self.dev_manager.pair(bd_addr)
 
         self.dev_func_map[bd_addr] = function
         self.update_conf_file()
 
     def remove_device(self, bt_addr: str):
-        dev_manager = DeviceManager.get_instance()
-        dev_manager.remove(bt_addr)
+        self.dev_manager.remove(bt_addr)
         if bt_addr in self.dev_func_map:
             self.dev_func_map.pop(bt_addr)
         self.update_conf_file()
 
-    def update_conf_file(self):
-        if self.conf_name is not None:
-            try:
-                with open(self.conf_name, 'w') as f:
-                    print('Updating {}'.format(self.conf_name))
-                    json.dump(self.dev_func_map, f)
-            except Exception as e:
-                print(e)
+    def connect_device(self, bt_addr: str):
+        self.dev_manager.connect(bt_addr)
 
-    @staticmethod
-    def connect_device(bt_addr: str):
-        dev_manager = DeviceManager.get_instance()
-        dev_manager.connect(bt_addr)
-
-    @staticmethod
-    def disconnect_device(bt_addr: str):
-        dev_manager = DeviceManager.get_instance()
-        dev_manager.disconnect(bt_addr)
+    def disconnect_device(self, bt_addr: str):
+        self.dev_manager.disconnect(bt_addr)
 
     def is_busy(self):
         return self.bt_scanner.is_busy()
@@ -113,7 +140,7 @@ if __name__ == '__main__':
         print('Please specify the command')
         sys.exit(0)
 
-    bt_manager = BtManager()
+    bt_manager = BtManager.get_instance()
 
     cmd = args[0]
     if cmd == 'devices':

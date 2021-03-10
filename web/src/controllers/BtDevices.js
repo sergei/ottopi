@@ -40,7 +40,7 @@ class BtDevices extends Component {
         this.setState( {loading:true, ok: false,})
         this.props.swaggerClient
         .then( client =>
-            {client.apis.bluetooth.rest_api_start_scan({},{}).then(response => {
+            {client.apis.bluetooth.bt_rest_api_start_scan({},{}).then(response => {
                 console.log(response)
                 // Start poling for scan status
                 this.requestScanResults();
@@ -61,7 +61,7 @@ class BtDevices extends Component {
         this.setState( {loading:true, ok: false})
 
         this.props.swaggerClient
-            .then( client => {client.apis.bluetooth.rest_api_get_bt_scan_result().then(response => {
+            .then( client => {client.apis.bluetooth.bt_rest_api_get_bt_scan_result().then(response => {
                 // console.log(response)
                 let scanIsActive = response.body.in_progress;
                 this.setState( {
@@ -84,7 +84,7 @@ class BtDevices extends Component {
     requestCachedDevices = () => {
         console.log('Fetching cached devices');
         this.props.swaggerClient
-            .then( client => {client.apis.bluetooth.rest_api_get_bt_devices().then(response => {
+            .then( client => {client.apis.bluetooth.bt_rest_api_get_bt_devices().then(response => {
                 console.log(response)
                 this.setState( {loading:false, ok: true, deviceListPending: false, devices: response.body} )
             }).catch( error => {
@@ -102,7 +102,7 @@ class BtDevices extends Component {
         this.setState( {loading:true, ok: false})
         this.props.swaggerClient
             .then( client => {
-                client.apis.bluetooth.rest_api_pair_bt_device({},
+                client.apis.bluetooth.bt_rest_api_pair_bt_device({},
                     {requestBody: {bd_addr: bd_addr, function: remote_func}})
                     .then(response => {
                         console.log(response);
@@ -122,7 +122,7 @@ class BtDevices extends Component {
         this.setState( {loading:true, ok: false})
         this.props.swaggerClient
             .then( client => {
-                client.apis.bluetooth.rest_api_unpair_bt_device({bd_addr}, {})
+                client.apis.bluetooth.bt_rest_api_unpair_bt_device({bd_addr}, {})
                     .then(response => {
                         console.log(response);
                         this.requestCachedDevices();

@@ -96,27 +96,13 @@ class Agent(dbus.service.Object):
 
 class DeviceManager:
 
-    __instance = None
-
-    @staticmethod
-    def get_instance():
-        """ Static access method """
-        if DeviceManager.__instance is None:
-            DeviceManager()
-        return DeviceManager.__instance
-
     def __init__(self):
-        """ Virtually private constructor.  """
-        if DeviceManager.__instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            DeviceManager.__instance = self
-            dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-            self.mainloop = GObject.MainLoop()
-            self.bus = dbus.SystemBus()
-            self.device = None
-            self.dev_path = None
-            self.agent = Agent(self.bus, AGENT_PATH, self)
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        self.mainloop = GObject.MainLoop()
+        self.bus = dbus.SystemBus()
+        self.device = None
+        self.dev_path = None
+        self.agent = Agent(self.bus, AGENT_PATH, self)
 
     @staticmethod
     def ask(prompt):

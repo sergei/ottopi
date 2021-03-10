@@ -1,21 +1,31 @@
+import argparse
 import time
 
+from bt_manager import BtManager
 from rest_client_bang_acp import BangAcpRestClient
 from bt_remote_hog import HogBtRemote
-from rest_client_bt_mgr import RestClientBtMgr
 from rest_client_routes import RoutesRestClient
 
 
-def main():
+def get_device_map(bt_manager):
+    device_map = {}
+    devices = bt_manager.get_cached_devices_list()
+    for device in devices:
+        device_map[device.addr] = device.function
+
+    print(device_map)
+    return device_map
+
+
+def main(args):
+    bt_manager = BtManager.load_instance(args.data_dir)
 
     clients = {}
     old_dev_addr_set = set()
     old_bt_dev_map = {}
 
-    bt_manager_client = RestClientBtMgr()
-
     while True:
-        new_bt_dev_map = bt_manager_client.get_device_map()
+        new_bt_dev_map = get_device_map(bt_manager)
         new_dev_addr_set = set(new_bt_dev_map.keys())
         print('New devices {}'.format(new_dev_addr_set))
         print('Old devices {}'.format(old_dev_addr_set))
@@ -39,7 +49,7 @@ def main():
                 rest_client = find_event_handler(bt_remote_func)
 
                 if rest_client is not None:
-                    clients[bt_addr] = HogBtRemote(bt_addr, rest_client.on_remote_key)
+                    clients[bt_addr] = HogBtRemote(bt_manager, bt_addr, rest_client.on_remote_key)
                     print('Starting polling device {} for {} control'.format(bt_addr, bt_remote_func))
                     clients[bt_addr].start_polling()
 
@@ -76,4 +86,7 @@ def find_event_handler(bt_remote_func):
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+    parser.add_argument("--data-dir", help="Directory to keep GPX data",  required=True)
+
+    main(parser.parse_args())

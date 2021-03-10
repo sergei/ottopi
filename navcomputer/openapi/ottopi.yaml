@@ -489,7 +489,7 @@ paths:
 ########################################################################################################################
   /bluetooth/devices:
     get:
-      operationId: rest_api.get_bt_devices
+      operationId: bt_rest_api.get_bt_devices
       tags:
         - bluetooth
       summary: List paired bluetooth devices
@@ -508,7 +508,7 @@ paths:
 
   /bluetooth/scan:
     get:
-      operationId: rest_api.get_bt_scan_result
+      operationId: bt_rest_api.get_bt_scan_result
       tags:
         - bluetooth
       summary: Scan status
@@ -531,7 +531,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/BluetoothDevice'
     post:
-      operationId: rest_api.start_scan
+      operationId: bt_rest_api.start_scan
       tags:
         - bluetooth
       summary: List bluetooth devices
@@ -547,7 +547,7 @@ paths:
 
   /bluetooth/pair:
     post:
-      operationId: rest_api.pair_bt_device
+      operationId: bt_rest_api.pair_bt_device
       tags:
         - bluetooth
       summary: Pair with BT device
@@ -568,7 +568,7 @@ paths:
 
   /bluetooth/unpair/{bd_addr}:
     delete:
-      operationId: rest_api.unpair_bt_device
+      operationId: bt_rest_api.unpair_bt_device
       tags:
         - bluetooth
       summary: Unpair bluetooth device
@@ -590,7 +590,7 @@ paths:
 
   /bluetooth/connect/{bd_addr}:
     post:
-      operationId: rest_api.connect_bt_device
+      operationId: bt_rest_api.connect_bt_device
       tags:
         - bluetooth
       summary: Connect to bluetooth device

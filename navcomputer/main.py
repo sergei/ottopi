@@ -8,6 +8,7 @@ import connexion
 from flask_cors import CORS
 import logging
 
+from bt_rest_api import BT_CONF_DIR
 from logger import Logger
 import conf
 from nmea_interface import NmeaInterface
@@ -103,6 +104,9 @@ def start_flask_server(http_port):
 def main(args):
     print('Inputs', args.inputs)
     Logger.set_log_dir(args.log_dir)
+
+    # This variable is used by BT rest APIs to load BT configuration
+    os.environ[BT_CONF_DIR] = args.data_dir
 
     navigator = Navigator.get_instance()
     data_dir = os.path.expanduser(args.data_dir)

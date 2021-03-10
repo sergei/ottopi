@@ -6,9 +6,8 @@ import evdev
 # noinspection PyUnresolvedReferences
 from evdev import ecodes
 
+from bt_manager import BtManager
 from bt_remote import BtRemote
-from rest_client import RestClient
-from rest_client_bt_mgr import RestClientBtMgr
 
 
 class HogBtRemote(BtRemote):
@@ -28,12 +27,14 @@ class HogBtRemote(BtRemote):
 
     t: threading.Thread
     keep_running: bool
+    bt_manager: BtManager
 
-    def __init__(self, addr: str, event_handler):
+    def __init__(self, bt_manager: BtManager, addr: str, event_handler):
         super().__init__(addr)
         self.t = threading.Thread(target=self.__poll_device, name='bt_remote_hog', args=[])
         self.keep_running = True
         self.event_handler = event_handler
+        self.bt_manager = bt_manager
 
     def start_polling(self):
         self.t.start()
@@ -42,11 +43,10 @@ class HogBtRemote(BtRemote):
         self.event_handler = event_handler
 
     def __poll_device(self):
-        bt_manager_client = RestClientBtMgr()
 
         while self.keep_running:
             event_handler = self.event_handler
-            bt_manager_client.connect_to(self.addr)
+            self.bt_manager.connect_device(self.addr)
             devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
             input_device = None
             for d in devices:
