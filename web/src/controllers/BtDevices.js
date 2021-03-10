@@ -4,7 +4,7 @@ import BtDevicesListView from "../views/BtDeviceListView";
 class BtDevices extends Component {
     // State of this component
     state = {
-        loading: true, // true when ajax request is running
+        loading: false, // true when ajax request is running
         scanIsActive: false,  // True when scan is active
         deviceListPending: true, // We haven't got list of the devices yet
         scanPollTimer: null,
@@ -37,6 +37,7 @@ class BtDevices extends Component {
     }
 
     startScan = () => {
+        console.log('Starting scan');
         this.setState( {loading:true, ok: false,})
         this.props.swaggerClient
         .then( client =>
@@ -62,14 +63,17 @@ class BtDevices extends Component {
 
         this.props.swaggerClient
             .then( client => {client.apis.bluetooth.bt_rest_api_get_bt_scan_result().then(response => {
-                // console.log(response)
+
                 let scanIsActive = response.body.in_progress;
-                this.setState( {
-                    loading:false, ok: true, scanIsActive: scanIsActive, scanned_devices: response.body.devices,
-                })
-                // No scan is running, so let's just request cached devices
-                if ( ! scanIsActive && this.state.deviceListPending ){
-                    this.requestCachedDevices();
+
+                if ( !(this.state.scanIsActive && scanIsActive) ){  // Don't update state while scan status is ON
+                    this.setState( {
+                        loading:false, ok: true, scanIsActive: scanIsActive, scanned_devices: response.body.devices,
+                    })
+                    // No scan is running, so let's just request cached devices
+                    if ( ! scanIsActive && this.state.deviceListPending ){
+                        this.requestCachedDevices();
+                    }
                 }
             }).catch( error => {
                 console.log("API error" + error);

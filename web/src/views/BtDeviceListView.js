@@ -7,10 +7,10 @@ import BtDeviceView from "./BtDeviceView";
 function BtDevicesListView (props){
     const classes = useStyles();
 
-    if( props.loading ) {
-        return (<div>Loading BT devices ...</div>)
-    }else if (props.scanIsActive) {
+    if( props.scanIsActive) {
         return (<div>Scan in progress ...</div>)
+    }else if (props.loading) {
+        return (<div>Loading BT devices ...</div>)
     }else {
         if( props.ok){
              const devices = props.devices.map( (device, i) => (
