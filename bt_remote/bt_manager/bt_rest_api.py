@@ -1,7 +1,9 @@
 import os
 
 from bt_device import BtRemoteFunction
-from bt_manager import BtManager
+from sys import platform
+if platform != "darwin":
+    from bt_manager import BtManager
 
 BT_CONF_DIR = 'BT_CONF_DIR'
 

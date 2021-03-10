@@ -8,7 +8,12 @@ import connexion
 from flask_cors import CORS
 import logging
 
-from bt_rest_api import BT_CONF_DIR
+from sys import platform
+if platform == "darwin":
+    BT_CONF_DIR = 'BT_CONF_DIR'
+else:
+    from bt_rest_api import BT_CONF_DIR
+
 from logger import Logger
 import conf
 from nmea_interface import NmeaInterface
