@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Build server app
-pushd web
+pushd web || exit
 yarn build
-popd
+popd || exit
 
-tar cvzf update/otto-pi-update.tgz  --exclude='navcomputer/__pycache__/' navcomputer/ bt_remote/ web/build
+tar cvzf update/otto-pi-update.tgz  --exclude='navcomputer/__pycache__/' --exclude='bt_remote/__pycache__/' \
+     navcomputer/ bt_remote/ web/build

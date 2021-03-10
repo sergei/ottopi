@@ -10,7 +10,7 @@ class RestClient:
     Use this class to communicate with otto pi navigator
     """
     def __init__(self, url=None):
-        self.end_point_url = 'http://localhost:5555/' if url is None else url
+        self.end_point_url = 'http://localhost/' if url is None else url
 
     def post(self, path, data):
         print(self.end_point_url + path)

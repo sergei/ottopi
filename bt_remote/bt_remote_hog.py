@@ -1,3 +1,4 @@
+import selectors
 import threading
 import time
 
@@ -48,29 +49,40 @@ class HogBtRemote(BtRemote):
             event_handler = self.event_handler
             self.bt_manager.connect_device(self.addr)
             devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-            input_device = None
+            input_devices = []
             for d in devices:
                 if d.uniq.lower() == self.addr.lower():
-                    input_device = d
-                    break
+                    input_devices.append(d)
 
-            if input_device is None:
-                print('Device is not found, trying again')
+            if len(input_devices) == 0:
+                print('No devices found for address {}, trying again'.format(self.addr))
                 time.sleep(10)
-                continue
 
-            device = evdev.InputDevice(input_device.path)
-            print('Opened {}'.format(device))
-            try:
-                for event in device.read_loop():
-                    print(evdev.categorize(event))
-                    if event.type == evdev.ecodes.EV_KEY:
-                        if event.value == 1 and event.code in self.BUTTONS_MAP:
-                            bt_event = self.BUTTONS_MAP.get(event.code)
-                            event_handler(bt_event)
-            except OSError:
-                time.sleep(1)
-                continue
+            # We might have multiple devices for the same address, so read from all of them
+            selector = selectors.DefaultSelector()
+            for device in input_devices:
+                # This works because InputDevice has a `fileno()` method.
+                selector.register(device, selectors.EVENT_READ)
+                print('Registered {}'.format(device.path))
+
+            while True:
+                for key, mask in selector.select():
+                    device = key.fileobj
+                    try:
+                        # noinspection PyUnresolvedReferences
+                        for event in device.read():
+                            print(evdev.categorize(event))
+                            if event.type == evdev.ecodes.EV_KEY:
+                                if event.value == 1 and event.code in self.BUTTONS_MAP:
+                                    bt_event = self.BUTTONS_MAP.get(event.code)
+                                    try:
+                                        event_handler(bt_event)
+                                    except Exception as e:
+                                        print('Failed to handle event {}:'.format(e))
+                    except OSError as e:
+                        print('Event reading error :{}'.format(e))
+                        time.sleep(1)
+                        continue
 
     def stop(self):
         self.keep_running = False
