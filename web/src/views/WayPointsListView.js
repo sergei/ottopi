@@ -5,13 +5,10 @@ import List from "@material-ui/core/List";
 import {
     Collapse,
     Divider,
-    IconButton,
-    ListItem,
+    ListItem, ListItemSecondaryAction,
     ListItemText,
-    Paper,
+    Paper, Switch,
 } from "@material-ui/core";
-import ExploreOffIcon from '@material-ui/icons/ExploreOff';
-import ExploreIcon from '@material-ui/icons/Explore';
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import {ExpandLess, ExpandMore} from "@material-ui/icons";
 import CurrentRoutePointView from "./CurrentRoutePointView";
@@ -19,7 +16,6 @@ import CurrentRoutePointView from "./CurrentRoutePointView";
 function WayPointsListView (props){
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
-
     const handleClick = () => {
         setOpen(!open);
     };
@@ -34,25 +30,37 @@ function WayPointsListView (props){
             );
 
             const routeWpts = props.routeWpts.map( (wpt, i) => (
-                <CurrentRoutePointView {...wpt} key={i} idx={i} navigateTo={props.navigateTo} removeFromRoute={props.removeFromRoute}/>
+                <CurrentRoutePointView {...wpt} key={i} idx={i} activeWptIdx={props.activeWptIdx}
+                                       // Methods
+                                       navigateTo={props.navigateTo}
+                                       removeFromRoute={props.removeFromRoute}/>
                 )
             );
+
+            const routeName = props.routeIsActive ? "Current route" : "No route is selected";
 
             return (
                 <Paper>
                     <div className={classes.root}>
                         <List component="nav" aria-label="main mailbox folders">
                             <ListItem button>
-                                <ListItemText primary="Current Route (active)" />
-                                <IconButton edge="end" aria-label="delete">
-                                    <ExploreIcon />
-                                </IconButton>
+                                <ListItemText primary={routeName} />
+                                    <ListItemSecondaryAction>
+                                        <Switch
+                                            edge="end"
+                                            onChange={props.toggleActiveRoute}
+                                            checked={props.routeIsActive}
+                                            inputProps={{ 'aria-labelledby': 'switch-list-label-wifi' }}
+                                        />
+                                    </ListItemSecondaryAction>
                             </ListItem>
                         </List>
                         <Divider />
-                        <List component="nav" aria-label="secondary mailbox folders">
-                            {routeWpts}
-                        </List>
+                        <Collapse in={props.routeIsActive} timeout="auto" unmountOnExit>
+                            <List component="nav" aria-label="secondary mailbox folders">
+                                {routeWpts}
+                            </List>
+                        </Collapse>
                     </div>
 
                     <List component="nav" className={classes.root}>

@@ -4,7 +4,6 @@ import SwaggerClient from 'swagger-client'
 import FileUploader from "./controllers/FileUploader";
 import WayPoints from "./controllers/WayPoints";
 import Autopilot from "./controllers/Autopilot";
-import Routes from "./controllers/Routes";
 import DestInfo from "./controllers/DestInfo";
 import NavHistory from "./controllers/NavHistory";
 import {Component} from "react";
@@ -62,7 +61,6 @@ class MainScreen extends Component {
                 screen_jsx =
                     <div>
                         <WayPoints swaggerClient={this.state.swaggerClient} />
-                        <Routes swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
             case screens.AUTOPILOT:

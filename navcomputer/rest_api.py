@@ -61,32 +61,21 @@ def get_history():
     return history
 
 
-def goto_wpt(body=None):
-    wpt = body
-    navigator = Navigator.get_instance()
-
-    dest_wpt = GPXRoutePoint(name=wpt['name'], latitude=wpt['lat'], longitude=wpt['lon'])
-    navigator.goto_wpt(dest_wpt)
-    return {'status': 200}
-
-
 def get_wpts():
     navigator = Navigator.get_instance()
     gpx_wpts = navigator.get_wpts()
-    dest_wpt = navigator.get_dest_wpt()
     wpts = []
     for wpt in gpx_wpts:
         wpt_dict = {
             'name': wpt.name,
             'lat': wpt.latitude,
             'lon': wpt.longitude,
-            'active': dest_wpt is not None and dest_wpt.name == wpt.name
         }
         wpts.append(wpt_dict)
     return wpts
 
 
-def select_route(body=None):
+def set_active_route(body=None):
     route = body
     print(route)
     active_wpt_idx = int(route['active_wpt_idx']) % len(route['wpts'])
@@ -100,7 +89,7 @@ def select_route(body=None):
     return {'status': 200}
 
 
-def clear_dest():
+def clear_active_route():
     print('Clear current destination')
     Navigator.get_instance().clear_dest()
 
@@ -125,7 +114,6 @@ def get_routes():
                 'name': wpt.name,
                 'lat': wpt.latitude,
                 'lon': wpt.longitude,
-                'active': route_is_active and active_wpt_idx == wpt_idx,
             })
         route = {
             'name': gpx_route.name,
@@ -135,6 +123,36 @@ def get_routes():
         }
         routes.append(route)
     return routes
+
+
+def get_active_route():
+    navigator = Navigator.get_instance()
+    gpx_route, active_wpt_idx = navigator.get_active_route()
+
+    if gpx_route is None:
+        return {
+            'name': '',
+            'wpts': [],
+            'active': False,
+            'active_wpt_idx': -1
+        }
+
+    wpts = []
+    for wpt_idx, wpt in enumerate(gpx_route.points):
+        wpts.append({
+            'name': wpt.name,
+            'lat': wpt.latitude,
+            'lon': wpt.longitude,
+        })
+
+    route = {
+        'name': gpx_route.name if gpx_route.name is not None else '',
+        'wpts': wpts,
+        'active': True,
+        'active_wpt_idx': active_wpt_idx
+    }
+
+    return route
 
 
 def root_page():

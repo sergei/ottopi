@@ -17,14 +17,18 @@ info:
 tags:
   - name: nav
     description: Navigation data REST APIs
-  - name: web
-    description: Paths to acess the builtin Web site
+  - name: routes
+    description: Manipulate routes and waypoints
   - name: autopilot
     description: Autopilot control REST APIs
   - name: timer
-    description: Start timer REST APIs
+    description: Race timer REST APIs
+  - name: files
+    description: APIs to upload/download files
   - name: bluetooth
     description: APIs to manage bluetooth devices
+  - name: web
+    description: Paths to acess the builtin Web site
 
 paths:
 ########################################################################################################################
@@ -72,7 +76,7 @@ paths:
                 type: string
 
 ########################################################################################################################
-#  /navigation
+#  navigation
 ########################################################################################################################
   /instr:
     get:
@@ -122,11 +126,15 @@ paths:
                 items:
                   $ref: '#/components/schemas/HistoryItem'
 
+
+########################################################################################################################
+#  routes
+########################################################################################################################
   /wpts:
     get:
       operationId: rest_api.get_wpts
       tags:
-        - nav
+        - routes
       summary: Get list of waypoints
       description: Get list of waypoints
       responses:
@@ -141,7 +149,7 @@ paths:
     get:
       operationId: rest_api.get_routes
       tags:
-        - nav
+        - routes
       summary: Get list of routes
       description: Get list of routes
       responses:
@@ -152,11 +160,77 @@ paths:
               schema:
                 $ref: '#/components/schemas/Routes'
 
+  /routes/active_route:
+    get:
+      operationId: rest_api.get_active_route
+      tags:
+        - routes
+      summary: Currently active route
+      description: Currently active route
+      responses:
+        '200':
+          description: Currently active route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+    post:
+      operationId: rest_api.set_active_route
+      tags:
+        - routes
+      summary: Sail this route
+      description: Sail this route
+      requestBody:
+        description: Sail this route
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: Successfully selected
+          content:
+            text/html:
+              schema:
+                type: string
+    delete:
+      operationId: rest_api.clear_active_route
+      tags:
+        - routes
+      summary: Clears current destination
+      description: Clears current destination
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /routes/announce_current_route:
+    post:
+      operationId: rest_api.announce_current_route
+      tags:
+        - routes
+      summary: Announce current route and waypoint
+      description: Announce current route and waypoint
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+########################################################################################################################
+#  File management
+########################################################################################################################
+
   /logs:
     get:
       operationId: rest_api.get_logs
       tags:
-        - nav
+        - files
       summary: Get list of log files
       description: Get list of log files
       responses:
@@ -173,7 +247,7 @@ paths:
     get:
       operationId: rest_api.get_log
       tags:
-        - nav
+        - files
       summary: Download log file
       description: Download log files
       parameters:
@@ -197,7 +271,7 @@ paths:
     get:
       operationId: rest_api.zip_all_logs
       tags:
-        - nav
+        - files
       summary: Download all log files in one zip
       description: Download all log files in one zip
       responses:
@@ -209,53 +283,11 @@ paths:
                 type: string
                 format: binary
 
-  /goto_wpt:
-    post:
-      operationId: rest_api.goto_wpt
-      tags:
-        - nav
-      summary: Set destination WPT
-      description: Set destination WPT
-      requestBody:
-        description: Destination WPT
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Waypoint'
-      responses:
-        '200':
-          description: Successfully set
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /select_route:
-    post:
-      operationId: rest_api.select_route
-      tags:
-        - nav
-      summary: Sail this route
-      description: Sail this route
-      requestBody:
-        description: Sail this route
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Route'
-      responses:
-        '200':
-          description: Successfully selected
-          content:
-            text/html:
-              schema:
-                type: string
-
   /polars:
     post:
       operationId: rest_api.polars_upload
       tags:
-        - nav
+        - files
       summary: Uplaod file containing polras data
       description: Uplaod file containing polras data
       requestBody:
@@ -279,7 +311,7 @@ paths:
     post:
       operationId: rest_api.gpx_upload
       tags:
-        - nav
+        - files
       summary: Upload GPX file containing routes and waypoints
       description:  Upload GPX file containing routes and waypoints
       requestBody:
@@ -303,7 +335,7 @@ paths:
     post:
       operationId: rest_api.sw_update
       tags:
-        - nav
+        - files
       summary: Upload update package
       description:  Upload update package
       requestBody:
@@ -323,35 +355,6 @@ paths:
               schema:
                 type: string
 
-  /announce_current_route:
-    post:
-      operationId: rest_api.announce_current_route
-      tags:
-        - nav
-      summary: Announce current route and waypoint
-      description: Announce current route and waypoint
-      responses:
-        '200':
-          description: Command accepted
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /clear_dest:
-    post:
-      operationId: rest_api.clear_dest
-      tags:
-        - nav
-      summary: Clears current destination
-      description: Clears current destination
-      responses:
-        '200':
-          description: Command accepted
-          content:
-            text/html:
-              schema:
-                type: string
 
 
 ########################################################################################################################
@@ -681,9 +684,6 @@ components:
           minimum: -180
           maximum: 180
           type: number
-        active:
-          description: We are navigating to this waypoint
-          type: boolean
 
     RawInstrData:
       description: Raw Instruments Data

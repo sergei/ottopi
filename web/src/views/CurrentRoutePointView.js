@@ -10,7 +10,7 @@ function CurrentRoutePointView(props) {
     return (
         <ListItem button className={classes.nested}
                   onClick={ () => props.navigateTo(props.idx)}>
-            {props.active ? <ChevronRightIcon/> : ''}
+            {props.idx === props.activeWptIdx ? <ChevronRightIcon/> : ''}
             <ListItemText primary={props.name} />
             <ListItemSecondaryAction>
                 <IconButton edge="end" aria-label="delete"
