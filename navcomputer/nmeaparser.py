@@ -143,14 +143,15 @@ class NmeaParser:
 
     def parse_rmc(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_rmc_recommended_minimum_navigation_information """
-        hour = int(t[1][0:2])
-        minute = int(t[1][2:4])
-        sec = int(t[1][4:6])
-        day = int(t[9][0:2])
-        month = int(t[9][2:4])
-        year = int(t[9][4:6]) + 2000
-        self.utc = datetime.datetime(year, month, day, hour, minute, sec, tzinfo=datetime.timezone.utc)
-        self.utc_t = time.time()
+        if len(t[1]) > 0 and len(t[9]):
+            hour = int(t[1][0:2])
+            minute = int(t[1][2:4])
+            sec = int(t[1][4:6])
+            day = int(t[9][0:2])
+            month = int(t[9][2:4])
+            year = int(t[9][4:6]) + 2000
+            self.utc = datetime.datetime(year, month, day, hour, minute, sec, tzinfo=datetime.timezone.utc)
+            self.utc_t = time.time()
         if t[2] == 'A':
             self.lat = self.parse_coord(t[3], t[4])
             self.lat_t = time.time()

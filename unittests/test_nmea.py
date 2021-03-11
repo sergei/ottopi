@@ -42,6 +42,16 @@ class TestNmea(unittest.TestCase):
         self.assertAlmostEqual(nmea_parser.awa, 39, delta=0.1)
         self.assertAlmostEqual(nmea_parser.aws, 11.2, delta=0.1)
 
+    def test_parse_rmc(self):
+        nmea = '$GPRMC,,V,,,,,,,,,,N*53'
+        nmea_parser = NmeaParser(None)
+        nmea_parser.set_nmea_sentence(nmea)
+        self.assertIsNone(nmea_parser.utc)
+        self.assertIsNone(nmea_parser.lat)
+        self.assertIsNone(nmea_parser.lon)
+        self.assertIsNone(nmea_parser.sog)
+        self.assertIsNone(nmea_parser.cog_true)
+
 
 if __name__ == '__main__':
     unittest.main()
