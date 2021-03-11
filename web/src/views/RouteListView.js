@@ -2,7 +2,7 @@ import React  from 'react';
 import RouteView from "./RouteView";
 import List from '@material-ui/core/List';
 import { makeStyles } from '@material-ui/core/styles';
-import {Button, Paper, Typography} from "@material-ui/core";
+import {Divider, ListItem, ListItemText, Paper} from "@material-ui/core";
 
 export const useStyles = makeStyles((theme) => ({
     root: {
@@ -32,19 +32,16 @@ function RouteListView(props) {
         }
         return (
             <Paper>
-                <Paper>
-                    <Button variant="contained" onClick={() => props.stopNavigation()}>Stop navigation</Button>
-                </Paper>
-
-                <Typography variant="h6">Routes</Typography>
-                <List
-                    component="nav"
-                    className={classes.root}
-                >
+                <List component="nav" className={classes.root}>
+                    <Divider />
+                    <ListItem>
+                        <ListItemText primary="Available Routes" />
+                    </ListItem>
+                    <Divider />
                     {routes}
                 </List>
             </Paper>
-                )
+        )
     }
 }
 
