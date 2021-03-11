@@ -3,11 +3,13 @@ import math
 
 import gpxpy
 from gpxpy import geo
+from gpxpy.geo import Location
 from gpxpy.gpx import GPXRoutePoint
+from typing import List
 
 from const import METERS_IN_NM
 from nav_stats import NavStatsEventsListener, NavStats
-from navigator_listener import DestInfo, WindShift, HistoryItem
+from navigator_listener import DestInfo, WindShift, HistoryItem, NavigationListener
 import geomag
 
 from logger import Logger
@@ -50,17 +52,23 @@ class Targets:
 
 
 class StatsEventsListener(NavStatsEventsListener):
-    def __init__(self, listeners, speech_moderator: SpeechModerator, nav_history):
+    avg_twd: float
+    speech_moderator: SpeechModerator
+    listeners: List[NavigationListener]
+
+    def __init__(self, listeners: List[NavigationListener], speech_moderator: SpeechModerator,
+                 nav_history: List[HistoryItem]):
         self.listeners = listeners
         self.speech_moderator = speech_moderator
         self.nav_history = nav_history
+        # noinspection PyTypeChecker
         self.avg_twd = None
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
         maneuver = 'tack' if is_tack else 'gybe'
         direction = 'lost' if distance_loss_m > 0 else 'gained'
 
-        phrase = 'You {} {:.0f} meters on this {}'.format(direction, distance_loss_m, maneuver)
+        phrase = 'You {} {:.0f} meters on this {}'.format(direction, abs(distance_loss_m), maneuver)
         self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
 
     def on_mark_rounding(self, utc, loc, is_windward):
@@ -88,7 +96,8 @@ class StatsEventsListener(NavStatsEventsListener):
         for listener in self.listeners:
             listener.on_history_item(history_item)
 
-    def on_target_update(self, utc, loc, distance_delta_m, speed_delta, twa_angle_delta):
+    def on_target_update(self, utc: datetime, loc: Location,
+                         distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
         phrase = ''
         direction = 'gained' if distance_delta_m > 0 else 'lost'
         phrase += 'You {} {:.0f} meters to the target boat. '.format(direction, abs(distance_delta_m))
@@ -100,6 +109,8 @@ class StatsEventsListener(NavStatsEventsListener):
         phrase += 'You were sailing {:.0f} degrees {} than target. '.format(abs(twa_angle_delta), direction)
 
         self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_UPDATE, utc, phrase))
+        for listener in self.listeners:
+            listener.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
 
 
 class Navigator:

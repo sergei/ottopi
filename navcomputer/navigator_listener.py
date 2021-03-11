@@ -1,3 +1,7 @@
+import datetime
+
+from gpxpy.geo import Location
+
 from raw_instr_data import RawInstrData
 
 
@@ -57,4 +61,8 @@ class NavigationListener:
         pass
 
     def on_wind_shift(self, wind_shift: WindShift):
+        pass
+
+    def on_target_update(self, utc: datetime, loc: Location,
+                         distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
         pass

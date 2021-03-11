@@ -90,12 +90,12 @@ class TestNav(unittest.TestCase):
 
         # Extrapolate below lowest wind
         target_speed, target_twa = polars.get_targets(4, -30)
-        self.assertAlmostEqual(target_twa, 47.5, delta=0.01)
+        self.assertAlmostEqual(target_twa, 44.6, delta=0.01)  # TWA on the low rail
         self.assertAlmostEqual(target_speed, 3.71, delta=0.01)
 
         # Extrapolate above strongest wind
         target_speed, target_twa = polars.get_targets(24, -30)
-        self.assertAlmostEqual(target_twa, 40.3, delta=0.01)
+        self.assertAlmostEqual(target_twa, 39.5, delta=0.01)  # TWA on the high rail
         self.assertAlmostEqual(target_speed, 6.86, delta=0.01)
 
         # Interpolate within table wind range
@@ -118,6 +118,16 @@ class TestNav(unittest.TestCase):
         target_speed, target_twa = polars.get_targets(20, -130)
         self.assertAlmostEqual(target_twa, 178.7, delta=0.01)
         self.assertAlmostEqual(target_speed, 8.14, delta=0.01)
+
+        # Extrapolate below lowest wind
+        target_speed, target_twa = polars.get_targets(4, -130)
+        self.assertAlmostEqual(target_twa, 140.5, delta=0.01)  # TWA on the low rail
+        self.assertAlmostEqual(target_speed, 3.66, delta=0.01)
+
+        # Extrapolate above highest wind
+        target_speed, target_twa = polars.get_targets(25, -130)
+        self.assertAlmostEqual(target_twa, 178.7, delta=0.01)  # TWA on the high rail
+        self.assertAlmostEqual(target_speed, 9.26, delta=0.01)
 
         # Self try to read invalid file
 

@@ -52,9 +52,12 @@ class Polars:
         speeds = list(self.polars.keys())
         speed_below = None
         speed_above = None
+        extrapolate_below = False
+        extrapolate_above = False
         for i, table_tws in enumerate(speeds):
             if tws <= table_tws:
                 if i == 0:  # Will extrapolate below lowest wind in the table
+                    extrapolate_below = True
                     speed_below = speeds[i]
                     speed_above = speeds[i+1]
                 else:
@@ -63,6 +66,7 @@ class Polars:
                 break
 
         if speed_below is None:  # Will extrapolate above highest wind speed in the table
+            extrapolate_above = True
             speed_below = speeds[-2]
             speed_above = speeds[-1]
 
@@ -79,8 +83,15 @@ class Polars:
         target_speed_below = targets_below[target_twa_below]
         target_speed_above = targets_above[target_twa_above]
 
+        # extrapolate the speed
         target_speed = self.interp(tws, speed_above, speed_below, target_speed_above, target_speed_below)
-        target_twa = self.interp(tws, speed_above, speed_below, target_twa_above, target_twa_below)
+        # Don't extrapolate the angle
+        if extrapolate_below:
+            target_twa = target_twa_below
+        elif extrapolate_above:
+            target_twa = target_twa_above
+        else:
+            target_twa = self.interp(tws, speed_above, speed_below, target_twa_above, target_twa_below)
 
         return target_speed, target_twa
 

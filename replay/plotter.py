@@ -1,11 +1,17 @@
+import datetime
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from dateutil import tz
+from gpxpy.geo import Location
+
+from navigator_listener import NavigationListener
 
 
-class Plotter:
+class Plotter(NavigationListener):
     def __init__(self, use_local_tz=True):
+        super().__init__()
         if use_local_tz:
             self.tz = tz.tzlocal()
         else:
@@ -24,6 +30,8 @@ class Plotter:
         self.target_twa = []
         self.wind_shift_utc = []
         self.wind_shift_text = []
+        self.gains_utc = []
+        self.gains_text = []
 
     def show(self):
         print('Preparing the plots')
@@ -33,10 +41,13 @@ class Plotter:
         ax1 = plt.subplot(4, 1, 1)
         twa = np.array(self.twa, dtype=np.float)
         awa = np.array(self.awa, dtype=np.float)
+        target_twa = np.array(self.target_twa, dtype=np.float)
+        target_twa = target_twa * np.sign(twa)
+        ax1.plot(self.utc, target_twa, '.')
         ax1.plot(self.utc, twa, '.')
         ax1.plot(self.utc, awa, '.')
         ax1.xaxis.set_major_formatter(fmt)
-        ax1.legend(['TWA', 'AWA'])
+        ax1.legend(['Target TWA', 'TWA', 'AWA'])
         plt.ylabel('Degrees')
 
         ax2 = plt.subplot(4, 1, 2, sharex=ax1)
@@ -65,6 +76,10 @@ class Plotter:
         ax4.plot(self.utc, np.array(self.target_sow, dtype=np.float), '.')
         ax4.plot(self.utc, np.array(self.boat_vmg, dtype=np.float), '.')
         ax4.plot(self.utc, np.array(self.target_vmg, dtype=np.float), '.')
+
+        for i in range(len(self.gains_utc)):
+            ax4.text(self.gains_utc[i], -10, self.gains_text[i], rotation=90)
+
         ax4.xaxis.set_major_formatter(fmt)
         ax4.legend(['Boat speed', 'Target speed', 'Boat VMG', 'Target VMG'])
         plt.ylabel('KTS')
@@ -101,3 +116,9 @@ class Plotter:
         wind_direction = 'Veer' if wind_shift.shift_deg > 0 else 'Back'
         phrase = '{} {:.0f}'.format(wind_direction, abs(wind_shift.shift_deg))
         self.wind_shift_text.append(phrase)
+
+    def on_target_update(self, utc: datetime, loc: Location,
+                         distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
+        phrase = '{:.0f} m {:.1f} kts {:.1f} deg'.format(distance_delta_m, speed_delta, twa_angle_delta)
+        self.gains_utc.append(utc)
+        self.gains_text.append(phrase)

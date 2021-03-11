@@ -1,4 +1,4 @@
---replay-dir=~/debuglog/ottopi/data/logs
+--replay-dir=~/debuglog/ottopi/20210307/data/data/logs
 --log-dir=~/tmp/ottopi/replays
 --data-dir=~/tmp/ottopi/gpx
 --with-prefix

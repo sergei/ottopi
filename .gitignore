@@ -1,12 +1,8 @@
 /navcomputer/data/
-*.o
-/mobix-web-template/
-/web/.idea/inspectionProfiles/Project_Default.xml
-navcomputer/__pycache__/
-navcomputer/bt_manager/__pycache__/
-replay/__pycache__/
-unittests/__pycache__/
-/update/*.tgz
 /unittests/data/
+/update/*.tgz
 /.coverage
+/web/.idea/inspectionProfiles/Project_Default.xml
 .idea/csv-plugin.xml
+**/__pycache__/
+*.o

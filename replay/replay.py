@@ -1,5 +1,8 @@
+import datetime
 import glob
 import os
+
+from gpxpy.geo import Location
 
 from kml_writer import KmlWriter
 from navigator_listener import NavigationListener
@@ -52,3 +55,7 @@ class Replay(NavigationListener):
     def on_speech(self, s):
         print(s)
         self.kml_writer.add_speech(s)
+
+    def on_target_update(self, utc: datetime, loc: Location,
+                         distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
+        self.plotter.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)

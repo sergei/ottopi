@@ -12,8 +12,8 @@ class KmlWriter:
         # Icons are available at http://kml4earth.appspot.com/icons.html
         self.trk_pt_style = simplekml.Style()
         self.trk_pt_style.labelstyle.color = simplekml.Color.red  # Make the text red
-        self.trk_pt_style.labelstyle.scale = 0.1
         self.trk_pt_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png'
+        self.trk_pt_style.iconstyle.scale = 0.5
 
         self.mark_style = simplekml.Style()
         self.mark_style.labelstyle.color = simplekml.Color.red  # Make the text red
