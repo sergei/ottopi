@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import WayPointsListView from "../views/WayPointsListView";
 import RouteListView from "../views/RouteListView";
 
-class WayPoints extends Component {
+class Routes extends Component {
     // State of this component
     state = {
         loadingWpts: true,
@@ -92,6 +92,7 @@ class WayPoints extends Component {
     };
 
     set_active_route = (route) => {
+        this.setState( {loadingWpts:true, loadingRoutes: true, loadingActiveRoute: true} )
         this.props.swaggerClient
             .then(client => {
                 client.apis.routes.rest_api_set_active_route({}, {requestBody: route})
@@ -195,4 +196,4 @@ class WayPoints extends Component {
     }
 }
 
-export default WayPoints;
+export default Routes;

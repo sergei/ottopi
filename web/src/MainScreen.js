@@ -2,7 +2,7 @@ import './App.css';
 import RawInstrDisplay from "./controllers/RawInstrDisplay";
 import SwaggerClient from 'swagger-client'
 import FileUploader from "./controllers/FileUploader";
-import WayPoints from "./controllers/WayPoints";
+import Routes from "./controllers/Routes";
 import Autopilot from "./controllers/Autopilot";
 import DestInfo from "./controllers/DestInfo";
 import NavHistory from "./controllers/NavHistory";
@@ -60,7 +60,7 @@ class MainScreen extends Component {
             case screens.ROUTES:
                 screen_jsx =
                     <div>
-                        <WayPoints swaggerClient={this.state.swaggerClient} />
+                        <Routes swaggerClient={this.state.swaggerClient} />
                     </div>
                 break;
             case screens.AUTOPILOT:
