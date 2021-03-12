@@ -31,8 +31,8 @@ class Speaker(NavigationListener):
 
             if os.path.isfile('/usr/bin/afplay'):
                 self.player_bin = '/usr/bin/afplay'
-            elif os.path.isfile('omxplayer'):
-                self.player_bin = 'omxplayer'
+            elif os.path.isfile('/usr/bin/omxplayer'):
+                self.player_bin = '/usr/bin/omxplayer'
             else:
                 self.player_bin = None
 
