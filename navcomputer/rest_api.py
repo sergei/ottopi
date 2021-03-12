@@ -1,9 +1,11 @@
 """
 This file contains the entry points for the REST API calls received form HTTP server
 """
+import gzip
 import os
 import pwd
 import grp
+import tarfile
 
 import connexion
 import flask
@@ -210,15 +212,45 @@ def sw_update():
     navigator = Navigator.get_instance()
     uploaded_file = connexion.request.files['fileName']
     package_file_name = navigator.get_data_dir() + os.sep + conf.UPDATE_PKG_NAME
-    print('Storing update to {}'.format(package_file_name))
-    uploaded_file.save(package_file_name)
+    tmp_package_file_name = package_file_name + '.tmp'
+    print('Storing update to {}'.format(tmp_package_file_name))
+    uploaded_file.save(tmp_package_file_name)
 
-    # The update service is running as user pi
-    uid = pwd.getpwnam("pi").pw_uid
-    gid = grp.getgrnam("pi").gr_gid
-    os.chown(package_file_name, uid, gid)
+    # Validate uploaded file
+    # First check if it's valid gzip
+    gz_is_valid = False
+    error = ''
+    try:
+        with gzip.open(tmp_package_file_name, 'rb') as f:
+            try:
+                while f.read(10000000) != '':
+                    pass
+                gz_is_valid = True
+            except Exception as e:
+                error = e
+                print(error)
+    except Exception as e:
+        error = e
+        print(error)
 
-    return {'status': 200}
+    # Now check if's valid tar
+    tgz_valid = False
+    if gz_is_valid:
+        try:
+            tgz_valid = tarfile.is_tarfile(tmp_package_file_name)
+        except Exception as e:
+            error = e
+            print(error)
+
+    if tgz_valid:
+        os.rename(tmp_package_file_name, package_file_name)
+        # The update service is running as user pi
+        uid = pwd.getpwnam("pi").pw_uid
+        gid = grp.getgrnam("pi").gr_gid
+        os.chown(package_file_name, uid, gid)
+        return {'status': 200}
+    else:
+        return str(error), 420
 
 
 def get_logs():
@@ -311,4 +343,3 @@ def timer_announce_timer_state():
     navigator = Navigator.get_instance()
     navigator.announce_timer_state()
     return {'status': 200}
-

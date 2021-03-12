@@ -10,7 +10,8 @@ class FileUploader extends Component {
         selectedFileName: null,
         uploading: false,
         finished: false,
-        success: null
+        success: null,
+        errorMessage: null,
     };
 
     // On file select (from the pop up)
@@ -44,7 +45,10 @@ class FileUploader extends Component {
                 console.log(response);
                 this.setState({ uploading: false, finished: true, success: true });
             }, (error) => {
-                this.setState({ uploading: false, finished: true, success: false });
+                console.log('Response', error.response.data);
+                console.log('Status', error.response.status);
+                this.setState({ uploading: false, finished: true, success: false,
+                    errorMessage:error.response.data });
             });
         });
         this.setState({ uploading: true, success: null });
@@ -54,6 +58,7 @@ class FileUploader extends Component {
         return ( <FileUploaderView uploadPath={this.props.uploadPath} label={this.props.label}
                                    finished={this.state.finished} selectedFileName={this.state.selectedFileName}
                                    success={this.state.success} uploading={this.state.uploading}
+                                   errorMessage={this.state.errorMessage}
                                    onFileChange={this.onFileChange} onFileUpload={this.onFileUpload}
         />);
     }

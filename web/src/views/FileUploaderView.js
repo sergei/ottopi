@@ -9,7 +9,7 @@ function FileUploaderView(props){
     if (props.finished && props.success)
         uploadStatus = "Sucessfully uploaded";
     else if (props.finished && !props.success)
-        uploadStatus = "Upload failed";
+        uploadStatus = "Upload failed:" + props.errorMessage;
     else
         uploadStatus = "";
 
