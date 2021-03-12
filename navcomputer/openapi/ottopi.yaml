@@ -447,6 +447,21 @@ paths:
               schema:
                 type: string
 
+  /timer/say_state:
+    post:
+      operationId: rest_api.timer_announce_timer_state
+      tags:
+        - timer
+      summary: Announces timer state
+      description: Announces timer state
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
   /timer/data:
     get:
       operationId: rest_api.timer_get_data

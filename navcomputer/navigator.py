@@ -290,7 +290,7 @@ class Navigator:
 
                 self.data_registry.set_dest_info(dest_info)
 
-        self.speech_moderator.say_something(raw_instr_data.utc)
+        self.speech_moderator.say_something(raw_instr_data.utc, self.in_pre_start())
 
     def clear_dest(self):
         self.data_registry.clear_active_route()
@@ -441,6 +441,20 @@ class Navigator:
         now = datetime.datetime.now()
         elapsed_time = (now - self.race_starts_at).total_seconds()
         return elapsed_time
+
+    def in_pre_start(self):
+        return self.is_timer_active() and self.get_elapsed_time() < 0
+
+    def announce_timer_state(self):
+        if self.in_pre_start():
+            phrase = TimerTalker.format_time(-self.get_elapsed_time())
+            self.speech_moderator.say_now(phrase)
+        elif self.is_timer_active():
+            phrase = 'Race in progress'
+            self.speech_moderator.say_now(phrase)
+        else:
+            phrase = 'Timer is stopped'
+            self.speech_moderator.say_now(phrase)
 
     def get_phrf_timers(self):
         if len(self.phrf_table.table) == 0:

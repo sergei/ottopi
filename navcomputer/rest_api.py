@@ -305,3 +305,10 @@ def timer_get_data():
         }
     else:
         return {}
+
+
+def timer_announce_timer_state():
+    navigator = Navigator.get_instance()
+    navigator.announce_timer_state()
+    return {'status': 200}
+

@@ -45,7 +45,11 @@ class SpeechModerator:
         else:
             return 3600
 
-    def say_something(self, utc_now):
+    def say_something(self, utc_now, in_pre_start):
+
+        if in_pre_start:  # Stay silent in pre start sequence
+            return
+
         if self.last_spoken_at is not None:
             time_since_last_speech = (utc_now - self.last_spoken_at).total_seconds()
         else:
@@ -58,8 +62,7 @@ class SpeechModerator:
                         break
 
                     # Say the phrase
-                    for listener in self.speech_listeners:
-                        listener.on_speech(self.last_entries[entry_type].phrase)
+                    self.say_now(self.last_entries[entry_type].phrase)
 
                     # Remove what we just said
                     self.last_entries.pop(entry_type)
@@ -70,3 +73,7 @@ class SpeechModerator:
 
                     # Don't say more than one phrase at once
                     break
+
+    def say_now(self, phrase):
+        for listener in self.speech_listeners:
+            listener.on_speech(phrase)

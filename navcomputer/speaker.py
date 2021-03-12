@@ -29,9 +29,23 @@ class Speaker(NavigationListener):
             else:
                 self.espeak_bin = None
 
+            if os.path.isfile('/usr/bin/afplay'):
+                self.player_bin = '/usr/bin/afplay'
+            elif os.path.isfile('omxplayer'):
+                self.player_bin = 'omxplayer'
+            else:
+                self.player_bin = None
+
     def on_speech(self, speech):
         print('Saying ' + speech)
         Logger.log('> $POTTOPI,SAY,{}'.format(speech))
 
         cmd = [self.espeak_bin, '"' + speech + '"']
+        subprocess.run(cmd)
+
+    def play_file(self, file):
+        print('Playing ' + file)
+        Logger.log('> $POTTOPI,SAY,{}'.format(file))
+
+        cmd = [self.player_bin,  file]
         subprocess.run(cmd)

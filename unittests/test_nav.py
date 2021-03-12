@@ -146,7 +146,7 @@ class TestNav(unittest.TestCase):
             time_left_sec = float(time_left_msec) / 10
             say_now, time_left = time_talker.check_time_left(time_left_sec)
             if say_now:
-                self.assertAlmostEqual(time_left_msec/10, time_left, delta=0.2)
+                self.assertAlmostEqual(time_left_msec/10, time_left[0], delta=0.2)
 
     def test_tws_twa(self):
         tws, twa = Navigator.compute_tws_twa(aws=10, awa=60, bs=5)

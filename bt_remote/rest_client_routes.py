@@ -68,31 +68,5 @@ class RoutesRestClient(RestClient):
 
 
 if __name__ == '__main__':
-    from pynput.keyboard import Key, Listener
-
-    key_map = {
-        Key.down: BtRemote.MINUS_BUTTON,
-        Key.up: BtRemote.PLUS_BUTTON,
-        Key.left: BtRemote.PREV_BUTTON,
-        Key.right: BtRemote.NEXT_BUTTON,
-        Key.enter: BtRemote.PLAY_BUTTON,
-        Key.delete: BtRemote.VENDOR_BUTTON,
-    }
-    client = RoutesRestClient('http://localhost:5555/')
-
-    def on_press(key):
-        print('{0} pressed'.format(key))
-        if key in key_map:
-            client.on_remote_key(key_map[key])
-
-    def on_release(key):
-        print('{0} release'.format(key))
-        if key == Key.esc:
-            # Stop listener
-            return False
-
-    # Collect events until released
-    with Listener(
-            on_press=on_press,
-            on_release=on_release) as listener:
-        listener.join()
+    from sim_bt_remote import sim_bt_remote
+    sim_bt_remote(RoutesRestClient('http://localhost:5555/'))

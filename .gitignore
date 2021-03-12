@@ -6,3 +6,4 @@
 .idea/csv-plugin.xml
 **/__pycache__/
 *.o
+/navcomputer/sounds/
