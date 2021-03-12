@@ -218,12 +218,13 @@ def sw_update():
 
     # Validate uploaded file
     # First check if it's valid gzip
+    print('validating update compression ...')
     gz_is_valid = False
     error = ''
     try:
         with gzip.open(tmp_package_file_name, 'rb') as f:
             try:
-                while f.read(10000000) != '':
+                while f.read(1024*1024) != b'':
                     pass
                 gz_is_valid = True
             except Exception as e:
@@ -234,6 +235,7 @@ def sw_update():
         print(error)
 
     # Now check if's valid tar
+    print('Validating update TAR integrity ...')
     tgz_valid = False
     if gz_is_valid:
         try:
@@ -243,11 +245,13 @@ def sw_update():
             print(error)
 
     if tgz_valid:
+        print('Update validated')
         os.rename(tmp_package_file_name, package_file_name)
         # The update service is running as user pi
         uid = pwd.getpwnam("pi").pw_uid
         gid = grp.getgrnam("pi").gr_gid
         os.chown(package_file_name, uid, gid)
+        print('Update ready')
         return {'status': 200}
     else:
         return str(error), 420
