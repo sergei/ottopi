@@ -18,12 +18,28 @@ class HogBtRemote(BtRemote):
     """
 
     BUTTONS_MAP = {
-        ecodes.KEY_VOLUMEDOWN: BtRemote.MINUS_BUTTON,
+        ecodes.KEY_VOLUMEDOWN: BtRemote.MINUS_BUTTON,  # Tunai and Satechi buttons
         ecodes.KEY_VOLUMEUP: BtRemote.PLUS_BUTTON,
         ecodes.KEY_PREVIOUSSONG: BtRemote.PREV_BUTTON,
         ecodes.KEY_NEXTSONG: BtRemote.NEXT_BUTTON,
         ecodes.KEY_PLAYPAUSE: BtRemote.PLAY_BUTTON,
-        ecodes.KEY_HOMEPAGE: BtRemote.VENDOR_BUTTON,
+
+        ecodes.KEY_HOMEPAGE: BtRemote.VENDOR_BUTTON,  # Tunai button
+
+        # 8BitDo mini controller in keyboard mode
+        ecodes.KEY_D: BtRemote.MINUS_BUTTON,  # D-pad Down
+        ecodes.KEY_C: BtRemote.PLUS_BUTTON,   # D-pad Up
+        ecodes.KEY_E: BtRemote.PREV_BUTTON,   # D-pad left
+        ecodes.KEY_F: BtRemote.NEXT_BUTTON,   # D-pad right
+        ecodes.KEY_O: BtRemote.PLAY_BUTTON,   # start button
+        ecodes.KEY_N: BtRemote.VENDOR_BUTTON,  # select button
+        ecodes.KEY_K: BtRemote.VENDOR_BUTTON,  # L button
+        ecodes.KEY_M: BtRemote.VENDOR_BUTTON,  # R button
+        ecodes.KEY_H: BtRemote.VENDOR_BUTTON,  # X button
+        ecodes.KEY_J: BtRemote.VENDOR_BUTTON,  # B button
+        ecodes.KEY_I: BtRemote.VENDOR_BUTTON,  # Y button
+        ecodes.KEY_G: BtRemote.VENDOR_BUTTON,  # A button
+
     }
 
     t: threading.Thread
