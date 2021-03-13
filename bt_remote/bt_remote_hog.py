@@ -84,7 +84,7 @@ class HogBtRemote(BtRemote):
                 print('Registered {}'.format(device.path))
 
             while self.keep_running:
-                for key, mask in selector.select(timeout=2):
+                for key, mask in selector.select():
                     device = key.fileobj
                     try:
                         # noinspection PyUnresolvedReferences
@@ -100,7 +100,7 @@ class HogBtRemote(BtRemote):
                     except OSError as e:
                         print('Event reading error :{}'.format(e))
                         time.sleep(1)
-                        continue
+                        break
 
     def stop(self):
         self.keep_running = False

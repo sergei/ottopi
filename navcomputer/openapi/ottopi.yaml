@@ -427,7 +427,7 @@ paths:
               schema:
                 type: string
 
-  /routes/announce_autopilot_state:
+  /autopilot/announce_autopilot_state:
     post:
       operationId: rest_api.announce_autopilot_state
       tags:
