@@ -63,6 +63,7 @@ class HogBtRemote(BtRemote):
 
         while self.keep_running:
             event_handler = self.event_handler
+            print('Trying to connect to {}'.format(self.addr))
             self.bt_manager.connect_device(self.addr)
             devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
             input_devices = []
@@ -71,8 +72,9 @@ class HogBtRemote(BtRemote):
                     input_devices.append(d)
 
             if len(input_devices) == 0:
-                print('No devices found for address {}, trying again'.format(self.addr))
-                time.sleep(10)
+                print('No devices found for address {}, will try again'.format(self.addr))
+                time.sleep(1)
+                continue
 
             # We might have multiple devices for the same address, so read from all of them
             selector = selectors.DefaultSelector()
@@ -81,14 +83,14 @@ class HogBtRemote(BtRemote):
                 selector.register(device, selectors.EVENT_READ)
                 print('Registered {}'.format(device.path))
 
-            while True:
-                for key, mask in selector.select():
+            while self.keep_running:
+                for key, mask in selector.select(timeout=2):
                     device = key.fileobj
                     try:
                         # noinspection PyUnresolvedReferences
                         for event in device.read():
-                            print(evdev.categorize(event))
                             if event.type == evdev.ecodes.EV_KEY:
+                                print(evdev.categorize(event))
                                 if event.value == 1 and event.code in self.BUTTONS_MAP:
                                     bt_event = self.BUTTONS_MAP.get(event.code)
                                     try:

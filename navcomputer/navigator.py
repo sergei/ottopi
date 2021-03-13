@@ -418,6 +418,8 @@ class Navigator:
         return self.timer_talker.start_timer(secs_to_start)
 
     def timer_stop(self):
+        phrase = 'Race timer has stopped'
+        self.speech_moderator.say_now(phrase)
         self.race_starts_at = None
         return self.timer_talker.stop_timer()
 
