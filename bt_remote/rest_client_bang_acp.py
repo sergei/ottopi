@@ -17,6 +17,6 @@ class BangAcpRestClient(RestClient):
         elif key == BtRemote.PREV_BUTTON:
             self.post('autopilot/steer/-10', {})
         elif key == BtRemote.PLUS_BUTTON:
-            self.post('autopilot/steer/2', {})
+            self.post('autopilot/on', {})
         elif key == BtRemote.MINUS_BUTTON:
-            self.post('autopilot/steer/-2', {})
+            self.post('autopilot/off', {})

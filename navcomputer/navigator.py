@@ -345,6 +345,19 @@ class Navigator:
     def get_active_route(self):
         return self.active_route, self.active_wpt_idx
 
+    def enable_autopilot(self, enable):
+        if enable:
+            phrase = 'Autopilot enabled'
+        else:
+            phrase = 'Autopilot off'
+
+        for listener in self.listeners:
+            listener.on_speech(phrase)
+
+        if self.bang_control.is_connected():
+            return self.bang_control.enable(enable)
+        return False
+
     def tack(self):
         for listener in self.listeners:
             listener.on_speech('Tacking')

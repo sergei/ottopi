@@ -360,8 +360,36 @@ paths:
 ########################################################################################################################
 #  /autopilot
 ########################################################################################################################
-#  /autopilot/engage:
-#  /autopilot/steer:
+  /autopilot/on:
+    post:
+      operationId: rest_api.autopilot_on
+      tags:
+        - autopilot
+      summary: Engage autopilot
+      description: Engages autopolot
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /autopilot/off:
+    post:
+      operationId: rest_api.autopilot_off
+      tags:
+        - autopilot
+      summary: Disengage autopilot
+      description: Disengages autopilot
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
   /autopilot/tack:
     post:
       operationId: rest_api.tack

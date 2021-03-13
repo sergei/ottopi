@@ -110,6 +110,7 @@ class BtManager:
 
     def pair_device(self, bd_addr: str, function: BtRemoteFunction):
         # Check if device is already paired, then we just change the map settings
+        # FIXME need to check if the device is paired or not
         if bd_addr not in self.dev_func_map:
             self.dev_manager.pair(bd_addr)
 

@@ -285,6 +285,22 @@ def tack():
         return 'Not connected', 420
 
 
+def autopilot_on():
+    print('Autopilot on')
+    if Navigator.get_instance().enable_autopilot(True):
+        return {'status': 200}
+    else:
+        return 'Not connected', 420
+
+
+def autopilot_off():
+    print('Autopilot off')
+    if Navigator.get_instance().enable_autopilot(False):
+        return {'status': 200}
+    else:
+        return 'Not connected', 420
+
+
 def steer(degrees):
     degrees = int(degrees)
     print('Steering {} degrees'.format(degrees))

@@ -61,6 +61,12 @@ class BangControl:
     def tack(self):
         return self.push_buttons([BangControl.PLUS_TEN, BangControl.MINUS_TEN])
 
+    def enable(self, enable):
+        if enable:
+            self.push_button(BangControl.AP_ON)
+        else:
+            self.push_button(BangControl.AP_OFF)
+
     def is_ready(self):
         if self.bang_thread is not None:
             print('Waiting for bang thread to finish')
