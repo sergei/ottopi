@@ -13,13 +13,13 @@ class StartTimerRestClient(RestClient):
         if key == BtRemote.PLAY_BUTTON:
             self.post('timer/start', {})
         elif key == BtRemote.VENDOR_BUTTON:
-            self.post('timer/stop', {})
+            self.post('timer/say_state', {})
         elif key == BtRemote.PREV_BUTTON:
             self.post('timer/sync', {})
         elif key == BtRemote.NEXT_BUTTON:
             self.post('timer/sync', {})
         elif key == BtRemote.MINUS_BUTTON:
-            self.post('timer/say_state', {})
+            self.post('timer/stop', {})
         elif key == BtRemote.PLUS_BUTTON:
             self.post('timer/say_state', {})
 

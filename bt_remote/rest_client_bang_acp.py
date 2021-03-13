@@ -20,3 +20,5 @@ class BangAcpRestClient(RestClient):
             self.post('autopilot/on', {})
         elif key == BtRemote.MINUS_BUTTON:
             self.post('autopilot/off', {})
+        elif key == BtRemote.VENDOR_BUTTON:
+            self.post('autopilot/announce_autopilot_state', {})

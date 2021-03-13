@@ -29,7 +29,9 @@ class RoutesRestClient(RestClient):
 
     def on_remote_key(self, key):
         if key == BtRemote.PLAY_BUTTON:  # Select an go
-            self.post('announce_current_route', {})
+            self.post('routes/announce_current_route', {})
+        elif key == BtRemote.VENDOR_BUTTON:  # Select an go
+            self.post('routes/announce_current_route', {})
         elif key == BtRemote.PLUS_BUTTON:  # Next route
             self.routes = self.get_routes()
             num_routes = len(self.routes)

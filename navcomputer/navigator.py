@@ -176,7 +176,7 @@ class Navigator:
         if route is not None:
             phrase = 'Route {}. Navigating to {}'.format(route.name, route.points[self.active_wpt_idx].name)
         else:
-            phrase = 'No route is selected'
+            phrase = 'No route is active'
 
         for listener in self.listeners:
             listener.on_speech(phrase)
@@ -375,6 +375,14 @@ class Navigator:
         if self.bang_control.is_connected():
             return self.bang_control.steer(degrees)
         return False
+
+    def announce_autopilot_state(self):
+        if self.bang_control.is_connected():
+            phrase = 'Autopilot is connected'
+        else:
+            phrase = 'No autopilot is present'
+        for listener in self.listeners:
+            listener.on_speech(phrase)
 
     def say_dest_info(self, dest_info, raw_instr_data, say_now=False):
         if dest_info.atw_up is not None:

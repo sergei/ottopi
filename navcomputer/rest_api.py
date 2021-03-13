@@ -310,6 +310,13 @@ def steer(degrees):
         return 'Not connected', 420
 
 
+def announce_autopilot_state():
+    if Navigator.get_instance().announce_autopilot_state():
+        return {'status': 200}
+    else:
+        return 'Not connected', 420
+
+
 def timer_start():
     if Navigator.get_instance().timer_start():
         return {'status': 200}

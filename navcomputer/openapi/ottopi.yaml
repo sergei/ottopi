@@ -6,7 +6,7 @@ servers:
 
 info:
   description: APIs to interact with Otto Pi
-  version: "1.0.6"
+  version: "1.1.0"
   title: Otto Pi API
   contact:
     email: spodshivalov@gmail.com
@@ -419,6 +419,21 @@ paths:
             type: string
           required: true
           description: Amount of degrees to change course (negative left positive right)
+      responses:
+        '200':
+          description: Command accepted
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /routes/announce_autopilot_state:
+    post:
+      operationId: rest_api.announce_autopilot_state
+      tags:
+        - autopilot
+      summary: Announce autopilot state
+      description: Announce autopilot state
       responses:
         '200':
           description: Command accepted

@@ -40,13 +40,6 @@ class BangControl:
             self.bang_connected = False
             print("B&G autopilot is not attached")
 
-    # def enable_autopilot(self, enable):
-    #     if enable:
-    #         self.push_button(BangControl.AP_ON)
-    #     else:
-    #         self.push_button(BangControl.AP_OFF)
-    #
-
     def is_connected(self):
         return self.bang_connected
 
