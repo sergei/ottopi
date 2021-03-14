@@ -16,6 +16,7 @@ import conf
 from logger import Logger
 from navigator import Navigator
 from polars import Polars
+from speaker import Speaker
 
 
 def get_raw_instr():
@@ -380,3 +381,16 @@ def set_speaker_state(body=None):
 
 def get_speaker_state():
     return Navigator.get_instance().speech_moderator.channel_is_on
+
+
+def get_speaker_volume():
+    volume = Speaker.get_volume()
+    return volume if volume is not None else 420
+
+
+def set_speaker_volume(percent):
+    if 0 <= percent <= 100:
+        volume = Speaker.set_volume(percent)
+        return volume if volume is not None else 420
+
+    return 430

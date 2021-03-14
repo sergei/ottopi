@@ -711,6 +711,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/SpeakerState'
 
+  /speaker/volume:
+    get:
+      operationId: rest_api.get_speaker_volume
+      tags:
+        - speaker
+      summary: Get speaker volume
+      description: Get speaker volume
+      responses:
+        '200':
+          description: Speaker volume
+          content:
+            application/json:
+              schema:
+                type: integer
+
+  /speaker/volume/{percent}:
+    post:
+      operationId: rest_api.set_speaker_volume
+      tags:
+        - speaker
+      summary: Set speaker volume
+      description: Set speaker volume
+      parameters:
+        - in: path
+          name: percent
+          schema:
+            type: integer
+          required: true
+          description: Volume in percent
+      responses:
+        '200':
+          description: Speaker volume
+          content:
+            application/json:
+              schema:
+                type: integer
 
 ########################################################################################################################
 # Components

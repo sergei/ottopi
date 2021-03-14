@@ -49,3 +49,28 @@ class Speaker(NavigationListener):
 
         cmd = [self.player_bin,  file]
         subprocess.run(cmd)
+
+    @classmethod
+    def set_volume(cls, percent):
+        return cls.run_amixer("sset 'Headphone' {percent}%".format(percent=percent).split())
+
+    @classmethod
+    def get_volume(cls):
+        return cls.run_amixer([])
+
+    @classmethod
+    def run_amixer(cls, args):
+        cmd = ['/usr/bin/amixer'] + args
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                line = str(output.strip())
+                if "Mono: Playback" in line:
+                    t = line.split()
+                    percentage_str = t[3][1:-2]
+                    return int(percentage_str)
+
+        return None
