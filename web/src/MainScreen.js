@@ -12,6 +12,7 @@ import LogFileListView from "./views/LogFileListView";
 import About from "./controllers/About";
 import RaceTimer from "./controllers/RaceTimer";
 import BtDevices from "./controllers/BtDevices";
+import Speaker from "./controllers/Speaker";
 
 export const screens = {
     NAVIGATION: "navigation",
@@ -72,6 +73,7 @@ class MainScreen extends Component {
             case screens.FILE_MANAGER:
                 screen_jsx =
                     <div>
+                        <Speaker swaggerClient={this.state.swaggerClient}  />
                         <FileUploader key="1" swaggerClient={this.state.swaggerClient} uploadPath={'gpx'} label={'Select GPX file'}/>
                         <FileUploader key="2" swaggerClient={this.state.swaggerClient} uploadPath={'polars'} label={'Select Polar file'}/>
                         <FileUploader key="3" swaggerClient={this.state.swaggerClient} uploadPath={'sw_update'} label={'Select SW Update package'}/>

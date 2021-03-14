@@ -370,3 +370,13 @@ def timer_announce_timer_state():
     navigator = Navigator.get_instance()
     navigator.announce_timer_state()
     return {'status': 200}
+
+
+def set_speaker_state(body=None):
+    print(body)
+    Navigator.get_instance().speech_moderator.set_on_off_state(body)
+    return Navigator.get_instance().speech_moderator.channel_is_on
+
+
+def get_speaker_state():
+    return Navigator.get_instance().speech_moderator.channel_is_on

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import datetime
 import math
 
@@ -20,6 +21,7 @@ from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
 from speech_moderator import SpeechEntryType, SpeechEntry, SpeechModerator
 from timer_talker import TimerTalker
+
 
 BROKEN_SOW_SPD_THR = 4  # SOG must be greater than that while SOW is zero for SOW to be invalidated
 BROKEN_SOW_CNT_THR = 60  # The test above must pass that many times for SOW to be invalidated
@@ -114,6 +116,16 @@ class StatsEventsListener(NavStatsEventsListener):
 
 
 class Navigator:
+    __instance: Navigator
+    speech_moderator: SpeechModerator
+    stats_listener: StatsEventsListener
+    nav_stats: NavStats
+    phrf_table: PhrfTable
+    timer_talker: TimerTalker
+    polars: Polars
+    bang_control: BangControl
+    data_registry: DataRegistry
+
     __instance = None
 
     @staticmethod
@@ -151,6 +163,7 @@ class Navigator:
 
     def set_data_dir(self, data_dir):
         self.data_registry.set_data_dir(data_dir)
+        self.speech_moderator.read_settings(data_dir)
 
     def read_polars(self, file_name):
         self.polars.read_table(file_name)

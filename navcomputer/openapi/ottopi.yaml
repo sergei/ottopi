@@ -6,7 +6,7 @@ servers:
 
 info:
   description: APIs to interact with Otto Pi
-  version: "1.1.0"
+  version: "1.2.0"
   title: Otto Pi API
   contact:
     email: spodshivalov@gmail.com
@@ -27,6 +27,8 @@ tags:
     description: APIs to upload/download files
   - name: bluetooth
     description: APIs to manage bluetooth devices
+  - name: speaker
+    description: APIs to control the speaker
   - name: web
     description: Paths to acess the builtin Web site
 
@@ -673,6 +675,44 @@ paths:
 
 
 ########################################################################################################################
+#  /speaker
+########################################################################################################################
+  /speaker/:
+    get:
+      operationId: rest_api.get_speaker_state
+      tags:
+        - speaker
+      summary: Get speaker state
+      description: Get speaker state
+      responses:
+        '200':
+          description: Status for each speaker channel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeakerState'
+    post:
+      operationId: rest_api.set_speaker_state
+      tags:
+        - speaker
+      summary: Set state of speaker channels
+      description: Set state of speaker channels
+      requestBody:
+        description: Status for each speaker channel
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeakerState'
+      responses:
+        '200':
+          description: Status for each speaker channel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeakerState'
+
+
+########################################################################################################################
 # Components
 ########################################################################################################################
 components:
@@ -911,3 +951,13 @@ components:
           description: Device function
           type: string
           enum: [route, timer, autopilot, unassigned]
+
+    SpeakerState:
+      description: State for each speaker
+      properties:
+        performance:
+          description: Performance channel
+          type: boolean
+        route:
+          description: Route channel
+          type: boolean
