@@ -24,7 +24,6 @@ class RoutesRestClient(RestClient):
                 if 'active_wpt_idx' in route:
                     self.active_wpt_idx = route['active_wpt_idx']
 
-        print(self.routes)
         return routes
 
     def on_remote_key(self, key):
