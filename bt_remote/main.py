@@ -15,7 +15,6 @@ def get_device_map(bt_manager):
     for device in devices:
         device_map[device.addr] = device.function
 
-    print(device_map)
     return device_map
 
 
@@ -29,8 +28,6 @@ def main(args):
     while True:
         new_bt_dev_map = get_device_map(bt_manager)
         new_dev_addr_set = set(new_bt_dev_map.keys())
-        print('New devices {}'.format(new_dev_addr_set))
-        print('Old devices {}'.format(old_dev_addr_set))
         if old_dev_addr_set != new_dev_addr_set:
             # Determine what devices to add and what to remove
             removed_addr_set = old_dev_addr_set - new_dev_addr_set
