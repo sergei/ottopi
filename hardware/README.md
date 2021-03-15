@@ -4,18 +4,23 @@
 - GybeTime raspberry Pi HAT
 - Relay board
 
-## GybeTime raspberry Pi HAT
+## Enclosure 
 
-- [Schematic](gybetime_schem.pdf) 
-- [PCB overview](gybetime_pcb.png) 
-- [PCB gerber files](gybetime-gerber)
+- Hammond [1555HF42](1555HF42GY.pdf) The large one for Otto Pi with B&G Relay board 
+  - Steel panel 1555HFPL - The RPI is mounted on this panel
+- Hammond [1555NF42GY](1555NF42.pdf) for the regular one
+  - Steel panel 1555NFPL - The RPI is mounted on this panel
 
-This board has two functions:
+## Sensor board 
+- [ICM20948 9DoF Motion Sensor Breakout](https://shop.pimoroni.com/products/icm20948)
+  - Sensor chipset [ICM-20948](DS-000189-ICM-20948-v1.3.pdf)
+  - [Python library](https://github.com/pimoroni/icm20948-python)    
 
-- Convert 12V boat power to 5V Raspberry Pi
-- Convert +- 12V Boat NMEA to CMOS level Raspberry Pi RS-232 
+## RS-232 Board
+- [AB Electronics  Serial Pi Plus RS232 Expansion board](https://www.abelectronics.co.uk/p/51/serial-pi-plus)
+  - [Schematic](schematic-serial-pi-plus.pdf) 
 
-## Relay board 
+## Relay board (For Otto PI with B&G ACP connection) 
 The B&G ACP remote controller input is connected to the relays 
 mounted on this board. Each relay is controlled by RPI GPIO.   
 We use Normally Open (N.O.) relay connectors. 
@@ -54,3 +59,15 @@ describing wiring of the ACP remote controller
   
   Dirk
 ```
+
+## GybeTime raspberry Pi HAT
+
+- [Schematic](gybetime_schem.pdf) 
+- [PCB overview](gybetime_pcb.png) 
+- [PCB gerber files](gybetime-gerber)
+
+This board has two functions:
+
+- Convert 12V boat power to 5V Raspberry Pi
+- Convert +- 12V Boat NMEA to CMOS level Raspberry Pi RS-232 
+
