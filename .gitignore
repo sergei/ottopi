@@ -7,3 +7,5 @@
 **/__pycache__/
 *.o
 /navcomputer/sounds/
+/venv/
+/os-image/2021-01-11-raspios-buster-armhf-lite.zip
