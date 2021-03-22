@@ -6,6 +6,7 @@ import threading
 import serial
 import connexion
 from flask_cors import CORS
+from flask_sockets import Sockets
 import logging
 
 from sys import platform
@@ -92,12 +93,25 @@ def flask_server(http_port):
     app = connexion.App(__name__, specification_dir='openapi/')
     app.add_api('ottopi.yaml')
     CORS(app.app)
+    sockets = Sockets(app.app)
+
+    @sockets.route('/echo')
+    def echo_socket(ws):
+        while not ws.closed:
+            message = ws.receive()
+            ws.send(message)
 
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
 
     # Use FLASK development server to host connexion app
-    app.run(port=http_port, debug=False)
+    # app.run(port=http_port, debug=False)
+
+    # Use pywsgi to host connexion app and websockets
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+    server = pywsgi.WSGIServer(('', http_port), app, handler_class=WebSocketHandler)
+    server.serve_forever()
 
 
 def start_flask_server(http_port):
