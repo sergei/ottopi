@@ -112,5 +112,9 @@ Here is the high level functionality
 * See https://www.raspberrypi.org/forums/viewtopic.php?t=136974 to rid of espeak errors
 * See UART configuration at https://www.raspberrypi.org/documentation/configuration/uart.md
   * https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README
-
-
+* I2C support in order to use the sensor board:
+  * Enable I2C support as described [here](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c)
+  * Install pimoroni python library 
+    * sudo pip install icm20948
+    * Examples how to use it are [here](https://github.com/pimoroni/icm20948-python)
+  

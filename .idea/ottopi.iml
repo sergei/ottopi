@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/replay" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/unittests" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bt_remote/bt_manager" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/imu/micropython-fusion" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/navcomputer/data" />
       <excludeFolder url="file://$MODULE_DIR$/unittests/data" />
       <excludeFolder url="file://$MODULE_DIR$/web/.idea/inspectionProfiles" />

@@ -16,6 +16,8 @@ ssh pi@${PI} 'sudo systemctl disable ottopi-update.service'
 
 # Copy package to RPI
 scp update/otto-pi-update.tgz pi@${PI}:/home/pi/data/gpx/otto-pi-update.tgz
+scp update/run-update.sh pi@${PI}:ottopi/update/run-update.sh
+
 # Execute the update script
 ssh pi@${PI} 'ottopi/update/run-update.sh'
 

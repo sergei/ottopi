@@ -8,9 +8,9 @@ if  gunzip -t ${UPDATE_ARCHIVE} ; then
   rm -rf bt_remote/
   rm -rf web/build
   tar xvzf ${UPDATE_ARCHIVE} --warning=no-timestamp --exclude='navcomputer/__pycache__/' \
-                                                      --exclude='bt_remote/__pycache__/' \
-                                                      navcomputer/ bt_remote/ web/build
-  rm ${UPDATE_ARCHIVE}
+                                                      --exclude='bt_remote/__pycache__/'
+
+#  rm ${UPDATE_ARCHIVE}
 else
   echo 'The update archive either not found or not valid'
 fi
