@@ -1,0 +1,20 @@
+[Unit]
+Description=Ottopi IMU service
+After=signalk.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+# Need to run as root in order to access Bluetooth
+User=root
+WorkingDirectory=/home/pi/ottopi/imu
+Environment="PYTHONPATH=micropython-fusion"
+ExecStart=/usr/bin/python3 /home/pi/ottopi/imu/main.py @/home/pi/ottopi/imu/args/rpi.txt
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ottopi-imu
+
+[Install]
+WantedBy=multi-user.target
