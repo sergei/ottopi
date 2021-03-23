@@ -95,11 +95,10 @@ def flask_server(http_port):
     CORS(app.app)
     sockets = Sockets(app.app)
 
-    @sockets.route('/echo')
+    @sockets.route('/signalk/v1/stream')
     def echo_socket(ws):
-        while not ws.closed:
-            message = ws.receive()
-            ws.send(message)
+        message = ws.receive()
+        print(message)
 
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
