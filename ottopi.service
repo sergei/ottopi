@@ -11,7 +11,7 @@ RestartSec=1
 User=root
 WorkingDirectory=/home/pi/ottopi/navcomputer
 Environment="PYTHONPATH=../bt_remote/bt_manager"
-ExecStart=/usr/bin/python3 /home/pi/ottopi/navcomputer/main.py @/home/pi/ottopi/navcomputer/args/rpi.txt
+ExecStart=/usr/bin/python3 /home/pi/ottopi/navcomputer/main.py @/home/pi/ottopi/navcomputer/args/rpi-signalk.txt
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=ottopi
