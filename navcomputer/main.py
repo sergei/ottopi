@@ -10,6 +10,9 @@ from flask_sockets import Sockets
 import logging
 
 from sys import platform
+
+from sk_client import SkClient
+
 if platform == "darwin":
     BT_CONF_DIR = 'BT_CONF_DIR'
 else:
@@ -153,7 +156,8 @@ def main(args):
     interfaces = []
 
     # Add TCP server
-    add_tcp_server(sel, int(args.tcp_server_port))
+    if args.tcp_server_port is not None:
+        add_tcp_server(sel, int(args.tcp_server_port))
 
     # Open and register specified inputs
     instr_inputs = []
@@ -166,6 +170,11 @@ def main(args):
             ifc = add_serial_port(sel, inp, interfaces, nmea_parser)
             if ifc is not None:
                 instr_inputs.append(ifc)
+        elif inp.startswith('signalk'):
+            t = inp.split('|')
+            client = SkClient(t[1])
+            client.add_listener(navigator)
+            client.subscribe()
 
     # Connect inputs to outputs
     for inp_ifc in instr_inputs:

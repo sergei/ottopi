@@ -19,6 +19,7 @@ from phrf_table import PhrfTable
 from polars import Polars
 from data_registry import DataRegistry
 from nmea_encoder import encode_apb, encode_rmb, encode_bwr
+from raw_instr_data import RawInstrData
 from speech_moderator import SpeechEntryType, SpeechEntry, SpeechModerator
 from timer_talker import TimerTalker
 
@@ -125,6 +126,7 @@ class Navigator:
     polars: Polars
     bang_control: BangControl
     data_registry: DataRegistry
+    raw_instr_data: RawInstrData
 
     __instance = None
 
@@ -157,6 +159,7 @@ class Navigator:
             self.speech_moderator = SpeechModerator(self.listeners)
             self.stats_listener = StatsEventsListener(self.listeners, self.speech_moderator, self.nav_history)
             self.nav_stats = NavStats(self.stats_listener)
+            self.raw_instr_data = RawInstrData()
 
     def get_data_dir(self):
         return self.data_registry.data_dir
@@ -304,6 +307,42 @@ class Navigator:
                 self.data_registry.set_dest_info(dest_info)
 
         self.speech_moderator.say_something(raw_instr_data.utc, self.in_pre_start())
+
+    def on_update_from_sk(self, utc, value_list):
+        gps_ready = False
+
+        for v in value_list:
+            path = v['path']
+            value = v['value']
+
+            # GPS
+            if 'navigation.position' == path:
+                self.raw_instr_data.utc = utc
+                self.raw_instr_data.lat = value['latitude']
+                self.raw_instr_data.lon = value['longitude']
+                gps_ready = True
+            elif 'navigation.speedOverGround' == path:
+                self.raw_instr_data.sog = value
+            elif 'navigation.courseOverGroundTrue' == path:
+                self.raw_instr_data.cog = math.degrees(value)
+            # Instruments
+            elif 'environment.wind.angleApparent' == path:
+                self.raw_instr_data.awa = math.degrees(value)
+            elif 'environment.wind.speedApparent' == path:
+                self.raw_instr_data.aws = value
+            elif 'environment.wind.angleTrueWater' == path:
+                self.raw_instr_data.twa = math.degrees(value)
+            elif 'environment.wind.speedTrue' == path:
+                self.raw_instr_data.tws = value
+            elif 'navigation.speedThroughWater' == path:
+                self.raw_instr_data.sow = value
+            elif 'navigation.headingMagnetic' == path:
+                self.raw_instr_data.hdg = math.degrees(value)
+            elif 'navigation.magneticVariation' == path:
+                self.mag_decl = math.degrees(value)
+
+        if gps_ready:
+            self.set_raw_instr_data(self.raw_instr_data)
 
     def clear_dest(self):
         self.data_registry.clear_active_route()
