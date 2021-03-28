@@ -20,6 +20,12 @@
 - [AB Electronics  Serial Pi Plus RS232 Expansion board](https://www.abelectronics.co.uk/p/51/serial-pi-plus)
   - [Schematic](schematic-serial-pi-plus.pdf) 
 
+## Audio jack
+- A - Tip (Right audio) - US-CAB-73 Red 
+- B - Ring (Left audio) - US-CAB-73 White
+- C - Ground            - US-CAB-73 Green
+- D - Microphone        - US-CAB-73 Black
+
 ## Relay board (For Otto PI with B&G ACP connection) 
 The B&G ACP remote controller input is connected to the relays 
 mounted on this board. Each relay is controlled by RPI GPIO.   
