@@ -1,2 +1,1 @@
---log-dir=/home/pi/data/logs
---data-dir=/home/pi/data/gpx
+--tcp-server-port=2323

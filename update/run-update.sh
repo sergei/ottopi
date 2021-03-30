@@ -7,8 +7,7 @@ if  gunzip -t ${UPDATE_ARCHIVE} ; then
   rm -rf navcomputer/
   rm -rf bt_remote/
   rm -rf web/build
-  tar xvzf ${UPDATE_ARCHIVE} --warning=no-timestamp --exclude='navcomputer/__pycache__/' \
-                                                      --exclude='bt_remote/__pycache__/'
+  tar xvzf ${UPDATE_ARCHIVE} --warning=no-timestamp --exclude='*/__pycache__/'
 
 #  rm ${UPDATE_ARCHIVE}
 else

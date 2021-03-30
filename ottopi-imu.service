@@ -1,6 +1,6 @@
 [Unit]
 Description=Ottopi IMU service
-After=signalk.service
+After=ottopi.service
 StartLimitIntervalSec=0
 
 [Service]

@@ -10,7 +10,7 @@ RestartSec=1
 # Need to run as root in order to access server on port 80 and Bluetooth
 User=root
 WorkingDirectory=/home/pi/ottopi/navcomputer
-Environment="PYTHONPATH=../bt_remote/bt_manager"
+Environment="PYTHONPATH=../bt_remote/bt_manager:../sk_py_client"
 ExecStart=/usr/bin/python3 /home/pi/ottopi/navcomputer/main.py @/home/pi/ottopi/navcomputer/args/rpi-signalk.txt
 StandardOutput=syslog
 StandardError=syslog
