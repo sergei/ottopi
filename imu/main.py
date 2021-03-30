@@ -16,29 +16,27 @@ tcp_nmea_connections = []
 
 # noinspection PyUnusedLocal
 def read(conn, mask):
-    data = conn.recv(1)
-    if not data:
-        print('closing', conn)
+    try:
+        data = conn.recv(1)
+        if not data:
+            remove_connection(conn)
+    except OSError as e:
+        print(f'Connection error {e}')
+        remove_connection(conn)
+
+
+def remove_connection(conn):
+    print('closing', conn)
+    try:
         sel.unregister(conn)
         conn.close()
-        tcp_nmea_connections.remove(conn)
+    except OSError:
+        pass
+    tcp_nmea_connections.remove(conn)
 
 
-def append_nmea_checksum(nmea):
-    cc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in nmea[1:]])  # Exclude $ sign
-    return nmea + '*{:02X}'.format(cc)
-
-
-def send_xdr(heading, pitch, roll):
-    nmea = f'$OPXDR,A,{heading:.1f},D,YAW,A,{pitch:.1f},D,PTCH,A,{roll:.1f},D,ROLL'
-    nmea = bytes(append_nmea_checksum(nmea) + '\r\n', 'ascii')
-
-    for conn in tcp_nmea_connections:
-        conn.send(nmea)
-
-
-# noinspection PyUnusedLocal
-def accept_nmea_tcp(sock, mask):
+def accept_tcp_conn(sock, mask):
+    print('Accepting', sock, mask)
     conn, addr = sock.accept()  # Should be ready
     print('accepted', conn, 'from', addr)
     conn.setblocking(False)
@@ -60,10 +58,36 @@ def add_tcp_server(tcp_port):
     sock.bind(('0.0.0.0', tcp_port))
     sock.listen(100)
     sock.setblocking(False)
-    sel.register(sock, selectors.EVENT_READ, accept_nmea_tcp)
+    sel.register(sock, selectors.EVENT_READ, accept_tcp_conn)
     print('Listening on port {} for NMEA 0183 TCP connections ...'.format(tcp_port))
     t = threading.Thread(target=wait_for_connections, name='tcp_server', daemon=True)
     t.start()
+
+
+def append_nmea_checksum(nmea):
+    cc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in nmea[1:]])  # Exclude $ sign
+    return nmea + '*{:02X}'.format(cc)
+
+
+def send_nmea(nmea):
+    nmea = bytes(append_nmea_checksum(nmea) + '\r\n', 'ascii')
+    for conn in tcp_nmea_connections:
+        try:
+            conn.send(nmea)
+        except Exception as e:
+            print(f'Error sending NMEA {e}')
+            remove_connection(conn)
+
+
+def send_xdr(heading, pitch, roll):
+    nmea = f'$OPXDR,A,{heading:.1f},D,YAW,A,{pitch:.1f},D,PTCH,A,{roll:.1f},D,ROLL'
+    send_nmea(nmea)
+
+
+def send_raw(accel, gyro, mag, t):
+    nmea = f'$POTTO,SEN,{t:.3f},{accel[0]:.2f},{accel[1]:.2f},{accel[2]:.2f},{gyro[0]:.1f},' \
+           f'{gyro[1]:.1f},{gyro[2]:.1f},{mag[0]:.1f},{mag[1]:.1f},{mag[2]:.1f}'
+    send_nmea(nmea)
 
 
 def main(args):
@@ -82,6 +106,7 @@ def main(args):
             accel, gyro, mag, t = raw.get_raw_data()
             fusion.update(accel, gyro, mag, t)
             # print('heading {:.3f}, pitch {:.3f}, roll {:.3f}'.format(fusion.heading, fusion.pitch, fusion.roll))
+            send_raw(accel, gyro, mag, t)
             send_xdr(fusion.heading, fusion.pitch, fusion.roll)
             if csv_file is not None:
                 csv_file.write('{},{},{},{},{},{},{},{},{},{},{},{},{}\n'.format(t,
