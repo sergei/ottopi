@@ -5,6 +5,8 @@ import time
 
 import serial
 
+from nmeaparser import NmeaParser
+
 sel = selectors.DefaultSelector()
 connections = []
 serial_ports = []
@@ -59,10 +61,32 @@ def read_serial(port, mask):
         serial_ports.remove(port)
 
 
+last_rmc_time_tag = None
+
+
+def time_tagged_line(raw_line):
+    global last_rmc_time_tag
+    raw_line = raw_line.decode('ascii', errors='ignore')
+    if raw_line.startswith("$GPRMC"):
+        nmea_parser = NmeaParser(None)
+        nmea_parser.set_nmea_sentence(raw_line)
+        unix_time_ms = int(nmea_parser.utc.timestamp() * 1000)
+        last_rmc_time_tag = f'\\c:{unix_time_ms}\\'
+
+    if last_rmc_time_tag is None:
+        return None
+
+    if raw_line.startswith("$GP"):
+        return raw_line.encode()
+    else:
+        return (last_rmc_time_tag + raw_line).encode()
+
+
 def nmea_sim(args):
     with open(args.nmea_file, 'rb') as nmea_file:
         if args.tcp_port is not None:
             sock = socket.socket()
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('0.0.0.0', int(args.tcp_port)))
             sock.listen(100)
             sock.setblocking(False)
@@ -92,7 +116,11 @@ def nmea_sim(args):
             now = time.time()
             if now - last_epoch > 1:
                 last_epoch = now
-                for line in nmea_file:
+                for raw_line in nmea_file:
+                    line = time_tagged_line(raw_line)
+                    if line is None:
+                        continue
+
                     chunk_size = 10
                     for i in range(0, len(line), chunk_size):
                         chunk_end = i + chunk_size

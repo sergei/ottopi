@@ -180,7 +180,6 @@ class NmeaParser:
     def set_raw_instr_data(self):
         if self.mag_decl is None and self.lat is not None and self.lon is not None:
             self.mag_decl = geomag.declination(self.lat, self.lon)
-            print('Set magnetic declination to {} degrees'.format(self.mag_decl))
 
         now = int(time.time())
         exp_time = now - 10  # Ten seconds expiration time
@@ -197,5 +196,6 @@ class NmeaParser:
         sow = None if self.sow_t < exp_time else self.sow
         hdg = None if self.hdg_mag_t < exp_time else self.hdg_mag
 
-        self.navigator.set_raw_instr_data(RawInstrData(t=now, utc=utc, lat=lat, lon=lon, sog=sog, cog=cog, awa=awa,
-                                                       aws=aws, twa=twa, tws=tws, sow=sow, hdg=hdg))
+        if self.navigator is not None:
+            self.navigator.set_raw_instr_data(RawInstrData(t=now, utc=utc, lat=lat, lon=lon, sog=sog, cog=cog, awa=awa,
+                                                           aws=aws, twa=twa, tws=tws, sow=sow, hdg=hdg))
