@@ -1,4 +1,5 @@
---replay-dir=~/debuglog/ottopi/20210520
+--replay-dir=~/Documents/sailing/2021 SpinCup/nmea
 --log-dir=~/tmp/ottopi/replays
 --data-dir=~/tmp/ottopi/gpx
 --strict-nmea
+--signalk

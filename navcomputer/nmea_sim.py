@@ -67,7 +67,7 @@ last_rmc_time_tag = None
 def time_tagged_line(raw_line):
     global last_rmc_time_tag
     raw_line = raw_line.decode('ascii', errors='ignore')
-    if raw_line.startswith("$GPRMC"):
+    if "RMC," in raw_line:
         nmea_parser = NmeaParser(None)
         nmea_parser.set_nmea_sentence(raw_line)
         unix_time_ms = int(nmea_parser.utc.timestamp() * 1000)
@@ -76,7 +76,7 @@ def time_tagged_line(raw_line):
     if last_rmc_time_tag is None:
         return None
 
-    if raw_line.startswith("$GP"):
+    if raw_line.startswith("$G"):
         return raw_line.encode()
     else:
         return (last_rmc_time_tag + raw_line).encode()
@@ -130,7 +130,7 @@ def nmea_sim(args):
                             conn.send(line[i:chunk_end])
                         for port in serial_ports:
                             port.write(line[i:chunk_end])
-                    if b'$GPRMC' in line:
+                    if b'RMC,' in line:
                         break
 
 

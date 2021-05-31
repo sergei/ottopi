@@ -137,13 +137,13 @@ def main(args):
     navigator.restore_active_route()
     navigator.read_polars(data_dir + os.sep + conf.POLAR_NAME)
 
-    nmea_parser = NmeaParser(navigator)
+    nmea_parser = NmeaParser(navigator, args.strict_nmea)
 
     if args.replay_dir is not None:
         from replay import Replay
         replay = Replay(args.replay_dir, args.log_dir, nmea_parser)
         navigator.add_listener(replay)
-        replay.run(args.with_prefix)
+        replay.run(args.with_prefix, args.signalk)
         return
 
     navigator.add_listener(Speaker.get_instance())
@@ -209,6 +209,10 @@ if __name__ == '__main__':
     parser.add_argument("--http-server-port", help="HTTP server port", required=False)
     parser.add_argument("--replay-dir", help="Replay logs found in this directory", required=False)
     parser.add_argument("--with-prefix", help="Analyze prefix in the files being replayed", default=False,
+                        action='store_true', required=False)
+    parser.add_argument("--strict-nmea", help="NMEA checksum is not optional", default=False,
+                        action='store_true', required=False)
+    parser.add_argument("--signalk", help="Log collected from SignalK", default=False,
                         action='store_true', required=False)
 
     main(parser.parse_args())

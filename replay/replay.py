@@ -1,5 +1,6 @@
 import datetime
 import glob
+import gzip
 import os
 
 from gpxpy.geo import Location
@@ -18,19 +19,28 @@ class Replay(NavigationListener):
         self.kml_writer = KmlWriter()
         self.plotter = Plotter()
 
-    def run(self, with_prefix):
-        log_list = sorted(glob.glob(self.replay_dir + os.sep + 'log-*.nmea'))
+    def run(self, with_prefix, signalk):
+        log_list = sorted(glob.glob(self.replay_dir + os.sep + '*.nmea'))
         log_list += sorted(glob.glob(self.replay_dir + os.sep + '*.log'))
+        log_list += sorted(glob.glob(self.replay_dir + os.sep + '*.log.gz'))
 
         for log in log_list:
-            with open(log, 'r') as f:
-                print('Replaying {}'.format(log))
-                for nmea in f:
-                    if with_prefix:
-                        if nmea.startswith('>'):
-                            self.nmea_parser.set_nmea_sentence(nmea[2:])
-                    else:
-                        self.nmea_parser.set_nmea_sentence(nmea)
+            if log.endswith('.gz'):
+                f = gzip.open(log, 'rt')
+            else:
+                f = open(log, 'r')
+            print('Replaying {}'.format(log))
+            for nmea in f:
+                if with_prefix:
+                    if nmea.startswith('>'):
+                        self.nmea_parser.set_nmea_sentence(nmea[2:])
+                elif signalk:
+                    t = nmea.split(';')
+                    if len(t) == 3:
+                        self.nmea_parser.set_nmea_sentence(t[2])
+                else:
+                    self.nmea_parser.set_nmea_sentence(nmea)
+            f.close()
 
         kml_file = self.log_dir + os.sep + "replay.kml"
         print('Saving {}'.format(kml_file))

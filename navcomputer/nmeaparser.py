@@ -15,8 +15,9 @@ SPEED_FACTOR = {
 
 
 class NmeaParser:
-    def __init__(self, navigator):
+    def __init__(self, navigator, strict_cc=False):
         self.navigator = navigator
+        self.strict_cc = strict_cc
         self.mag_decl = None
         self.last_dest_wpt = None  # Last WPT received from RMB message
         # Cache most recent instrument readings
@@ -48,17 +49,26 @@ class NmeaParser:
     def set_nmea_sentence(self, nmea_sentence):
         Logger.log('> ' + nmea_sentence)
         # print('set_nmea_sentence({})'.format(nmea_sentence))
+        if nmea_sentence[0] != '$':
+            return
+        if nmea_sentence[-1] != '\n':
+            return
         # Verify optional checksum
         nmea_sentence = nmea_sentence.rstrip()
         cc_idx = nmea_sentence.find('*')
-        if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
-            body = nmea_sentence[1:cc_idx]  # string between $ and *
-            received_cc = int(nmea_sentence[cc_idx+1:], 16)
-            computed_crc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in body])
-            if received_cc != computed_crc:
+        try:
+            if cc_idx >= 0 and (len(nmea_sentence) - cc_idx - 1) == 2:
+                body = nmea_sentence[1:cc_idx]  # string between $ and *
+                received_cc = int(nmea_sentence[cc_idx+1:], 16)
+                computed_crc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in body])
+                if received_cc != computed_crc:
+                    return
+            elif self.strict_cc:  # Ignore sentences without CC
                 return
-            else:
+            else:  # Pray
                 nmea_sentence = nmea_sentence[0:cc_idx]
+        except ValueError:
+            return
 
         t = nmea_sentence.split(',')
         if t[0].endswith('MWV'):
