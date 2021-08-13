@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import os
 import selectors
 import socket
@@ -143,7 +144,7 @@ def main(args):
         from replay import Replay
         replay = Replay(args.replay_dir, args.log_dir, nmea_parser)
         navigator.add_listener(replay)
-        replay.run(args.with_prefix, args.signalk)
+        replay.run(args.with_prefix, args.signalk, args.replay_start, args.replay_days)
         return
 
     navigator.add_listener(Speaker.get_instance())
@@ -214,5 +215,8 @@ if __name__ == '__main__':
                         action='store_true', required=False)
     parser.add_argument("--signalk", help="Log collected from SignalK", default=False,
                         action='store_true', required=False)
+    parser.add_argument("--replay-start", help="Date to start replay from YYYY-MM-DD UTC",
+                        type=datetime.date.fromisoformat, required=False)
+    parser.add_argument("--replay-days", help="How many days to replay", default=1, required=False)
 
     main(parser.parse_args())
