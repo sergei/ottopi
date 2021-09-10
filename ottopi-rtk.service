@@ -1,0 +1,18 @@
+[Unit]
+Description=Ottopi GNSS RTK service
+After=ottopi.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+WorkingDirectory=/home/pi/ottopi/rtklib
+ExecStart=/home/pi/ottopi/rtklib/rtkrcv -o ottopi-rtk.conf -s -d /dev/null -m 8888
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=ottopi-rtk
+
+[Install]
+WantedBy=multi-user.target
