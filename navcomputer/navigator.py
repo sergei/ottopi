@@ -73,9 +73,12 @@ class StatsEventsListener(NavStatsEventsListener):
 
         phrase = 'You {} {:.0f} meters on this {}'.format(direction, abs(distance_loss_m), maneuver)
         self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
+        for listener in self.listeners:
+            listener.on_tack(utc, loc, is_tack, distance_loss_m)
 
     def on_mark_rounding(self, utc, loc, is_windward):
-        pass
+        for listener in self.listeners:
+            listener.on_mark_rounding(utc, loc, is_windward)
 
     def on_wind_shift(self, utc, loc, shift_deg, new_twd, is_lift):
         angle_direction = 'lifted' if is_lift else 'headed'

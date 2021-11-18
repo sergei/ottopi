@@ -66,3 +66,9 @@ class NavigationListener:
     def on_target_update(self, utc: datetime, loc: Location,
                          distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
         pass
+
+    def on_mark_rounding(self, utc, loc, is_windward):
+        pass
+
+    def on_tack(self, utc, loc, is_tack, distance_loss_m):
+        pass

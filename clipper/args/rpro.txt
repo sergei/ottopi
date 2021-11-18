@@ -1,0 +1,10 @@
+--name="Regatta PRO Race 1"
+--race-date=2021-11-13
+--start-time=11:35
+--finish-time=12:20
+--timezone=America/Los_Angeles
+--uuid=781c5630-a269-47aa-b764-d935b36c38ab
+--bucket=com.santacruzinstruments.signalk.logs
+--profile=signalk-down
+--polar-file=../navcomputer/data/polar.txt
+--cache-only
