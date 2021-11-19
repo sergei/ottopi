@@ -14,6 +14,7 @@ from tzlocal import get_localzone
 
 from clipper.kml_maker import make_kml
 from clipper.race_events_recorder import RaceEventsRecorder
+from clipper.video_maker import make_video
 from navigator import Navigator
 from nmeaparser import NmeaParser
 
@@ -111,6 +112,7 @@ def main(args):
 
     kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
     make_kml(kml_file, race_events)
+    make_video(args.work_dir, get_valid_filename(args.name), race_events)
 
 
 def get_valid_filename(s):
