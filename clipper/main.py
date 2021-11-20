@@ -112,7 +112,7 @@ def main(args):
 
     kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
     make_kml(kml_file, race_events)
-    make_video(args.work_dir, get_valid_filename(args.name), race_events)
+    make_video(args.work_dir, get_valid_filename(args.name), race_events, args.gopro_dir)
 
 
 def get_valid_filename(s):
@@ -159,5 +159,6 @@ if __name__ == '__main__':
     parser.add_argument("--profile", help="S3 profile", required=True)
     parser.add_argument("--polar-file", help="Boat polar file", required=True)
     parser.add_argument("--cache-only", help="Use cached data only", default=False, action='store_true')
+    parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
 
     main(parser.parse_args())

@@ -58,7 +58,7 @@ class InfoCell:
 
 class OverlayMaker:
     def __init__(self, work_dir, base_name, width, height):
-        self.overlay_dir = work_dir + os.sep + base_name + 'overlay'
+        self.overlay_dir = work_dir + os.sep + base_name + os.sep + 'overlay'
         os.makedirs(self.overlay_dir, exist_ok=True)
         self.width = width
         self.height = height
@@ -94,6 +94,11 @@ class OverlayMaker:
         self.time_stamp_height = self.time_stamp_font.getmetrics()[0]
 
     def add_epoch(self, file_name, epoch):
+        full_file_name = self.overlay_dir + os.sep + file_name
+        if os.path.isfile(full_file_name):
+            print(f'{full_file_name} exists, skipped.')
+            return full_file_name
+
         image = new('RGBA', (self.width, self.height), FULLY_TRANSPARENT_COLOR)
         draw = ImageDraw.Draw(image)
 
@@ -114,7 +119,7 @@ class OverlayMaker:
         draw.text((x, y), epoch['utc'], font=self.time_stamp_font,
                   fill=SEMI_TRANSPARENT_FONT_COLOR)
 
-        file_name = self.overlay_dir + os.sep + file_name
-        image.save(file_name)
-        print(f'{file_name} created')
+        image.save(full_file_name)
+        print(f'{full_file_name} created')
+        return full_file_name
 
