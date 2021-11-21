@@ -12,6 +12,8 @@ class GoPro:
     def __init__(self, sd_card_dir='/Volumes/GOPRO'):
         # Build the list of clips
         clips = []
+
+        print(f'Looking for GOPRO clips in {sd_card_dir} ...')
         for root, dirs_list, files_list in os.walk(sd_card_dir):
             for file_name in files_list:
                 if os.path.splitext(file_name)[-1] == ".MP4":
@@ -27,6 +29,7 @@ class GoPro:
                 clip['start_utc'] = start_utc
                 clip['stop_utc'] = stop_utc
                 self.clips.append(clip)
+                print(f'{clip["name"]} {start_utc} {stop_utc}')
             else:
                 print(f'Warning: Clip {clip["name"]} contains no valid UTC')
 
@@ -39,12 +42,13 @@ class GoPro:
         result = subprocess.run(cmd, stdout=subprocess.PIPE)
         start_utc = None
         stop_utc = None
+        timezone = pytz.timezone("UTC")
         if result.returncode == 0:
             lines = result.stdout.decode('utf-8').split('\n')
             reader = csv.DictReader(lines)
             for row in reader:
                 if row['fix_valid'] == 'True':
-                    utc = datetime.fromisoformat(row['utc']).astimezone(pytz.utc)
+                    utc = timezone.localize(datetime.fromisoformat(row['utc']))
                     if start_utc is None:
                         t_ms = int(float(row['t']) * 1000)
                         start_utc = utc - timedelta(milliseconds=t_ms)

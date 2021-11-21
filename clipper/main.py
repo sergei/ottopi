@@ -104,7 +104,9 @@ def main(args):
         # Store race json file
         with open(json_name, 'wt') as f:
             f.write(events_recorder.to_json())
-            print(f'Creates {json_name}')
+            print(f'Created {json_name}')
+    else:
+        print(f'Using cached {json_name}')
 
     # Read the cached race file
     with open(json_name, 'rt') as f:
@@ -112,6 +114,7 @@ def main(args):
 
     kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
     make_kml(kml_file, race_events)
+
     make_video(args.work_dir, get_valid_filename(args.name), race_events, args.gopro_dir)
 
 
