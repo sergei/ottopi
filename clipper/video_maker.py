@@ -73,25 +73,28 @@ def make_video(work_dir, base_name, race_events, gopro_dir):
                 camera_clip = VideoFileClip(name).subclip(in_time, out_time)
                 camera_clips.append(camera_clip)
 
-            background_clip = concatenate_videoclips(camera_clips)
-            overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
-            overlay_x = 0
-            overlay_y = height - overlay_clip.size[1]
-            composite_clip = CompositeVideoClip([background_clip, overlay_clip.set_position((overlay_x, overlay_y))])
+            if len(camera_clips) > 0:
+                background_clip = concatenate_videoclips(camera_clips)
+                overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
+                overlay_x = 0
+                overlay_y = height - overlay_clip.size[1]
+                composite_clip = CompositeVideoClip([background_clip, overlay_clip.set_position((overlay_x, overlay_y))])
 
-            composite_clip.write_videofile(evt_clip_name)
+                composite_clip.write_videofile(evt_clip_name)
 
-            # Close unused clips
-            composite_clip.close()
-            for c in camera_clips:
-                c.close()
-            background_clip.close()
-
-            print(f'{evt_clip_name} created')
+                # Close unused clips
+                composite_clip.close()
+                background_clip.close()
+                for c in camera_clips:
+                    c.close()
+                print(f'{evt_clip_name} created')
+                event_clips.append(evt_clip_name)
+            else:
+                print(f'No GOPRO clips found for {evt["name"]} {evt["utc"]} ')
         else:
             print(f'Using cached {evt_clip_name}')
+            event_clips.append(evt_clip_name)
 
-        event_clips.append(evt_clip_name)
         if evt_idx >= max_evt:
             break
 
