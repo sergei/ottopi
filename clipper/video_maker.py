@@ -6,8 +6,8 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from clipper.gopro import GoPro
-from clipper.overlay_maker import OverlayMaker
+from gopro import GoPro
+from overlay_maker import OverlayMaker
 
 
 def get_clip_size(mp4_name):
@@ -58,22 +58,51 @@ def make_video(work_dir, base_name, race_events, gopro_dir):
             png_name = overlay_maker.add_epoch(file_name, epoch)
             evt['overlay_images'].append(png_name)
 
-    # Compose the clip
+    # Create separate event clips
+    event_clips = []
+    max_evt = 99
     for evt_idx, evt in enumerate(race_events):
-        camera_clips = []
-        for go_pro_clip in evt['go_pro_clips']:
-            name = go_pro_clip['name']
-            in_time = go_pro_clip['in_time']
-            out_time = go_pro_clip['out_time']
-            camera_clip = VideoFileClip(name).subclip(in_time, out_time)
-            camera_clips.append(camera_clip)
+        evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
+        if not os.path.isfile(evt_clip_name):
+            print(f'Creating {evt_clip_name} ...')
+            camera_clips = []
+            for go_pro_clip in evt['go_pro_clips']:
+                name = go_pro_clip['name']
+                in_time = 0 if go_pro_clip['in_time'] is None else go_pro_clip['in_time']
+                out_time = go_pro_clip['out_time']
+                camera_clip = VideoFileClip(name).subclip(in_time, out_time)
+                camera_clips.append(camera_clip)
 
-        background_clip = concatenate_videoclips(camera_clips)
-        overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
-        composite_clip = CompositeVideoClip([background_clip, overlay_clip])
+            background_clip = concatenate_videoclips(camera_clips)
+            overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
+            overlay_x = 0
+            overlay_y = height - overlay_clip.size[1]
+            composite_clip = CompositeVideoClip([background_clip, overlay_clip.set_position((overlay_x, overlay_y))])
 
-        movie_name = work_dir + os.sep + base_name + os.sep + f'overlay_{evt_idx:04d}.mp4'
-        composite_clip.write_videofile(movie_name)
+            composite_clip.write_videofile(evt_clip_name)
 
-        print(f'{movie_name} created')
-        break
+            # Close unused clips
+            composite_clip.close()
+            for c in camera_clips:
+                c.close()
+            background_clip.close()
+
+            print(f'{evt_clip_name} created')
+        else:
+            print(f'Using cached {evt_clip_name}')
+
+        event_clips.append(evt_clip_name)
+        if evt_idx >= max_evt:
+            break
+
+    # Create summary clip
+    movie_name = work_dir + os.sep + base_name + os.sep + f'movie.mp4'
+    print(f'Creating summary movie {movie_name} ...')
+    clips = []
+    for clip_name in event_clips:
+        clip = VideoFileClip(clip_name)
+        clips.append(clip)
+
+    movie_clip = concatenate_videoclips(clips)
+    movie_clip.write_videofile(movie_name)
+    print(f'Created {movie_name}')

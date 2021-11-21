@@ -12,9 +12,9 @@ import pytz
 from pytz import UnknownTimeZoneError
 from tzlocal import get_localzone
 
-from clipper.kml_maker import make_kml
-from clipper.race_events_recorder import RaceEventsRecorder
-from clipper.video_maker import make_video
+from kml_maker import make_kml
+from race_events_recorder import RaceEventsRecorder
+from video_maker import make_video
 from navigator import Navigator
 from nmeaparser import NmeaParser
 
