@@ -1,11 +1,13 @@
 import os
 from datetime import datetime
 
+from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
+from summary_maker import SummaryMaker
 from gopro import GoPro
 from overlay_maker import OverlayMaker
 
@@ -15,7 +17,7 @@ def get_clip_size(mp4_name):
     return clip.size[0], clip.size[1]
 
 
-def make_video(work_dir, base_name, race_events, gopro_dir):
+def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache):
     gopro = GoPro(gopro_dir)
 
     width = None
@@ -50,22 +52,35 @@ def make_video(work_dir, base_name, race_events, gopro_dir):
         return
 
     # Create overlay images
-    overlay_maker = OverlayMaker(work_dir, base_name, width, 256)
+    event_title_png = None
+    overlay_height = 128
+    thumb_width = 256
+    overlay_maker = OverlayMaker(work_dir, base_name, width, overlay_height, ignore_cache)
+    summary_maker = SummaryMaker(work_dir, base_name, width, height, polars, ignore_cache)
     for evt_idx, evt in enumerate(race_events):
         evt['overlay_images'] = []
+        file_name = f'chapter_{evt_idx:04d}.png'
+        summary_maker.prepare_data(evt)
+        event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
+        evt['event_title_png'] = event_title_png
         for epoch_idx, epoch in enumerate(evt['history']):
+            file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
+            thumb_png_name = summary_maker.make_thumbnail(file_name, epoch, thumb_width, overlay_height)
+
             file_name = f'ovl_{evt_idx:04d}_{epoch_idx:04d}.png'
-            png_name = overlay_maker.add_epoch(file_name, epoch)
+            png_name = overlay_maker.add_epoch(file_name, epoch, thumb_png_name)
             evt['overlay_images'].append(png_name)
 
     # Create separate event clips
     event_clips = []
-    max_evt = 99
+    max_evt = 1
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
         if not os.path.isfile(evt_clip_name):
             print(f'Creating {evt_clip_name} ...')
+
             camera_clips = []
+
             for go_pro_clip in evt['go_pro_clips']:
                 name = go_pro_clip['name']
                 in_time = 0 if go_pro_clip['in_time'] is None else go_pro_clip['in_time']
@@ -74,11 +89,16 @@ def make_video(work_dir, base_name, race_events, gopro_dir):
                 camera_clips.append(camera_clip)
 
             if len(camera_clips) > 0:
+                title_duration = 4
+                event_title_clip = ImageClip(evt['event_title_png'], duration=title_duration)
+
                 background_clip = concatenate_videoclips(camera_clips)
                 overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
                 overlay_x = 0
                 overlay_y = height - overlay_clip.size[1]
-                composite_clip = CompositeVideoClip([background_clip, overlay_clip.set_position((overlay_x, overlay_y))])
+                composite_clip = CompositeVideoClip([background_clip,
+                                                     overlay_clip.set_position((overlay_x, overlay_y)),
+                                                     event_title_clip])
 
                 composite_clip.write_videofile(evt_clip_name)
 
@@ -98,9 +118,9 @@ def make_video(work_dir, base_name, race_events, gopro_dir):
         if evt_idx >= max_evt:
             break
 
-    # Create summary clip
+    # Create full movie
     movie_name = work_dir + os.sep + base_name + os.sep + f'movie.mp4'
-    print(f'Creating summary movie {movie_name} ...')
+    print(f'Creating full movie {movie_name} ...')
     clips = []
     for clip_name in event_clips:
         clip = VideoFileClip(clip_name)

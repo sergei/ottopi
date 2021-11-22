@@ -1,6 +1,7 @@
 import os
 from PIL import ImageFont, ImageDraw
 from PIL.Image import new
+from PIL import Image
 
 VALUE_FONT = "/System/Library/Fonts/Courier.dfont"
 LABEL_FONT = "/System/Library/Fonts/Courier.dfont"
@@ -57,7 +58,8 @@ class InfoCell:
 
 
 class OverlayMaker:
-    def __init__(self, work_dir, base_name, width, height):
+    def __init__(self, work_dir, base_name, width, height, ignore_cache):
+        self.ignore_cache = ignore_cache
         self.overlay_dir = work_dir + os.sep + base_name + os.sep + 'overlay'
         os.makedirs(self.overlay_dir, exist_ok=True)
         self.width = width
@@ -66,8 +68,8 @@ class OverlayMaker:
         num_cells = 5
         rect_width = width
         cell_width = rect_width / num_cells
-        self.cell_step = int(rect_width / (num_cells + 1))
-        cell_width = int(cell_width * 4 / 3)  # Make it a bit smaller
+        self.cell_step = int(rect_width / num_cells)
+        cell_width = int(cell_width * 3 / 4)  # Make it a bit smaller
 
         self.info_cell = InfoCell()
         self.info_cell.set_size(cell_width)
@@ -76,7 +78,7 @@ class OverlayMaker:
         self.time_stamp_height = None
         self.choose_time_stamp_font(self.info_cell.height / 3)
 
-        self.rect_height = self.time_stamp_height + self.info_cell.height
+        self.rect_height = self.info_cell.height
         self.rect_x_offset = 0
         self.rect_y_offset = height - self.rect_height
 
@@ -93,9 +95,10 @@ class OverlayMaker:
         self.time_stamp_font = ImageFont.truetype(TIMESTAMP_FONT, font_size)
         self.time_stamp_height = self.time_stamp_font.getmetrics()[0]
 
-    def add_epoch(self, file_name, epoch):
+    def add_epoch(self, file_name, epoch, thumb_png_name):
         full_file_name = self.overlay_dir + os.sep + file_name
-        if os.path.isfile(full_file_name):
+
+        if os.path.isfile(full_file_name) and not self.ignore_cache:
             print(f'{full_file_name} exists, skipped.')
             return full_file_name
 
@@ -112,14 +115,12 @@ class OverlayMaker:
         self.info_cell.draw(draw, x, self.rect_y_offset, "TWS", f"{epoch['tws']:.1f}")
 
         x += self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "AWA", f"{epoch['awa']:.1f}")
+        self.info_cell.draw(draw, x, self.rect_y_offset, "TWA", f"{epoch['twa']:.1f}")
 
-        y = self.rect_y_offset + self.info_cell.height
-        x = 0
-        draw.text((x, y), epoch['utc'], font=self.time_stamp_font,
-                  fill=SEMI_TRANSPARENT_FONT_COLOR)
+        # Draw the performance chart
+        thumb_img = Image.open(thumb_png_name)
+        image.paste(thumb_img, (16, 16), thumb_img)
 
         image.save(full_file_name)
         print(f'{full_file_name} created')
         return full_file_name
-

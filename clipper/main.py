@@ -84,10 +84,11 @@ def main(args):
 
     json_name = args.work_dir + os.sep + get_valid_filename(args.name) + '.json'
 
+    navigator = Navigator.get_instance()
+    navigator.read_polars(args.polar_file)
+
     if not args.cache_only:
         finish_time_utc, start_time_utc = get_race_time_interval(args)
-
-        navigator = Navigator.get_instance()
 
         nmea_parser = NmeaParser(navigator, strict_cc=True)
 
@@ -96,7 +97,6 @@ def main(args):
 
         data_dir = os.path.expanduser(args.work_dir)
         navigator.set_data_dir(data_dir)
-        navigator.read_polars(args.polar_file)
 
         for nmea in s3_sk_nmea_logs(start_time_utc, finish_time_utc, args.bucket, args.uuid, args.profile):
             nmea_parser.set_nmea_sentence(nmea)
@@ -115,7 +115,9 @@ def main(args):
     kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
     make_kml(kml_file, race_events)
 
-    make_video(args.work_dir, get_valid_filename(args.name), race_events, args.gopro_dir)
+    ignore_cache = not args.cache_only
+    make_video(args.work_dir, get_valid_filename(args.name), race_events, args.gopro_dir, navigator.polars,
+               ignore_cache)
 
 
 def get_valid_filename(s):
