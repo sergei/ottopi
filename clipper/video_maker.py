@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 
 from moviepy.video.VideoClip import ImageClip
@@ -52,7 +53,6 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
         return
 
     # Create overlay images
-    event_title_png = None
     overlay_height = 128
     thumb_width = 256
     overlay_maker = OverlayMaker(work_dir, base_name, width, overlay_height, ignore_cache)
@@ -72,7 +72,6 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
             evt['overlay_images'].append(png_name)
 
     # Create separate event clips
-    event_clips = []
     max_evt = 1
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
@@ -108,23 +107,35 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
                 for c in camera_clips:
                     c.close()
                 print(f'{evt_clip_name} created')
-                event_clips.append(evt_clip_name)
+                evt['composite_clip'] = evt_clip_name
             else:
                 print(f'No GOPRO clips found for {evt["name"]} {evt["utc"]} ')
         else:
             print(f'Using cached {evt_clip_name}')
-            event_clips.append(evt_clip_name)
+            evt['composite_clip'] = evt_clip_name
 
         if evt_idx >= max_evt:
             break
 
     # Create full movie
     movie_name = work_dir + os.sep + base_name + os.sep + f'movie.mp4'
+
+    description_name = work_dir + os.sep + base_name + os.sep + f'description.txt'
+
     print(f'Creating full movie {movie_name} ...')
     clips = []
-    for clip_name in event_clips:
-        clip = VideoFileClip(clip_name)
-        clips.append(clip)
+
+    with open(description_name, 'wt') as df:
+        start_time = 0
+        for evt_idx, evt in enumerate(race_events):
+            if 'composite_clip' in evt:
+                clip_name = evt['composite_clip']
+                clip = VideoFileClip(clip_name)
+                clips.append(clip)
+                d = time.strftime('%M:%S', time.gmtime(start_time))
+                df.write(f'{str(d)} - {evt_idx+1}. {evt["name"]}\n')
+                start_time += clip.duration
+        print(f'Created {description_name}')
 
     movie_clip = concatenate_videoclips(clips)
     movie_clip.write_videofile(movie_name)
