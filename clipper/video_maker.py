@@ -72,7 +72,7 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
             evt['overlay_images'].append(png_name)
 
     # Create separate event clips
-    max_evt = 1
+    max_evt = 999
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
         if not os.path.isfile(evt_clip_name):
@@ -137,6 +137,12 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
                 start_time += clip.duration
         print(f'Created {description_name}')
 
+    if os.path.isfile(movie_name) and not ignore_cache:
+        print(f'{movie_name} exists, skipped.')
+        return movie_name
+
     movie_clip = concatenate_videoclips(clips)
     movie_clip.write_videofile(movie_name)
     print(f'Created {movie_name}')
+
+    return movie_name
