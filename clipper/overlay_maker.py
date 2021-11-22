@@ -10,6 +10,7 @@ TIMESTAMP_FONT = "/System/Library/Fonts/Courier.dfont"
 # FULLY_TRANSPARENT_COLOR = rgb(0, 0, 0, 0)
 # SEMI_TRANSPARENT_BOX_COLOR_1 = rgb(0, 0, 0, 127)
 # SEMI_TRANSPARENT_BOX_COLOR_2 = rgb(50, 50, 50, 127)
+SEMI_TRANSPARENT_BOX_COLOR_2 = '#32323280'
 # SEMI_TRANSPARENT_FONT_COLOR = rgb(255, 255, 255, 127)
 # NON_TRANSPARENT_WHITE_FONT_COLOR = rgb(255, 255, 255, 255)
 
@@ -66,9 +67,9 @@ class OverlayMaker:
         self.height = height
 
         num_cells = 5
-        rect_width = width
-        cell_width = rect_width / num_cells
-        self.cell_step = int(rect_width / num_cells)
+        self.rect_width = width
+        cell_width = self.rect_width / num_cells
+        self.cell_step = int(self.rect_width / num_cells)
         cell_width = int(cell_width * 3 / 4)  # Make it a bit smaller
 
         self.info_cell = InfoCell()
@@ -104,6 +105,8 @@ class OverlayMaker:
 
         image = new('RGBA', (self.width, self.height), FULLY_TRANSPARENT_COLOR)
         draw = ImageDraw.Draw(image)
+
+        draw.rectangle([(0, 0), (self.rect_width, self.rect_height)], fill=SEMI_TRANSPARENT_BOX_COLOR_2)
 
         x = self.cell_step
         self.info_cell.draw(draw, x, self.rect_y_offset, "SPD", f"{epoch['sow']:.1f}")
