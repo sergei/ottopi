@@ -57,6 +57,14 @@ class InfoCell:
         draw.text((x + value_x_offset, y + value_y_offset), value, font=self.main_font,
                   fill=NON_TRANSPARENT_WHITE_FONT_COLOR)
 
+    def draw_vc_label(self, draw, x, y, name):
+        (label_w, label_h) = self.label_font.getsize(name)
+        label_x_offset = x
+        label_y_offset = (self.height - label_h) / 2
+        draw.text((x + label_x_offset, y + label_y_offset), name, font=self.label_font,
+                  fill=SEMI_TRANSPARENT_FONT_COLOR)
+        return label_w + label_x_offset
+
 
 class OverlayMaker:
     def __init__(self, work_dir, base_name, width, height, ignore_cache):
@@ -118,11 +126,15 @@ class OverlayMaker:
         self.info_cell.draw(draw, x, self.rect_y_offset, "TWS", f"{epoch['tws']:.1f}")
 
         x += self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "TWA", f"{epoch['twa']:.1f}")
+        self.info_cell.draw(draw, x, self.rect_y_offset, "TWA", f"{abs(epoch['twa']):.1f}")
+
+        x = 8
+        x = self.info_cell.draw_vc_label(draw, x, self.rect_y_offset, "VMG")
+        x += 16
 
         # Draw the performance chart
         thumb_img = Image.open(thumb_png_name)
-        image.paste(thumb_img, (16, 16), thumb_img)
+        image.paste(thumb_img, (x, 16), thumb_img)
 
         image.save(full_file_name)
         print(f'{full_file_name} created')

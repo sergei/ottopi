@@ -65,7 +65,7 @@ def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache
         evt['event_title_png'] = event_title_png
         for epoch_idx, epoch in enumerate(evt['history']):
             file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
-            thumb_png_name = summary_maker.make_thumbnail(file_name, epoch, thumb_width, overlay_height)
+            thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
 
             file_name = f'ovl_{evt_idx:04d}_{epoch_idx:04d}.png'
             png_name = overlay_maker.add_epoch(file_name, epoch, thumb_png_name)
