@@ -36,6 +36,13 @@ class GoPro:
         # Sort clips by UTC start time
         self.clips.sort(key=lambda x: x['start_utc'])
 
+        # Determine overall start and finish times
+        self.start_time_utc = None
+        self.finish_time_utc = None
+        if len(self.clips) > 0:
+            self.start_time_utc = self.clips[0]['start_utc']
+            self.finish_time_utc = self.clips[-1]['stop_utc']
+
     @staticmethod
     def time_stamp_mp4(mp4_name):
         cmd = [GOPRO_GPMF_BIN, mp4_name]

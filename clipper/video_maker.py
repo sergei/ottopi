@@ -9,7 +9,6 @@ from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from summary_maker import SummaryMaker
-from gopro import GoPro
 from overlay_maker import OverlayMaker
 
 
@@ -18,8 +17,7 @@ def get_clip_size(mp4_name):
     return clip.size[0], clip.size[1]
 
 
-def make_video(work_dir, base_name, race_events, gopro_dir, polars, ignore_cache):
-    gopro = GoPro(gopro_dir)
+def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
 
     width = None
     height = None

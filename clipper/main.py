@@ -17,6 +17,7 @@ from race_events_recorder import RaceEventsRecorder
 from video_maker import make_video
 from navigator import Navigator
 from nmeaparser import NmeaParser
+from gopro import GoPro
 
 
 def s3_sk_nmea_logs(start_time_utc, finish_time_utc, bucket, uuid, profile):
@@ -87,8 +88,14 @@ def main(args):
     navigator = Navigator.get_instance()
     navigator.read_polars(args.polar_file)
 
+    gopro = GoPro(args.gopro_dir)
+
     if not args.cache_only:
-        finish_time_utc, start_time_utc = get_race_time_interval(args)
+        if args.race_date is None:
+            finish_time_utc, start_time_utc = gopro.finish_time_utc, gopro.start_time_utc
+        else:
+            print(f'Using GOPRO clips time span to determine movie time span')
+            finish_time_utc, start_time_utc = get_race_time_interval(args)
 
         nmea_parser = NmeaParser(navigator, strict_cc=True)
 
@@ -116,7 +123,7 @@ def main(args):
     make_kml(kml_file, race_events)
 
     ignore_cache = not args.cache_only
-    make_video(args.work_dir, get_valid_filename(args.name), race_events, args.gopro_dir, navigator.polars,
+    make_video(args.work_dir, get_valid_filename(args.name), race_events, gopro, navigator.polars,
                ignore_cache)
 
 
@@ -155,9 +162,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("--work-dir", help="Working directory", default='/tmp')
     parser.add_argument("--name", help="Name of the clip")
-    parser.add_argument("--race-date", help="Race date YYYY-MM-DD (local timezone)", required=True)
-    parser.add_argument("--start-time", help="Start time HH:MM (local timezone)", required=True)
-    parser.add_argument("--finish-time", help="Start time HH:MM (local timezone)", required=True)
+    parser.add_argument("--race-date", help="Race date YYYY-MM-DD (local timezone)", required=False)
+    parser.add_argument("--start-time", help="Start time HH:MM (local timezone)", required=False)
+    parser.add_argument("--finish-time", help="Start time HH:MM (local timezone)", required=False)
     parser.add_argument("--timezone", help="Local timezone, e.g. PDT", required=False)
     parser.add_argument("--uuid", help="SK UUID", required=True)
     parser.add_argument("--bucket", help="S3 Bucket", required=True)
