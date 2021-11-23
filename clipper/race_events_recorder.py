@@ -25,6 +25,14 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
+EVENTS_IN_OUT = {
+    'Tack': {'in': 25, 'out': 35},
+    'Gybe': {'in': 25, 'out': 35},
+    'Windward Mark': {'in': 60, 'out': 60},
+    'Leeward Mark': {'in': 60, 'out': 60},
+}
+
+
 class RaceEventsRecorder(NavigationListener):
     def __init__(self, work_dir, start_time_utc, finish_time_utc):
         super().__init__()
@@ -43,9 +51,8 @@ class RaceEventsRecorder(NavigationListener):
                 'name': 'Windward Mark' if is_windward else 'Leeward Mark',
                 'utc': utc,
                 'location': loc,
-                'history': self.instr_data.copy()[-NavStats.WIN_LEN:]
+                'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
-            self.instr_data = []
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
         if self.start_time_utc <= utc <= self.finish_time_utc:
@@ -53,9 +60,15 @@ class RaceEventsRecorder(NavigationListener):
                 'name': 'Tack' if is_tack else 'Gybe',
                 'utc': utc,
                 'location': loc,
-                'history': self.instr_data.copy()[-NavStats.WIN_LEN:]
+                'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
-            self.instr_data = []
+
+    def finalize(self):
+        # Add history to all events
+        for evt in self.events:
+            in_idx = evt['hist_idx'] - EVENTS_IN_OUT[evt['name']]['in']
+            out_idx = evt['hist_idx'] + EVENTS_IN_OUT[evt['name']]['out']
+            evt['history'] = self.instr_data[in_idx:out_idx]
 
     def to_json(self):
         return json.dumps(self.events, indent=2, default=json_serial)

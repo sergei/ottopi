@@ -108,6 +108,9 @@ def main(args):
         for nmea in s3_sk_nmea_logs(start_time_utc, finish_time_utc, args.bucket, args.uuid, args.profile):
             nmea_parser.set_nmea_sentence(nmea)
 
+        # All NMEA is consumed finalize the events
+        events_recorder.finalize()
+
         # Store race json file
         with open(json_name, 'wt') as f:
             f.write(events_recorder.to_json())

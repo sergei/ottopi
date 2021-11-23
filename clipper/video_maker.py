@@ -73,7 +73,7 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
     max_evt = 999
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
-        if not os.path.isfile(evt_clip_name):
+        if not os.path.isfile(evt_clip_name) or ignore_cache:
             print(f'Creating {evt_clip_name} ...')
 
             camera_clips = []

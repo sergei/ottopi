@@ -1,3 +1,2 @@
-- Make in and out times of every event type configurable
 - Add manual events 
 - Create CSV file with events names
