@@ -1,0 +1,8 @@
+# Signal-K server UUID assigned to the boat
+uuid: 781c5630-a269-47aa-b764-d935b36c38ab
+# S3 Bucket where SK-logs are kept
+bucket: com.santacruzinstruments.signalk.logs
+# S3 profile to access the bucket above
+profile: signalk-down
+# Boat polar file
+polar_file: ../navcomputer/data/polar.txt

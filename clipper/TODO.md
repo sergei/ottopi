@@ -1,2 +1,4 @@
-- Make all parameters optional
+- Make all parameters optional, create two pass work flow 
+- Add cache of clips timestamps to avoid rereading GOPRO MP4s
+- Add cache of S3 log files
 - Create CSV file with events names

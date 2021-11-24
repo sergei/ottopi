@@ -63,8 +63,8 @@ class RaceEventsRecorder(NavigationListener):
                 'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
 
-    def add_extra_events(self, extra):
-        for evt in extra.events:
+    def add_extra_events(self, events):
+        for evt in events:
             utc = evt['utc']
             for hist_idx, ii in enumerate(self.instr_data):
                 if utc == ii.utc:

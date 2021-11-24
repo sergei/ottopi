@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from datetime import datetime
@@ -17,7 +18,11 @@ def get_clip_size(mp4_name):
     return clip.size[0], clip.size[1]
 
 
-def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
+def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cache):
+
+    # Read the cached race file
+    with open(events_json_name, 'rt') as f:
+        race_events = json.load(f)
 
     width = None
     height = None
