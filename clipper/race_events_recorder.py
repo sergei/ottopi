@@ -63,11 +63,36 @@ class RaceEventsRecorder(NavigationListener):
                 'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
 
+    def add_extra_events(self, extra):
+        for evt in extra.events:
+            utc = evt['utc']
+            for hist_idx, ii in enumerate(self.instr_data):
+                if utc == ii.utc:
+                    self.events.append({
+                        'name': evt['name'],
+                        'in': evt['in'],
+                        'out': evt['out'],
+                        'utc': utc,
+                        'location': Location(ii.lat, ii.lon),
+                        'hist_idx': hist_idx
+                    })
+
+        # Sort events by UTC, since the newly added ones might came out of order
+        self.events.sort(key=lambda x: x['utc'])
+
     def finalize(self):
         # Add history to all events
         for evt in self.events:
-            in_idx = evt['hist_idx'] - EVENTS_IN_OUT[evt['name']]['in']
-            out_idx = evt['hist_idx'] + EVENTS_IN_OUT[evt['name']]['out']
+            if 'in' in evt:
+                in_idx = evt['hist_idx'] - evt['in']
+            else:
+                in_idx = evt['hist_idx'] - EVENTS_IN_OUT[evt['name']]['in']
+
+            if 'out' in evt:
+                out_idx = evt['hist_idx'] + evt['out']
+            else:
+                out_idx = evt['hist_idx'] + EVENTS_IN_OUT[evt['name']]['out']
+
             evt['history'] = self.instr_data[in_idx:out_idx]
 
     def to_json(self):

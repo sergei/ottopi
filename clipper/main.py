@@ -12,6 +12,7 @@ import pytz
 from pytz import UnknownTimeZoneError
 from tzlocal import get_localzone
 
+from extra_events import ExtraEvents
 from kml_maker import make_kml
 from race_events_recorder import RaceEventsRecorder
 from video_maker import make_video
@@ -105,25 +106,32 @@ def main(args):
         data_dir = os.path.expanduser(args.work_dir)
         navigator.set_data_dir(data_dir)
 
+        # Create automatic events from the NMEA stream
         for nmea in s3_sk_nmea_logs(start_time_utc, finish_time_utc, args.bucket, args.uuid, args.profile):
             nmea_parser.set_nmea_sentence(nmea)
 
-        # All NMEA is consumed finalize the events
+        # Add manual events
+        if args.extra_events is not None:
+            extra_events = ExtraEvents(args.extra_events)
+            events_recorder.add_extra_events(extra_events)
+
+        # All events are creted, finalize the events
         events_recorder.finalize()
 
         # Store race json file
         with open(json_name, 'wt') as f:
             f.write(events_recorder.to_json())
             print(f'Created {json_name}')
+
+        # Create KML file that can be used to generate manual events
+        kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
+        make_kml(kml_file, events_recorder.events, events_recorder.instr_data)
     else:
         print(f'Using cached {json_name}')
 
     # Read the cached race file
     with open(json_name, 'rt') as f:
         race_events = json.load(f)
-
-    kml_file = args.work_dir + os.sep + get_valid_filename(args.name) + '.kml'
-    make_kml(kml_file, race_events)
 
     ignore_cache = not args.cache_only
     make_video(args.work_dir, get_valid_filename(args.name), race_events, gopro, navigator.polars,
@@ -175,5 +183,6 @@ if __name__ == '__main__':
     parser.add_argument("--polar-file", help="Boat polar file", required=True)
     parser.add_argument("--cache-only", help="Use cached data only", default=False, action='store_true')
     parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
+    parser.add_argument("--extra-events", help="YAML file containing extra events", required=False)
 
     main(parser.parse_args())

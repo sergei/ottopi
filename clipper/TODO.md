@@ -1,2 +1,2 @@
-- Add manual events 
+- Make all parameters optional
 - Create CSV file with events names
