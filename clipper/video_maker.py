@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import time
@@ -124,11 +125,14 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
     movie_name = work_dir + os.sep + base_name + os.sep + f'movie.mp4'
 
     description_name = work_dir + os.sep + base_name + os.sep + f'description.txt'
+    events_csv_name = work_dir + os.sep + base_name + os.sep + f'events.csv'
 
     print(f'Creating full movie {movie_name} ...')
     clips = []
 
-    with open(description_name, 'wt') as df:
+    with open(description_name, 'wt') as df, open(events_csv_name, 'wt') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, delimiter=',', quotechar='"', fieldnames=['url', 'event'])
+        csv_writer.writeheader()
         start_time = 0
         for evt_idx, evt in enumerate(race_events):
             if 'composite_clip' in evt:
@@ -137,8 +141,12 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
                 clips.append(clip)
                 d = time.strftime('%M:%S', time.gmtime(start_time))
                 df.write(f'{str(d)} - {evt_idx+1}. {evt["name"]}\n')
+                csv_writer.writerow({'url': f'YOUTUBE_URL?t={int(start_time)}', 'event': evt['name']})
+
                 start_time += clip.duration
+
         print(f'Created {description_name}')
+        print(f'Created {events_csv_name}')
 
     if os.path.isfile(movie_name) and not ignore_cache:
         print(f'{movie_name} exists, skipped.')
