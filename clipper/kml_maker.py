@@ -24,7 +24,7 @@ def make_kml(kml_file, race_events, instr_data):
     for evt in race_events:
         lng_lat = (evt['location'].longitude, evt['location'].latitude)
         point = events_folder.newpoint(name=evt['name'], coords=[lng_lat])
-        point.description = evt['utc']
+        point.description = f"{'='*40}<br/>{evt['utc']}<br/>"
         point.style = mark_style
         history_pts = evt['history']
         for pt_idx, pt in enumerate(history_pts):
