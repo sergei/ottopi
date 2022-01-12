@@ -26,6 +26,8 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
     with open(events_json_name, 'rt') as f:
         race_events = json.load(f)
 
+    # race_events = race_events[0:1]
+
     width = None
     height = None
 
@@ -55,11 +57,13 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
     # Create overlay images
     overlay_height = 128
     thumb_width = 256
+    polar_width = 400
     overlay_maker = OverlayMaker(work_dir, base_name, width, overlay_height, ignore_cache)
     summary_maker = SummaryMaker(work_dir, base_name, width, height, polars, ignore_cache)
-    polar_maker = PolarMaker(work_dir, base_name, width, height, polars, ignore_cache)
+    polar_maker = PolarMaker(work_dir, base_name, polar_width, polars, ignore_cache)
     for evt_idx, evt in enumerate(race_events):
         evt['overlay_images'] = []
+        evt['polar_images'] = []
         file_name = f'chapter_{evt_idx:04d}.png'
         summary_maker.prepare_data(evt)
         event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
@@ -72,6 +76,9 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
             file_name = f'polar_{evt_idx:04d}_{epoch_idx:04d}.png'
             if polar_maker.is_available():
                 polar_png_name = polar_maker.set_epoch(file_name, epoch_idx)
+            else:
+                polar_png_name = None
+            evt['polar_images'].append(polar_png_name)
 
             file_name = f'ovl_{evt_idx:04d}_{epoch_idx:04d}.png'
             png_name = overlay_maker.add_epoch(file_name, epoch, thumb_png_name)
@@ -101,9 +108,19 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
                 overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
                 overlay_x = 0
                 overlay_y = height - overlay_clip.size[1]
-                composite_clip = CompositeVideoClip([background_clip,
-                                                     overlay_clip.set_position((overlay_x, overlay_y)),
-                                                     event_title_clip])
+
+                clips = [background_clip,
+                         overlay_clip.set_position((overlay_x, overlay_y)),
+                         event_title_clip]
+
+                # Optional overlays
+
+                # Polar for tacks and gybes
+                if evt['polar_images'][0] is not None:
+                    polar_clip = ImageSequenceClip(evt['polar_images'], fps=1)
+                    clips.append(polar_clip.set_position(('right', 'top')))
+
+                composite_clip = CompositeVideoClip(clips)
 
                 composite_clip.write_videofile(evt_clip_name)
 
