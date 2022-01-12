@@ -2,24 +2,27 @@ import math
 import os
 from PIL import ImageDraw
 from PIL.Image import new
+from overlay_maker import FULLY_TRANSPARENT_COLOR
 
-from overlay_maker import FULLY_TRANSPARENT_COLOR, NON_TRANSPARENT_WHITE_FONT_COLOR
+CURRENT_DOT_WIDTH = 4
 
-HISTORY_TRANSPARENCY_FACTOR = 1  # [0 : 1]
+ARM_WIDTH = 3
+
+TARGET_CROSS_WIDTH = 5
 
 
 def rgba(r, g, b, a):
     return '#{r:02X}{g:02X}{b:02X}{a:02X}'.format(r=r, g=g, b=b, a=a)
 
 
-GRID_COLOR = rgba(255, 255, 255, 127)
-
-
 def rgb(r, g, b):
     return '#{r:02X}{g:02X}{b:02X}{a:02X}'.format(r=r, g=g, b=b, a=255)
 
 
+HISTORY_TRANSPARENCY_FACTOR = 1  # [0 : 1]
 DOT_OUTLINE = rgb(0, 0, 0)
+GRID_COLOR = rgba(255, 255, 255, 127)
+TARGET_COLOR = rgb(255, 255, 255)
 
 
 class PolarMaker:
@@ -43,11 +46,12 @@ class PolarMaker:
         self.dot_radius = 15
         self.x_pad = self.dot_radius
         self.y_pad = self.dot_radius
+        self.y0 = 0
 
     def to_screen(self, xy):
         x, y = xy
         screen_x = x * self.x_scale + self.width / 2
-        screen_y = - y * self.y_scale + self.height - self.y_pad
+        screen_y = - y * self.y_scale + self.height - self.y_pad - self.y0
         return screen_x, screen_y
 
     def update_scale(self):
@@ -57,7 +61,7 @@ class PolarMaker:
 
     @staticmethod
     def pol_to_cart(rho, theta):
-        return rho * math.sin(math.radians(theta)), rho * abs(math.cos(math.radians(theta)))  # x, y
+        return rho * math.sin(math.radians(theta)), rho * math.cos(math.radians(theta))  # x, y
 
     def is_available(self):
         return self.is_tack or self.is_gybe
@@ -75,13 +79,25 @@ class PolarMaker:
 
         # Draw grid
         # Speed circles
+        if self.is_tack:
+            start_angle = -90
+            end_angle = 100
+            arc_start = 180
+            arc_end = 0
+        else:
+            start_angle = 90
+            end_angle = 280
+            arc_start = 0
+            arc_end = 180
+
         for speed in range(self.max_speed, self.min_speed, -self.speed_step):
             ulx, uly = self.to_screen((-speed, speed))
             lrx, lry = self.to_screen((speed, -speed))
-            draw.arc((ulx, uly, lrx, lry), start=180, end=0, fill=GRID_COLOR)
+            draw.arc((ulx, uly, lrx, lry), start=arc_start, end=arc_end, fill=GRID_COLOR)
 
         # Angle lines
-        for angle in range(-90, 100, 30):
+
+        for angle in range(start_angle, end_angle, 30):
             x1, y1 = self.to_screen(self.pol_to_cart(self.min_speed, 0))
             x2, y2 = self.to_screen(self.pol_to_cart(self.max_speed, angle))
             draw.line((x1, y1, x2, y2), fill=GRID_COLOR)
@@ -98,22 +114,22 @@ class PolarMaker:
             a = int(255 * (1 - HISTORY_TRANSPARENCY_FACTOR * (epoch_idx - idx) / epoch_idx))
             color = rgba(255, 0, 0, a)
             if idx == epoch_idx - 1:
-                draw.line((x1, y1, x2, y2), fill=DOT_OUTLINE, width=3)
-                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=DOT_OUTLINE, width=4)
+                draw.line((x1, y1, x2, y2), fill=DOT_OUTLINE, width=ARM_WIDTH)
+                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=DOT_OUTLINE, width=CURRENT_DOT_WIDTH)
             else:
                 draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=DOT_OUTLINE)
 
         # Draw the target point
         x, y = self.to_screen(self.pol_to_cart(self.target[0], self.target[1]))
         draw.line((x, y-self.dot_radius, x, y+self.dot_radius),
-                  fill=NON_TRANSPARENT_WHITE_FONT_COLOR, width=5)
+                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         draw.line((x-self.dot_radius, y, x+self.dot_radius, y),
-                  fill=NON_TRANSPARENT_WHITE_FONT_COLOR, width=5)
+                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         x, y = self.to_screen(self.pol_to_cart(self.target[0], -self.target[1]))
         draw.line((x, y-self.dot_radius, x, y+self.dot_radius),
-                  fill=NON_TRANSPARENT_WHITE_FONT_COLOR, width=5)
+                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         draw.line((x-self.dot_radius, y, x+self.dot_radius, y),
-                  fill=NON_TRANSPARENT_WHITE_FONT_COLOR, width=5)
+                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
 
         image.save(full_file_name)
         print(f'{full_file_name} created')
@@ -131,7 +147,7 @@ class PolarMaker:
         self.max_speed = 0
         self.min_speed = 99
         for epoch in epochs:
-            twa = epoch['twa'] if self.is_tack else 180 - epoch['twa']
+            twa = epoch['twa']
             sow = epoch['sow']
             self.max_speed = int(max(sow, self.max_speed) + 0.5)
             self.min_speed = int(min(sow, self.min_speed))
@@ -141,14 +157,17 @@ class PolarMaker:
         mean_tws = tws_sum / len(epochs)
         if self.polars is not None:
             target_spd, target_twa = self.polars.get_targets(mean_tws, epochs[0]['twa'])
-            if self.is_gybe:
-                target_twa = 180 - target_twa
             self.max_speed = int(max(target_spd, self.max_speed) + 0.5)
             self.min_speed = int(min(target_spd, self.min_speed))
             self.target = (target_spd, target_twa)
 
         self.min_speed = 0
         self.max_speed += self.speed_step
+
+        if self.is_tack:
+            self.y0 = 0
+        else:
+            self.y0 = self.height - 2 * self.y_pad
 
         self.update_scale()
 
