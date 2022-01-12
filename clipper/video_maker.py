@@ -10,6 +10,7 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
+from polar_maker import PolarMaker
 from summary_maker import SummaryMaker
 from overlay_maker import OverlayMaker
 
@@ -35,11 +36,6 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
         start_utc = datetime.fromisoformat(history[0]['utc'])
         stop_utc = datetime.fromisoformat(history[-1]['utc'])
 
-        # # Fake time interval just for debugging
-        # duration = stop_utc - start_utc
-        # start_utc = datetime.fromisoformat('2021-11-19T18:05:00').astimezone(pytz.utc)
-        # stop_utc = start_utc + duration
-
         go_pro_clips = gopro.get_clips_for_time_interval(start_utc, stop_utc)
         evt['go_pro_clips'] = go_pro_clips
 
@@ -61,15 +57,21 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
     thumb_width = 256
     overlay_maker = OverlayMaker(work_dir, base_name, width, overlay_height, ignore_cache)
     summary_maker = SummaryMaker(work_dir, base_name, width, height, polars, ignore_cache)
+    polar_maker = PolarMaker(work_dir, base_name, width, height, polars, ignore_cache)
     for evt_idx, evt in enumerate(race_events):
         evt['overlay_images'] = []
         file_name = f'chapter_{evt_idx:04d}.png'
         summary_maker.prepare_data(evt)
         event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
         evt['event_title_png'] = event_title_png
+        polar_maker.set_history(evt['name'], evt['history'])
         for epoch_idx, epoch in enumerate(evt['history']):
             file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
             thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
+
+            file_name = f'polar_{evt_idx:04d}_{epoch_idx:04d}.png'
+            if polar_maker.is_available():
+                polar_png_name = polar_maker.set_epoch(file_name, epoch_idx)
 
             file_name = f'ovl_{evt_idx:04d}_{epoch_idx:04d}.png'
             png_name = overlay_maker.add_epoch(file_name, epoch, thumb_png_name)

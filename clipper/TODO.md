@@ -1,1 +1,3 @@
+- Add polar plot for tacks and gybes
+- Create cache for GOPRO timestamps
 - Allow reading NMEA from the ZIP file 

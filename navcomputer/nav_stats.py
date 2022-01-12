@@ -128,6 +128,9 @@ class NavStats:
         hdg = instr_data.hdg
         utc = instr_data.utc
 
+        if hdg is None:
+            hdg = instr_data.cog
+
         # Must have all this data
         if twa is None or sog is None or hdg is None or instr_data.lat is None or utc is None:
             self.reset()
