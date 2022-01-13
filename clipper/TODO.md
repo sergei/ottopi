@@ -1,5 +1,3 @@
-- Add polar plot for tacks and gybes
-- Create cache for GOPRO timestamps
-- Add timer to the start event
 - Add timestamps to KML elements, so GE will show time slider
+- Add timer to the start event
 - Allow reading NMEA from the ZIP file 

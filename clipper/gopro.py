@@ -1,4 +1,6 @@
+import argparse
 import csv
+import json
 from datetime import datetime, timedelta
 import os
 import subprocess
@@ -7,9 +9,23 @@ import pytz
 
 GOPRO_GPMF_BIN = '../gopro_gpmf/cmake-build-debug/gopro_gpmf'
 
+UTC_TZ = pytz.timezone("UTC")
+
+
+def from_timestamp(time_stamp):
+    return UTC_TZ.localize(datetime.utcfromtimestamp(time_stamp)) if time_stamp is not None else None
+
+
+def to_timestamp(start_utc):
+    return start_utc.timestamp() if start_utc is not None else None
+
 
 class GoPro:
-    def __init__(self, sd_card_dir='/Volumes/GOPRO'):
+    def __init__(self, args):
+        sd_card_dir = args.gopro_dir
+        cache_dir = args.work_dir + os.sep + 'gopro'
+        os.makedirs(cache_dir, exist_ok=True)
+
         # Build the list of clips
         clips = []
 
@@ -24,7 +40,24 @@ class GoPro:
         # Time stamp the clips
         self.clips = []  # Only clips with valid UTC
         for clip in clips:
-            [start_utc, stop_utc] = self.time_stamp_mp4(clip['name'])
+            clip_name = clip['name']
+            clip_cache_name = cache_dir + os.sep + os.path.basename(clip_name) + '.json'
+            if os.path.isfile(clip_cache_name):
+                print(f'Reading GOPRO clip info from cache {clip_cache_name}')
+                with open(clip_cache_name, 'r') as f:
+                    cache = json.load(f)
+                    start_utc = from_timestamp(cache['start_utc'])
+                    stop_utc = from_timestamp(cache['stop_utc'])
+            else:
+                print(f'Scanning {clip_name}')
+                [start_utc, stop_utc] = self.time_stamp_mp4(clip_name)
+                cache = {
+                    'start_utc': to_timestamp(start_utc),
+                    'stop_utc': to_timestamp(stop_utc)
+                }
+                with open(clip_cache_name, 'w') as f:
+                    json.dump(cache, f)
+
             if start_utc is not None:
                 clip['start_utc'] = start_utc
                 clip['stop_utc'] = stop_utc
@@ -73,7 +106,7 @@ class GoPro:
                 # Now find the clip containing the stop time
                 for stop_idx in range(start_idx, len(self.clips)):
                     clip = self.clips[stop_idx]
-                    if stop_utc <= clip['stop_utc']: # Last clip found
+                    if stop_utc <= clip['stop_utc']:  # Last clip found
                         out_time = (stop_utc - clip['start_utc']).seconds
                         clips.append({
                             'name': clip['name'],
@@ -93,7 +126,11 @@ class GoPro:
 
 
 if __name__ == '__main__':
-    gopro = GoPro()
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+    parser.add_argument("--work-dir", help="Working directory", default='/tmp')
+    parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
+
+    gopro = GoPro(parser.parse_args())
     start = datetime.fromisoformat('2021-11-19T18:04:54.825').astimezone(pytz.utc)
     stop = datetime.fromisoformat('2021-11-19T19:23:06.190').astimezone(pytz.utc)
     print(gopro.get_clips_for_time_interval(start, stop))

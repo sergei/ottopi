@@ -115,7 +115,7 @@ def main(args):
     navigator = Navigator.get_instance()
     navigator.read_polars(config['polar_file'])
 
-    gopro = GoPro(args.gopro_dir)
+    gopro = GoPro(args)
 
     if args.scenario is None:
         print(f'Using GOPRO clips time span to determine movie time span')
