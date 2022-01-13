@@ -3,15 +3,12 @@ from PIL import ImageFont, ImageDraw
 from PIL.Image import new
 from PIL import Image
 
+from colors import SEMI_TRANSPARENT_BOX_COLOR_2, FULLY_TRANSPARENT_COLOR, SEMI_TRANSPARENT_FONT_COLOR, \
+    NON_TRANSPARENT_WHITE_FONT_COLOR
+
 VALUE_FONT = "/System/Library/Fonts/Courier.dfont"
 LABEL_FONT = "/System/Library/Fonts/Courier.dfont"
 TIMESTAMP_FONT = "/System/Library/Fonts/Courier.dfont"
-
-SEMI_TRANSPARENT_BOX_COLOR_2 = '#32323280'
-
-FULLY_TRANSPARENT_COLOR = '#00000000'
-SEMI_TRANSPARENT_FONT_COLOR = '#FFFFFF80'
-NON_TRANSPARENT_WHITE_FONT_COLOR = '#FFFFFFFF'
 
 
 class InfoCell:

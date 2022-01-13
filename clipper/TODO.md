@@ -1,2 +1,1 @@
-- Add timer to the start event
 - Allow reading NMEA from the ZIP file 

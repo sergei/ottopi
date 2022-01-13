@@ -107,6 +107,10 @@ class GoPro:
                 for stop_idx in range(start_idx, len(self.clips)):
                     clip = self.clips[stop_idx]
                     if stop_utc <= clip['stop_utc']:  # Last clip found
+                        # Check for the corner case when the stop_utc falls inbetween start_utc of the previous clip
+                        # and start_utc of this one
+                        if stop_utc < clip['start_utc']:
+                            return clips
                         out_time = (stop_utc - clip['start_utc']).seconds
                         clips.append({
                             'name': clip['name'],

@@ -13,6 +13,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from polar_maker import PolarMaker
 from summary_maker import SummaryMaker
 from overlay_maker import OverlayMaker
+from timer_maker import TimerMaker
 
 
 def get_clip_size(mp4_name):
@@ -58,17 +59,22 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
     overlay_height = 128
     thumb_width = 256
     polar_width = 400
+    timer_height = 128
     overlay_maker = OverlayMaker(work_dir, base_name, width, overlay_height, ignore_cache)
     summary_maker = SummaryMaker(work_dir, base_name, width, height, polars, ignore_cache)
     polar_maker = PolarMaker(work_dir, base_name, polar_width, polars, ignore_cache)
+    timer_maker = TimerMaker(work_dir, base_name, timer_height, ignore_cache)
     for evt_idx, evt in enumerate(race_events):
         evt['overlay_images'] = []
         evt['polar_images'] = []
+        evt['timer_images'] = []
         file_name = f'chapter_{evt_idx:04d}.png'
         summary_maker.prepare_data(evt)
         event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
         evt['event_title_png'] = event_title_png
         polar_maker.set_history(evt['name'], evt['history'])
+
+        gun_utc = evt.get('gun', None)
         for epoch_idx, epoch in enumerate(evt['history']):
             file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
             thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
@@ -83,6 +89,11 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
             file_name = f'ovl_{evt_idx:04d}_{epoch_idx:04d}.png'
             png_name = overlay_maker.add_epoch(file_name, epoch, thumb_png_name)
             evt['overlay_images'].append(png_name)
+
+            if gun_utc is not None:
+                file_name = f'timer_{evt_idx:04d}_{epoch_idx:04d}.png'
+                timer_png_name = timer_maker.add_epoch(file_name, gun_utc, epoch)
+                evt['timer_images'].append(timer_png_name)
 
     # Create separate event clips
     max_evt = 999
@@ -110,8 +121,8 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
                 overlay_y = height - overlay_clip.size[1]
 
                 clips = [background_clip,
-                         overlay_clip.set_position((overlay_x, overlay_y)),
-                         event_title_clip]
+                         overlay_clip.set_position((overlay_x, overlay_y))
+                         ]
 
                 # Optional overlays
 
@@ -120,6 +131,13 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
                     polar_clip = ImageSequenceClip(evt['polar_images'], fps=1)
                     clips.append(polar_clip.set_position(('right', 'top')))
 
+                # Timer for the start
+                if len(evt['timer_images']) > 0:
+                    timer_clip = ImageSequenceClip(evt['timer_images'], fps=1)
+                    clips.append(timer_clip.set_position(('left', 'top')))
+
+                # Title goes the last on top of everything
+                clips.append(event_title_clip)
                 composite_clip = CompositeVideoClip(clips)
 
                 composite_clip.write_videofile(evt_clip_name)

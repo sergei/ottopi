@@ -81,6 +81,7 @@ class RaceEventsRecorder(NavigationListener):
                 if utc == ii.utc:
                     self.events.append({
                         'name': evt['name'],
+                        'gun': evt.get('gun', None),
                         'in': half_span,
                         'out': half_span,
                         'utc': utc,
@@ -88,10 +89,19 @@ class RaceEventsRecorder(NavigationListener):
                         'hist_idx': hist_idx
                     })
 
-        # Sort events by UTC, since the newly added ones might came out of order
+        # Sort events by UTC, since the newly added ones might come out of order
         self.events.sort(key=lambda x: x['utc'])
 
     def finalize(self):
+        # There should be no events before the start
+        start_evt_idx = None
+        for idx, evt in enumerate(self.events):
+            if evt['name'].lower() == 'start':
+                start_evt_idx = idx
+                break
+        if start_evt_idx is not None:
+            self.events = self.events[start_evt_idx:]
+
         # Add history to all events
         for evt in self.events:
             if 'in' in evt:

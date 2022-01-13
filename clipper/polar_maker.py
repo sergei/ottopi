@@ -2,27 +2,13 @@ import math
 import os
 from PIL import ImageDraw
 from PIL.Image import new
-from overlay_maker import FULLY_TRANSPARENT_COLOR
+
+from colors import rgba, POLAR_DOT_OUTLINE, POLAR_GRID_COLOR, POLAR_TARGET_COLOR, FULLY_TRANSPARENT_COLOR
 
 CURRENT_DOT_WIDTH = 4
-
 ARM_WIDTH = 3
-
 TARGET_CROSS_WIDTH = 5
-
-
-def rgba(r, g, b, a):
-    return '#{r:02X}{g:02X}{b:02X}{a:02X}'.format(r=r, g=g, b=b, a=a)
-
-
-def rgb(r, g, b):
-    return '#{r:02X}{g:02X}{b:02X}{a:02X}'.format(r=r, g=g, b=b, a=255)
-
-
 HISTORY_TRANSPARENCY_FACTOR = 1  # [0 : 1]
-DOT_OUTLINE = rgb(0, 0, 0)
-GRID_COLOR = rgba(255, 255, 255, 127)
-TARGET_COLOR = rgb(255, 255, 255)
 
 
 class PolarMaker:
@@ -93,14 +79,14 @@ class PolarMaker:
         for speed in range(self.max_speed, self.min_speed, -self.speed_step):
             ulx, uly = self.to_screen((-speed, speed))
             lrx, lry = self.to_screen((speed, -speed))
-            draw.arc((ulx, uly, lrx, lry), start=arc_start, end=arc_end, fill=GRID_COLOR)
+            draw.arc((ulx, uly, lrx, lry), start=arc_start, end=arc_end, fill=POLAR_GRID_COLOR)
 
         # Angle lines
 
         for angle in range(start_angle, end_angle, 30):
             x1, y1 = self.to_screen(self.pol_to_cart(self.min_speed, 0))
             x2, y2 = self.to_screen(self.pol_to_cart(self.max_speed, angle))
-            draw.line((x1, y1, x2, y2), fill=GRID_COLOR)
+            draw.line((x1, y1, x2, y2), fill=POLAR_GRID_COLOR)
 
         # Draw the history
         for idx in range(epoch_idx):
@@ -114,22 +100,22 @@ class PolarMaker:
             a = int(255 * (1 - HISTORY_TRANSPARENCY_FACTOR * (epoch_idx - idx) / epoch_idx))
             color = rgba(255, 0, 0, a)
             if idx == epoch_idx - 1:
-                draw.line((x1, y1, x2, y2), fill=DOT_OUTLINE, width=ARM_WIDTH)
-                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=DOT_OUTLINE, width=CURRENT_DOT_WIDTH)
+                draw.line((x1, y1, x2, y2), fill=POLAR_DOT_OUTLINE, width=ARM_WIDTH)
+                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=POLAR_DOT_OUTLINE, width=CURRENT_DOT_WIDTH)
             else:
-                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=DOT_OUTLINE)
+                draw.ellipse((ulx, uly, lrx, lry), fill=color, outline=POLAR_DOT_OUTLINE)
 
         # Draw the target point
         x, y = self.to_screen(self.pol_to_cart(self.target[0], self.target[1]))
         draw.line((x, y-self.dot_radius, x, y+self.dot_radius),
-                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
+                  fill=POLAR_TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         draw.line((x-self.dot_radius, y, x+self.dot_radius, y),
-                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
+                  fill=POLAR_TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         x, y = self.to_screen(self.pol_to_cart(self.target[0], -self.target[1]))
         draw.line((x, y-self.dot_radius, x, y+self.dot_radius),
-                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
+                  fill=POLAR_TARGET_COLOR, width=TARGET_CROSS_WIDTH)
         draw.line((x-self.dot_radius, y, x+self.dot_radius, y),
-                  fill=TARGET_COLOR, width=TARGET_CROSS_WIDTH)
+                  fill=POLAR_TARGET_COLOR, width=TARGET_CROSS_WIDTH)
 
         image.save(full_file_name)
         print(f'{full_file_name} created')
