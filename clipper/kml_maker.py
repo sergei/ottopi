@@ -1,5 +1,7 @@
 import simplekml
 
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
 
 def make_kml(kml_file, race_events, instr_data):
     kml = simplekml.Kml()
@@ -26,12 +28,15 @@ def make_kml(kml_file, race_events, instr_data):
         point = events_folder.newpoint(name=evt['name'], coords=[lng_lat])
         point.description = f"{'='*40}<br/>{evt['utc']}<br/>"
         point.style = mark_style
+        point.timestamp.when = evt['utc'].strftime(TIME_FORMAT)
+
         history_pts = evt['history']
         for pt_idx, pt in enumerate(history_pts):
             lng_lat = (pt.lon, pt.lat)
             point = events_folder.newpoint(name='', coords=[lng_lat])
             point.description = f"{pt_idx}<br/>{pt.utc}<br/>"
-            point.style = trk_pt_style
+            point.style = evt_pt_style
+            point.timestamp.when = pt.utc.strftime(TIME_FORMAT)
 
     route_folder = kml.newfolder(name="Route")
     for pt_idx, pt in enumerate(instr_data):
@@ -39,6 +44,7 @@ def make_kml(kml_file, race_events, instr_data):
         point = route_folder.newpoint(name='', coords=[lng_lat])
         point.description = f"{pt_idx}<br/>{pt.utc}<br/>"
         point.style = trk_pt_style
+        point.timestamp.when = pt.utc.strftime(TIME_FORMAT)
 
     kml.save(kml_file)
     print(f'Created {kml_file}')
