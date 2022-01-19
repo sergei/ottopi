@@ -118,6 +118,12 @@ class StatsEventsListener(NavStatsEventsListener):
         for listener in self.listeners:
             listener.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
 
+    def on_backup_alarm(self, utc, loc):
+        phrase = 'You are moving backwards'
+        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
+        for listener in self.listeners:
+            listener.on_backup_alarm(utc, loc)
+
 
 class Navigator:
     __instance: Navigator

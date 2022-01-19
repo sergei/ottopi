@@ -2,6 +2,8 @@ import datetime
 import math
 from collections import deque
 
+import geomag
+from gpxpy import geo
 from gpxpy.geo import Location
 
 from const import METERS_IN_NM
@@ -24,29 +26,45 @@ class NavStatsEventsListener:
                          twa_angle_delta: float):
         pass
 
+    def on_backup_alarm(self, utc: datetime, loc: Location):
+        pass
+
 
 class SlidingWindow:
     def __init__(self, maxlen):
         self.max_len = maxlen
         self.q = deque(maxlen=maxlen)
-        self.sum = 0.
 
     def clear(self):
         self.q.clear()
-        self.sum = 0.
 
     def append(self, v):
-        if len(self.q) < self.max_len:
-            old_v = 0
-        else:
-            old_v = self.q.popleft()
+        if len(self.q) >= self.max_len:
+            self.q.popleft()
 
-        self.sum -= old_v
         self.q.append(v)
-        self.sum += v
 
     def len(self):
         return len(self.q)
+
+    def is_full(self):
+        return len(self.q) == self.max_len
+
+
+class SlidingMathWindow(SlidingWindow):
+    def __init__(self, maxlen):
+        super().__init__(maxlen)
+        self.sum = 0.
+
+    def clear(self):
+        super().clear()
+        self.sum = 0.
+
+    def append(self, v):
+        old_v = 0 if len(self.q) < self.max_len else self.q[0]
+        self.sum -= old_v
+        self.sum += v
+        super().append(v)
 
     def get_avg(self):
         return self.sum / len(self.q)
@@ -60,11 +78,12 @@ class SlidingWindow:
         sum_after = sum(list(self.q)[split_point:])
         return sum_before, sum_after
 
-    def is_full(self):
-        return len(self.q) == self.max_len
-
 
 class NavStats:
+
+    BACKUP_ALARM_WIN_LEN = 60  # Length of the sliding window for backup alarm
+    BACKUP_ALARM_DIST_THR = 10  # Sound alarm only if moved more than distance
+    BACKUP_ALARM_DELTA_ANGLE_THR = 30  # All angles should be within this threshold while drifting back
 
     WIN_LEN = 60  # Length of the sliding window
     HALF_WIN = int(WIN_LEN / 2)
@@ -81,25 +100,30 @@ class NavStats:
     def __init__(self, stats_listener=None):
         self.stats_listener = stats_listener
 
+        self.mag_decl = None
+
         # Queues to analyze the turns
         self.turns_utc = deque(maxlen=self.WIN_LEN)
         self.turns_loc = deque(maxlen=self.WIN_LEN)
-        self.turns_sog = SlidingWindow(maxlen=self.WIN_LEN)
-        self.turns_up_down = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - upwind, -1 - downwind, 0 - reach
-        self.turns_sb_pr = SlidingWindow(maxlen=self.WIN_LEN)  # 1 - starboard, -1 - port, 0 - head to wind or ddw
+        self.turns_sog = SlidingMathWindow(maxlen=self.WIN_LEN)
+        self.turns_up_down = SlidingMathWindow(maxlen=self.WIN_LEN)  # 1 - upwind, -1 - downwind, 0 - reach
+        self.turns_sb_pr = SlidingMathWindow(maxlen=self.WIN_LEN)  # 1 - starboard, -1 - port, 0 - head to wind or ddw
 
         # Queues to analyze stats
         self.stats_utc = deque(maxlen=self.WIN_LEN)
         self.stats_loc = deque(maxlen=self.WIN_LEN)
         # Wind shift analysis
         self.ref_twd = None
-        self.stats_twd = SlidingWindow(maxlen=self.WIN_LEN)
-        self.stats_twa = SlidingWindow(maxlen=self.WIN_LEN)
-        self.stats_hdg = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_twd = SlidingMathWindow(maxlen=self.WIN_LEN)
+        self.stats_twa = SlidingMathWindow(maxlen=self.WIN_LEN)
+        self.stats_hdg = SlidingMathWindow(maxlen=self.WIN_LEN)
         # Target performance analysis
-        self.stats_vmg_diff = SlidingWindow(maxlen=self.WIN_LEN)
-        self.stats_speed_diff = SlidingWindow(maxlen=self.WIN_LEN)
-        self.stats_point_diff = SlidingWindow(maxlen=self.WIN_LEN)
+        self.stats_vmg_diff = SlidingMathWindow(maxlen=self.WIN_LEN)
+        self.stats_speed_diff = SlidingMathWindow(maxlen=self.WIN_LEN)
+        self.stats_point_diff = SlidingMathWindow(maxlen=self.WIN_LEN)
+        # Backup alarm
+        self.hdg_hist = SlidingWindow(maxlen=self.BACKUP_ALARM_WIN_LEN)
+        self.loc_hist = SlidingWindow(maxlen=self.BACKUP_ALARM_WIN_LEN)
 
     def reset(self):
         self.turns_sog.clear()
@@ -130,6 +154,11 @@ class NavStats:
 
         if hdg is None:
             hdg = instr_data.cog
+
+        if self.mag_decl is None and instr_data.lat is not None:
+            self.mag_decl = geomag.declination(instr_data.lat, instr_data.lon)
+
+        self.update_backup_alarm(instr_data)
 
         # Must have all this data
         if twa is None or sog is None or hdg is None or instr_data.lat is None or utc is None:
@@ -243,6 +272,53 @@ class NavStats:
             # Reset stats windows
             self.clear_stats_queues()
             return
+
+    def update_backup_alarm(self, instr_data):
+
+        true_backward = False
+        # UTC_FMT = '%Y-%m-%d %H:%M:%S%z'
+        # utc_from = datetime.datetime.strptime('2022-01-08 21:29:04+00:00', UTC_FMT)
+        # utc_to = datetime.datetime.strptime('2022-01-08 21:38:36+00:00', UTC_FMT)
+        # if utc_from < instr_data.utc < utc_to:
+        #     true_backward = True
+
+        if instr_data.hdg is not None and instr_data.lat is not None:
+            self.hdg_hist.append(instr_data.hdg)
+            self.loc_hist.append(Location(instr_data.lat, instr_data.lon))
+
+        if self.hdg_hist.is_full():
+            # Get the direction between first and last fix
+            start_loc = self.loc_hist.q[0]
+            end_loc = self.loc_hist.q[-1]
+            dist = geo.length([start_loc, end_loc])
+            if true_backward:
+                print(' *** Moved by {} meters'.format(dist))
+            if dist > self.BACKUP_ALARM_DIST_THR:  # Check if we moved by more that typical GPS error
+                movement_hdg = geo.get_course(start_loc.latitude, start_loc.longitude,
+                                              end_loc.latitude, end_loc.longitude) - self.mag_decl
+                movement_hdg = (movement_hdg + 360.0) % 360
+
+                # Now check if our magnetic heading was facing in other direction all this time
+                avg_compass_hdg = self.compute_avg_angle(self.hdg_hist.q)
+                d = avg_compass_hdg - movement_hdg
+                d = (d + 360.0) % 360
+                if 120 < d < 300:
+                    print('Facing backwards')
+                    # Verify if we were facing backwards all this time
+                    avg_delta = 0
+                    for compass_hdg in self.hdg_hist.q:
+                        d = abs(avg_compass_hdg - compass_hdg)
+                        if d > 350:
+                            d -= 360
+                        avg_delta += d
+                    avg_delta /= len(self.hdg_hist.q)
+
+                    if avg_delta < self.BACKUP_ALARM_DELTA_ANGLE_THR:
+                        print('*** Facing and moving backwards')
+                        self.stats_listener.on_backup_alarm(instr_data.utc, end_loc)
+
+                self.hdg_hist.clear()
+                self.loc_hist.clear()
 
     @staticmethod
     def compute_avg_angle(angles, unsigned=True):

@@ -1,5 +1,7 @@
 import simplekml
 
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
 
 class KmlWriter:
     def __init__(self):
@@ -30,6 +32,11 @@ class KmlWriter:
         self.speech_style.labelstyle.scale = 2
         self.speech_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/electronics.png'
 
+        self.alam_style = simplekml.Style()
+        self.alam_style.labelstyle.color = simplekml.Color.yellow  # Make the text red
+        self.alam_style.labelstyle.scale = 2
+        self.alam_style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/marina.png'
+
         self.last_dest_wpt = None  # Last WPT received from RMB message
         self.last_coords = None
 
@@ -38,9 +45,11 @@ class KmlWriter:
 
     def add_route_point(self, raw_instr_data, dest_info):
         self.last_coords = (raw_instr_data.lon, raw_instr_data.lat)
+        self.last_utc = raw_instr_data.utc.strftime(TIME_FORMAT)
 
         point = self.route_folder.newpoint(name="", coords=[self.last_coords])
         point.style = self.trk_pt_style
+        point.timestamp.when = self.last_utc
 
         description = "==INSTR==\n"
         for k in raw_instr_data.__dict__:
@@ -59,10 +68,12 @@ class KmlWriter:
                 point = self.wpts_folder.newpoint(name=dest_info.wpt.name,
                                                   coords=[(dest_info.wpt.longitude, dest_info.wpt.latitude)])
                 point.style = self.mark_style
+                point.timestamp.when = self.last_utc
 
     def add_leg_summary(self, leg_summary):
         dest = self.summary_folder.newpoint(name="", coords=[(leg_summary.dest.longitude, leg_summary.dest.latitude)])
         dest.style = self.summary_style
+        dest.timestamp.when = leg_summary.utc.strftime(TIME_FORMAT)
         description = ""
         for k in leg_summary.__dict__:
             description += '{}={}\n'.format(k, leg_summary.__dict__[k])
@@ -73,9 +84,17 @@ class KmlWriter:
                      (leg_summary.dest.longitude, leg_summary.dest.latitude)]
         ls.extrude = 1
         ls.altitudemode = simplekml.AltitudeMode.relativetoground
+        ls.timestamp.when = leg_summary.utc.strftime(TIME_FORMAT)
 
     def add_speech(self, s):
         if self.last_coords is not None:
             point = self.speech_folder.newpoint(name="", coords=[self.last_coords])
             point.style = self.speech_style
             point.description = s
+            point.timestamp.when = self.last_utc
+
+    def add_backup_alarm(self):
+        if self.last_coords is not None:
+            point = self.speech_folder.newpoint(name="Backup Alarm", coords=[self.last_coords])
+            point.style = self.alam_style
+            point.timestamp.when = self.last_utc

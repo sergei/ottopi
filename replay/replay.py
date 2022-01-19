@@ -29,6 +29,8 @@ def fetch_log_list(client, bucket, uuid, replay_start, replay_days):
         response = client.list_objects_v2(**params)
         for item in response['Contents']:
             key = item['Key']
+            if not key.endswith('log.gz'):
+                continue
             t = re.split(r'[/_.T]', key)
             if len(t) == 6:
                 date = datetime.date.fromisoformat(t[2])
@@ -121,3 +123,6 @@ class Replay(NavigationListener):
     def on_target_update(self, utc: datetime, loc: Location,
                          distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
         self.plotter.on_target_update(utc, loc, distance_delta_m, speed_delta, twa_angle_delta)
+
+    def on_backup_alarm(self, utc, loc):
+        self.kml_writer.add_backup_alarm()

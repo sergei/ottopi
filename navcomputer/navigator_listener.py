@@ -72,3 +72,6 @@ class NavigationListener:
 
     def on_tack(self, utc, loc, is_tack, distance_loss_m):
         pass
+
+    def on_backup_alarm(self, utc, loc):
+        pass
