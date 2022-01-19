@@ -120,7 +120,7 @@ class StatsEventsListener(NavStatsEventsListener):
 
     def on_backup_alarm(self, utc, loc):
         phrase = 'You are moving backwards'
-        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_EVENT, utc, phrase))
+        self.speech_moderator.add_entry(SpeechEntry(SpeechEntryType.NAV_ALARM, utc, phrase))
         for listener in self.listeners:
             listener.on_backup_alarm(utc, loc)
 

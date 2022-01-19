@@ -8,6 +8,7 @@ class SpeechEntryType(Enum):
     NAV_EVENT = 1
     NAV_UPDATE = 2
     DEST_UPDATE = 3
+    NAV_ALARM = 4
 
 
 class SpeakerChannels(str, Enum):
@@ -27,6 +28,7 @@ class SpeechModerator:
     MIN_TIME_TILL_SPEECH = 10
     UPDATE_INTERVALS = {
         SpeechEntryType.NAV_EVENT: 0,
+        SpeechEntryType.NAV_ALARM: 0,
         SpeechEntryType.NAV_UPDATE: 60,
         SpeechEntryType.DEST_UPDATE: 120,
     }
@@ -35,14 +37,17 @@ class SpeechModerator:
         SpeechEntryType.DEST_UPDATE: SpeakerChannels.ROUTE,
         SpeechEntryType.NAV_EVENT: SpeakerChannels.PERFORMANCE,
         SpeechEntryType.NAV_UPDATE: SpeakerChannels.PERFORMANCE,
+        SpeechEntryType.NAV_ALARM: SpeakerChannels.PERFORMANCE,
     }
 
-    TYPE_LIST = [SpeechEntryType.NAV_EVENT, SpeechEntryType.DEST_UPDATE, SpeechEntryType.NAV_UPDATE]
+    TYPE_LIST = [SpeechEntryType.NAV_EVENT, SpeechEntryType.DEST_UPDATE,
+                 SpeechEntryType.NAV_UPDATE, SpeechEntryType.NAV_ALARM]
     STATUS_TYPE_LIST = [SpeechEntryType.DEST_UPDATE, SpeechEntryType.NAV_UPDATE]
 
     def __init__(self, speech_listeners):
         self.cfg_name = None
         self.spoken_at = {
+            SpeechEntryType.NAV_ALARM: None,
             SpeechEntryType.NAV_EVENT: None,
             SpeechEntryType.NAV_UPDATE: None,
             SpeechEntryType.DEST_UPDATE: None,
