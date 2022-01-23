@@ -14,8 +14,29 @@ void printHelp(char* name)
 }
 
 
+static int dd(double deg){
+    return int(deg);
+
+}
+
+static double mm(double deg){
+    return (deg - dd(deg)) * 60.;
+}
+
+static unsigned char cc(const char *msg){
+    unsigned char cc = 0;
+    for(int i =0; msg[i] != '\0'; i++)
+        cc ^= msg[i];
+    return cc;
+}
+
 int main(int argc, char* argv[]) {
     size_t mp4handle = OpenMP4Source(argv[1], MOV_GPMF_TRAK_TYPE, MOV_GPMF_TRAK_SUBTYPE, 0);
+
+    bool nmeaOnly = false;
+    if (argc == 3){
+        nmeaOnly = true;
+    }
 
     if (argc < 2)
     {
@@ -36,7 +57,7 @@ int main(int argc, char* argv[]) {
     if (metadatalength > 0.0) {
         uint32_t payloads = GetNumberPayloads(mp4handle);
 
-        printf("idx,t,fix_valid,utc,lat,lon\n");
+        printf("idx,t,fix_valid,utc,lat,lon,alt,sog_ms,speed3d_ms\n");
 
         for (uint32_t index = 0; index < payloads; index++) {
             double in = 0.0, out = 0.0; //times
@@ -61,6 +82,9 @@ int main(int argc, char* argv[]) {
 
             double lat = 0;
             double lon = 0;
+            double alt = 0;
+            double sog_ms = 0;
+            double speed3d_ms = 0;
             bool   valid = false;
             char   utc[256] = "";
             do {
@@ -72,6 +96,9 @@ int main(int argc, char* argv[]) {
                         // Get only the first position
                         lat = (double)BYTESWAP32(data[0]) / 10000000.;
                         lon = (double)BYTESWAP32(data[1]) / 10000000.;
+                        alt = (double)BYTESWAP32(data[2]) / 1000.;
+                        sog_ms = (double)BYTESWAP32(data[3]) / 1000.;
+                        speed3d_ms = (double)BYTESWAP32(data[4]) / 100.;
                     }
                         break;
 
@@ -96,12 +123,35 @@ int main(int argc, char* argv[]) {
             } while (GPMF_OK == nextret); // Scan through all GPMF data
             GPMF_ResetState(&gs_stream);
 
-            printf("%d,%f,%s,", index, in, valid ? "True" : "False");
 
-            if( valid )
-                printf("%s,%.5f,%.5f\n", utc, lat, lon);
-            else
-                printf("%s,,\n", utc);
+            if( valid ) {
+                if ( !nmeaOnly ){
+                    printf("%d,%f,%s,", index, in,  "True" );
+                    printf("%s,%.5f,%.5f,%.1f,%.1f,%.1f\n", utc, lat, lon, alt, sog_ms, speed3d_ms);
+                }else {
+                    char nmea[120];
+                    sprintf(nmea, "GPRMC,%.2s%.2s%.2s,A,%02d%.5f,%c,%03d%.5f,%c,%.1f,,%.2s%.2s%.2s,,,A",
+                            utc + 11, utc + 14, utc + 17,
+                            dd(abs(lat)), mm(abs(lat)), lat > 0 ? 'N' : 'S',
+                            dd(abs(lon)), mm(abs(lon)), lon > 0 ? 'E' : 'W',
+                            sog_ms / 1852. * 3600,
+                            utc + 8, utc + 5, utc + 2
+                    );
+                    printf("$%s*%02X\n", nmea, cc(nmea));
+                }
+            }else {
+                if ( !nmeaOnly ) {
+                    printf("%d,%f,%s,", index, in, "False");
+                    printf("%s,,\n", utc);
+                }else {
+                    char nmea[120];
+                    sprintf(nmea, "GPRMC,%.2s%.2s%.2s,,,,,,,,%.2s%.2s%.2s,,,A",
+                            utc + 11, utc + 14, utc + 17,
+                            utc + 8, utc + 5, utc + 2
+                    );
+                    printf("$%s*%02X\n", nmea, cc(nmea));
+                }
+            }
         }
     }
 
