@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ $1 == with-rtk ]]; then
+  echo "Using  RTK lib for GPS solution"
+  with_rtk="yes"
+else
+  echo "Standalone GPS"
+fi
+
 # Host name or IP of RPI to the host
 PI=wrpi
 
@@ -32,7 +39,9 @@ ssh pi@${PI} 'sudo pip3 install -r ottopi/navcomputer/requirements.txt'
 ssh pi@${PI} 'sudo cp ottopi/ottopi.service /etc/systemd/system/ottopi.service'
 ssh pi@${PI} 'sudo cp ottopi/ottopi-bt.service /etc/systemd/system/ottopi-bt.service'
 ssh pi@${PI} 'sudo cp ottopi/ottopi-imu.service /etc/systemd/system/ottopi-imu.service'
-ssh pi@${PI} 'sudo cp ottopi/ottopi-rtk.service /etc/systemd/system/ottopi-rtk.service'
+if [ -n "$with_rtk" ]; then
+  ssh pi@${PI} 'sudo cp ottopi/ottopi-rtk.service /etc/systemd/system/ottopi-rtk.service'
+fi
 ssh pi@${PI} 'sudo cp ottopi/ottopi-update.service /etc/systemd/system/ottopi-update.service'
 ssh pi@${PI} 'sudo systemctl enable ottopi.service'
 ssh pi@${PI} 'sudo systemctl start ottopi.service'
@@ -40,8 +49,12 @@ ssh pi@${PI} 'sudo systemctl enable ottopi-bt.service'
 ssh pi@${PI} 'sudo systemctl start ottopi-bt.service'
 ssh pi@${PI} 'sudo systemctl enable ottopi-imu.service'
 ssh pi@${PI} 'sudo systemctl start ottopi-imu.service'
-ssh pi@${PI} 'sudo systemctl enable ottopi-rtk.service'
-ssh pi@${PI} 'sudo systemctl start ottopi-rtk.service'
+
+if [ -n "$with_rtk" ]; then
+  ssh pi@${PI} 'sudo systemctl enable ottopi-rtk.service'
+  ssh pi@${PI} 'sudo systemctl start ottopi-rtk.service'
+fi
+
 ssh pi@${PI} 'sudo systemctl enable ottopi-update.service'
 ssh pi@${PI} 'sudo systemctl start ottopi-update.service'
 
