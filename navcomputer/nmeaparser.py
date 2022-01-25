@@ -49,6 +49,9 @@ class NmeaParser:
     def set_nmea_sentence(self, nmea_sentence):
         Logger.log('> ' + nmea_sentence)
         # print('set_nmea_sentence({})'.format(nmea_sentence))
+        if len(nmea_sentence) < 5:
+            return
+
         if nmea_sentence[0] != '$':
             return
         if nmea_sentence[-1] != '\n':

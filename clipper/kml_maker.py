@@ -1,9 +1,11 @@
+import os.path
+
 import simplekml
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
-def make_kml(kml_file, race_events, instr_data):
+def make_kml(kml_file, race_events, instr_data, clips):
     kml = simplekml.Kml()
 
     evt_pt_style = simplekml.Style()
@@ -39,12 +41,36 @@ def make_kml(kml_file, race_events, instr_data):
             point.timestamp.when = pt.utc.strftime(TIME_FORMAT)
 
     route_folder = kml.newfolder(name="Route")
+    clip_idx = 0
     for pt_idx, pt in enumerate(instr_data):
         lng_lat = (pt.lon, pt.lat)
+        utc = pt.utc
+
+        # Find GoPro clip containing this UTC time
+        clip_time = None
+        clip_name = None
+        while clip_idx < len(clips):
+            clip = clips[clip_idx]
+            if clip['start_utc'] <= utc <= clip['stop_utc']:
+                clip_name = clip['name']
+                clip_time = int((utc - clip['start_utc']).total_seconds())
+                break
+            else:
+                clip_idx += 1
+
         point = route_folder.newpoint(name='', coords=[lng_lat])
-        point.description = f"{pt_idx}<br/>{pt.utc}<br/>"
+        point.description = f"{pt_idx}<br/>{utc}<br/>"
+        if clip_time is not None:
+            point.description += f"vlc --start-time={clip_time} {clip_name}<br/>"
+            minutes = clip_time // 60
+            seconds = clip_time % 60
+            point.description += f"clip/{os.path.basename(clip_name)}/{minutes:02d}:{seconds:02d}<br/>"
+        else:
+            # Probably was gap in the clips, reset the clip finder
+            clip_idx = 0
+
         point.style = trk_pt_style
-        point.timestamp.when = pt.utc.strftime(TIME_FORMAT)
+        point.timestamp.when = utc.strftime(TIME_FORMAT)
 
     kml.save(kml_file)
     print(f'Created {kml_file}')

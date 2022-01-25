@@ -121,7 +121,8 @@ def main(args):
         print(f'Using GOPRO clips time span to determine movie time span')
         finish_time_utc, start_time_utc = gopro.finish_time_utc, gopro.start_time_utc
         movie_name = 'movie_' + get_valid_filename(start_time_utc.strftime('%Y-%m-%d-%H-%M-%S'))
-        events_json_name = create_events(args, config, movie_name, navigator, start_time_utc, finish_time_utc)
+        events_json_name = create_events(args, config, movie_name, navigator, start_time_utc, finish_time_utc,
+                                         gopro.clips)
 
         # Create sample scenario file
         scenario_file = 'args' + os.sep + movie_name + '.yaml'
@@ -160,19 +161,19 @@ def main(args):
 
             # Make events for this movie
             events_json_name = create_events(args, config, movie_file_name, navigator, start_time_utc, finish_time_utc,
-                                             add_events, remove_events)
+                                             gopro.clips, add_events, remove_events)
 
             # Make video
             make_video(args.work_dir, movie_file_name, events_json_name, gopro, navigator.polars, args.ignore_cache)
 
 
-def create_events(args, config, movie_name, navigator, start_time_utc, finish_time_utc, extra_events=None,
+def create_events(args, config, movie_name, navigator, start_time_utc, finish_time_utc, clips, extra_events=None,
                   ignore_events=None):
 
     events_json_name = args.work_dir + os.sep + movie_name + '.json'
     nmea_cache_name = args.work_dir + os.sep + movie_name + '.nmea'
     nmea_parser = NmeaParser(navigator, strict_cc=True)
-    events_recorder = RaceEventsRecorder(args.work_dir, start_time_utc, finish_time_utc, ignore_events)
+    events_recorder = RaceEventsRecorder(args.work_dir, start_time_utc, finish_time_utc, clips, ignore_events)
     navigator.add_listener(events_recorder)
     data_dir = os.path.expanduser(args.work_dir)
     navigator.set_data_dir(data_dir)
@@ -183,6 +184,13 @@ def create_events(args, config, movie_name, navigator, start_time_utc, finish_ti
         with open(nmea_cache_name, 'r') as f:
             for nmea in f:
                 nmea_parser.set_nmea_sentence(nmea)
+    elif args.sk_file is not None:
+        print(f'Using SK log {nmea_cache_name}')
+        with open(args.sk_file, 'r') as sk_file:
+            for sk_line in sk_file:
+                t = sk_line.split(';')
+                if len(t) > 2 and t[1] == 'N' and t[0].isnumeric():
+                    nmea_parser.set_nmea_sentence(t[2])
     else:
         with open(nmea_cache_name, 'w') as f:
             print(f'Will cache NMEA to {nmea_cache_name}')
@@ -206,7 +214,7 @@ def create_events(args, config, movie_name, navigator, start_time_utc, finish_ti
 
     # Create KML file that can be used to generate manual events
     kml_file = args.work_dir + os.sep + movie_name + '.kml'
-    make_kml(kml_file, events_recorder.events, events_recorder.instr_data)
+    make_kml(kml_file, events_recorder.events, events_recorder.instr_data, clips)
 
     return events_json_name
 
@@ -225,5 +233,6 @@ if __name__ == '__main__':
     parser.add_argument("--force-video", '-f', help="Make video even if there is no scenario", default=False,
                         action='store_true')
     parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
+    parser.add_argument("--sk-file", help="SignalK file", required=False)
 
     main(parser.parse_args())

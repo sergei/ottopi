@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/imu/micropython-fusion" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/sk_py_client" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/clipper" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/recover" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/navcomputer/data" />
       <excludeFolder url="file://$MODULE_DIR$/unittests/data" />
       <excludeFolder url="file://$MODULE_DIR$/web/.idea/inspectionProfiles" />

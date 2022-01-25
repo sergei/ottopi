@@ -34,13 +34,14 @@ EVENTS_IN_OUT = {
 
 
 class RaceEventsRecorder(NavigationListener):
-    def __init__(self, work_dir, start_time_utc, finish_time_utc, ignore_events=None):
+    def __init__(self, work_dir, start_time_utc, finish_time_utc, clips, ignore_events=None):
         super().__init__()
         self.work_dir = work_dir
         self.start_time_utc = start_time_utc
         self.finish_time_utc = finish_time_utc
         self.events = []
         self.instr_data = []
+        self.clips = clips
         self.ignore_events = [] if ignore_events is None else ignore_events
 
     def on_instr_data(self, instr_data: RawInstrData):
@@ -72,13 +73,32 @@ class RaceEventsRecorder(NavigationListener):
                 'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
 
+    def evt_utc(self, s):
+        """ Get event utc time """
+        utc = None
+        if isinstance(s, datetime.datetime):
+            utc = s
+        elif s.startswith('clip'):
+            clip_name = s.split('/')[1]
+            mm_ss = s.split('/')[2].split(':')
+            clip_time = int(mm_ss[0]) * 60 + int(mm_ss[1])
+            for clip in self.clips:
+                if clip['name'].endswith(clip_name):
+                    utc = clip['start_utc'] + datetime.timedelta(seconds=clip_time)
+                    break
+        else:
+            utc = None
+
+        return utc
+
     def add_extra_events(self, events):
         for evt in events:
-            duration = int((evt['out'] - evt['in']).total_seconds())
+            duration = int((self.evt_utc(evt['out']) - self.evt_utc(evt['in'])).total_seconds())
             half_span = duration // 2
-            utc = evt['in'] + datetime.timedelta(seconds=half_span)
+            utc = self.evt_utc(evt['in']) + datetime.timedelta(seconds=half_span)
             for hist_idx, ii in enumerate(self.instr_data):
-                if utc == ii.utc:
+                if int(utc.timestamp()) == int(ii.utc.timestamp()):  # Ignore milliseconds
+                    print(f"Adding {evt['name']}")
                     self.events.append({
                         'name': evt['name'],
                         'gun': evt.get('gun', None),
