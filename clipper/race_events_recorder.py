@@ -34,8 +34,9 @@ EVENTS_IN_OUT = {
 
 
 class RaceEventsRecorder(NavigationListener):
-    def __init__(self, work_dir, start_time_utc, finish_time_utc, clips, ignore_events=None):
+    def __init__(self, work_dir, start_time_utc, finish_time_utc, clips, ignore_events=None, exclude_ranges=None):
         super().__init__()
+        self.ignore_evens_before_start = True
         self.work_dir = work_dir
         self.start_time_utc = start_time_utc
         self.finish_time_utc = finish_time_utc
@@ -43,13 +44,26 @@ class RaceEventsRecorder(NavigationListener):
         self.instr_data = []
         self.clips = clips
         self.ignore_events = [] if ignore_events is None else ignore_events
+        self.exclude_ranges = [] if exclude_ranges is None else exclude_ranges
 
+    def is_excluded(self, utc):
+        for exclude_range in self.exclude_ranges:
+            from_utc = exclude_range['from']
+            to_utc = exclude_range['to']
+            if from_utc < utc < to_utc:
+                return True
+        return False
+    
     def on_instr_data(self, instr_data: RawInstrData):
         self.instr_data.append(instr_data)
 
     def on_mark_rounding(self, utc, loc, is_windward):
         if utc in self.ignore_events:
             print(f'Ignoring event at {utc}')
+            return
+
+        if self.is_excluded(utc):
+            print(f'Excluding event at {utc}')
             return
 
         if self.start_time_utc <= utc <= self.finish_time_utc:
@@ -114,13 +128,14 @@ class RaceEventsRecorder(NavigationListener):
 
     def finalize(self):
         # There should be no events before the start
-        start_evt_idx = None
-        for idx, evt in enumerate(self.events):
-            if evt['name'].lower() == 'start':
-                start_evt_idx = idx
-                break
-        if start_evt_idx is not None:
-            self.events = self.events[start_evt_idx:]
+        if self.ignore_evens_before_start:
+            start_evt_idx = None
+            for idx, evt in enumerate(self.events):
+                if evt['name'].lower() == 'start':
+                    start_evt_idx = idx
+                    break
+            if start_evt_idx is not None:
+                self.events = self.events[start_evt_idx:]
 
         # Add history to all events
         for evt in self.events:

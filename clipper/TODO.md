@@ -1,1 +1,0 @@
-- Allow reading NMEA from the ZIP file 

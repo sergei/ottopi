@@ -3,6 +3,7 @@ import datetime
 import gzip
 import os
 import re
+import zipfile
 
 import boto3 as boto3
 import botocore
@@ -158,22 +159,24 @@ def main(args):
             finish_time_utc, start_time_utc = movie['finish'], movie['start']
             add_events = movie['add_events'] if 'add_events' in movie else None
             remove_events = movie['remove_events'] if 'remove_events' in movie else None
+            exclude_ranges = movie['exclude'] if 'exclude' in movie else None
 
             # Make events for this movie
             events_json_name = create_events(args, config, movie_file_name, navigator, start_time_utc, finish_time_utc,
-                                             gopro.clips, add_events, remove_events)
+                                             gopro.clips, add_events, remove_events, exclude_ranges)
 
             # Make video
             make_video(args.work_dir, movie_file_name, events_json_name, gopro, navigator.polars, args.ignore_cache)
 
 
 def create_events(args, config, movie_name, navigator, start_time_utc, finish_time_utc, clips, extra_events=None,
-                  ignore_events=None):
+                  ignore_events=None, exclude_ranges=None):
 
     events_json_name = args.work_dir + os.sep + movie_name + '.json'
     nmea_cache_name = args.work_dir + os.sep + movie_name + '.nmea'
     nmea_parser = NmeaParser(navigator, strict_cc=True)
-    events_recorder = RaceEventsRecorder(args.work_dir, start_time_utc, finish_time_utc, clips, ignore_events)
+    events_recorder = RaceEventsRecorder(args.work_dir, start_time_utc, finish_time_utc, clips, ignore_events,
+                                         exclude_ranges)
     navigator.add_listener(events_recorder)
     data_dir = os.path.expanduser(args.work_dir)
     navigator.set_data_dir(data_dir)
@@ -191,6 +194,22 @@ def create_events(args, config, movie_name, navigator, start_time_utc, finish_ti
                 t = sk_line.split(';')
                 if len(t) > 2 and t[1] == 'N' and t[0].isnumeric():
                     nmea_parser.set_nmea_sentence(t[2])
+    elif args.sk_zip:
+        with zipfile.ZipFile(args.sk_zip, mode='r') as zip_file:
+            members = zip_file.namelist()
+            sorted_members = sorted(members)
+            for member_name in sorted_members:
+                log_name = member_name.split('/')[1]
+                d = datetime.datetime.strptime(log_name, 'skserver-raw_%Y-%m-%dT%H.log')
+                d = pytz.utc.localize(d)
+                from_utc_hr = start_time_utc.replace(minute=0, second=0, microsecond=0)
+                to_utc_hr = finish_time_utc.replace(minute=0, second=0, microsecond=0)
+                if from_utc_hr <= d <= to_utc_hr:
+                    with zip_file.open(member_name, 'r') as sk_file:
+                        for sk_line in sk_file:
+                            t = sk_line.decode('utf-8').split(';')
+                            if len(t) > 2 and t[1] == 'N' and t[0].isnumeric():
+                                nmea_parser.set_nmea_sentence(t[2])
     else:
         with open(nmea_cache_name, 'w') as f:
             print(f'Will cache NMEA to {nmea_cache_name}')
@@ -234,5 +253,6 @@ if __name__ == '__main__':
                         action='store_true')
     parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
     parser.add_argument("--sk-file", help="SignalK file", required=False)
+    parser.add_argument("--sk-zip", help="Zip file containing SignalK logs", required=False)
 
     main(parser.parse_args())
