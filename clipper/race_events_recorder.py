@@ -30,6 +30,7 @@ EVENTS_IN_OUT = {
     'Gybe': {'in': 25, 'out': 35},
     'Windward Mark': {'in': 60, 'out': 60},
     'Leeward Mark': {'in': 60, 'out': 60},
+    'Top speed': {'in': 10, 'out': 10},
 }
 
 
@@ -45,6 +46,8 @@ class RaceEventsRecorder(NavigationListener):
         self.clips = clips
         self.ignore_events = [] if ignore_events is None else ignore_events
         self.exclude_ranges = [] if exclude_ranges is None else exclude_ranges
+        self.max_sow_event = {'name': 'Top speed', 'sow': 0, 'utc': None, 'location': Location(37, -122),
+                              'hist_idx': 0}
 
     def is_excluded(self, utc):
         for exclude_range in self.exclude_ranges:
@@ -55,6 +58,12 @@ class RaceEventsRecorder(NavigationListener):
         return False
     
     def on_instr_data(self, instr_data: RawInstrData):
+        if instr_data.sow is not None and instr_data.sow > self.max_sow_event['sow']:
+            self.max_sow_event['name'] = f'Top speed: {instr_data.sow:.1f} kts'
+            self.max_sow_event['sow'] = instr_data.sow
+            self.max_sow_event['utc'] = instr_data.utc
+            self.max_sow_event['hist_idx'] = len(self.instr_data)
+            self.max_sow_event['location'] = Location(instr_data.lat, instr_data.lon)
         self.instr_data.append(instr_data)
 
     def on_mark_rounding(self, utc, loc, is_windward):
@@ -123,10 +132,14 @@ class RaceEventsRecorder(NavigationListener):
                         'hist_idx': hist_idx
                     })
 
-        # Sort events by UTC, since the newly added ones might come out of order
+    def finalize(self):
+        # Add maximum speed event
+        if self.max_sow_event['utc'] is not None:
+            self.events.append(self.max_sow_event)
+
+        # Sort events by UTC
         self.events.sort(key=lambda x: x['utc'])
 
-    def finalize(self):
         # There should be no events before the start
         if self.ignore_evens_before_start:
             start_evt_idx = None
@@ -139,15 +152,19 @@ class RaceEventsRecorder(NavigationListener):
 
         # Add history to all events
         for evt in self.events:
+            evt_name = evt['name']
+            if ':' in evt_name:
+                evt_name = evt_name.split(':')[0]
+
             if 'in' in evt:
                 in_idx = evt['hist_idx'] - evt['in']
             else:
-                in_idx = evt['hist_idx'] - EVENTS_IN_OUT[evt['name']]['in']
+                in_idx = evt['hist_idx'] - EVENTS_IN_OUT[evt_name]['in']
 
             if 'out' in evt:
                 out_idx = evt['hist_idx'] + evt['out']
             else:
-                out_idx = evt['hist_idx'] + EVENTS_IN_OUT[evt['name']]['out']
+                out_idx = evt['hist_idx'] + EVENTS_IN_OUT[evt_name]['out']
 
             evt['history'] = self.instr_data[in_idx:out_idx]
 

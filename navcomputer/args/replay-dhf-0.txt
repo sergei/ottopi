@@ -1,0 +1,5 @@
+--replay-dir=s3://com.santacruzinstruments.signalk.logs/781c5630-a269-47aa-b764-d935b36c38ab/
+--log-dir=~/tmp/ottopi/dhf
+--data-dir=~/tmp/ottopi/dhf
+--replay-start=2022-04-09
+--strict-nmea
