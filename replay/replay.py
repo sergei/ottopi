@@ -7,6 +7,7 @@ import re
 import boto3 as boto3
 from gpxpy.geo import Location
 
+from csv_witer import CsvWriter
 from kml_writer import KmlWriter
 from navigator_listener import NavigationListener
 from plotter import Plotter
@@ -59,6 +60,7 @@ class Replay(NavigationListener):
         self.nmea_parser = nmea_parser
         self.kml_writer = KmlWriter()
         self.plotter = Plotter()
+        self.csv_writer = CsvWriter(self.log_dir + os.sep + "replay.csv")
 
     def run(self, with_prefix, signalk, replay_start, replay_days):
         if self.bucket is None:
@@ -99,10 +101,12 @@ class Replay(NavigationListener):
         kml_file = self.log_dir + os.sep + "replay.kml"
         print('Saving {}'.format(kml_file))
         self.kml_writer.save(kml_file)
+        self.csv_writer.close()
         self.plotter.show()
 
     def on_instr_data(self, instr_data):
         self.plotter.on_instr_data(instr_data)
+        self.csv_writer.on_instr_data(instr_data)
 
     def on_targets(self, targets):
         self.plotter.on_targets(targets)
