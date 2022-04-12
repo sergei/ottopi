@@ -21,9 +21,8 @@ def to_timestamp(start_utc):
 
 
 class GoPro:
-    def __init__(self, args):
-        sd_card_dir = args.gopro_dir
-        cache_dir = args.work_dir + os.sep + 'gopro'
+    def __init__(self, sd_card_dir, work_dir):
+        cache_dir = work_dir + os.sep + 'gopro'
         os.makedirs(cache_dir, exist_ok=True)
 
         # Build the list of clips
@@ -134,7 +133,8 @@ if __name__ == '__main__':
     parser.add_argument("--work-dir", help="Working directory", default='/tmp')
     parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
 
-    gopro = GoPro(parser.parse_args())
+    args = parser.parse_args()
+    gopro = GoPro(args.gopro_dir, args.work_dir)
     start = datetime.fromisoformat('2021-11-19T18:04:54.825').astimezone(pytz.utc)
     stop = datetime.fromisoformat('2021-11-19T19:23:06.190').astimezone(pytz.utc)
     print(gopro.get_clips_for_time_interval(start, stop))
