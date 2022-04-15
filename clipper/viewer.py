@@ -1,3 +1,4 @@
+import csv
 import glob
 import json
 import os.path
@@ -27,7 +28,7 @@ class DateTimeEncoder(JSONEncoder):
 
 def decode_date_time(d):
     for k in d:
-        if '_utc' in k:
+        if 'utc' in k:
             d[k] = from_timestamp(d[k])
     return d
 
@@ -36,10 +37,9 @@ class Params:
     def __init__(self, json_file):
         self.json_file = os.path.expanduser(json_file)
         self.params = {
-            'port': {'dir': os.path.expanduser('~/')},
-            'stbd': {'dir': os.path.expanduser('~/')},
-            'gopro': {'dir': os.path.expanduser('~/')},
-            'time_sync': {'gopro_utc': None, 'port_utc': None, 'stbd_utc': None},
+            'port': {'dir': os.path.expanduser('/tmp'), 'img_idx': 0},
+            'stbd': {'dir': os.path.expanduser('/tmp'), 'img_idx': 0},
+            'gopro': {'dir': os.path.expanduser('/tmp'), 'utc': None},
         }
         self.read()
 
@@ -47,15 +47,8 @@ class Params:
         self.params[section][key] = val
         json.dump(self.params, open(self.json_file, 'wt'), indent=4, cls=DateTimeEncoder)
 
-    def set_time_sync(self, v):
-        self.params['time_sync'] = v
-        json.dump(self.params, open(self.json_file, 'wt'),  indent=4, cls=DateTimeEncoder)
-
     def get(self, section, key):
         return self.params[section][key]
-
-    def get_time_sync(self):
-        return self.params.get('time_sync', {'gopro_utc': None, 'port_utc': None, 'stbd_utc': None})
 
     def read(self):
         try:
@@ -65,12 +58,11 @@ class Params:
 
 
 class GoProView:
-    def __init__(self, params, root, on_frame_change, work_dir='/tmp'):
+    def __init__(self, params, root, work_dir='/tmp'):
         self.params = params
-        self.on_frame_change = on_frame_change
         self.work_dir = work_dir
         self.current_clip_idx = 0
-        self.current_utc = None
+        self.current_utc = self.params.get(GOPRO, 'utc')
         self.vid_cap = None
         self.img = None
         self.gopro = None
@@ -99,6 +91,30 @@ class GoProView:
 
         ttk.Button(controls_frame, text="Open GoPro Folder",
                    command=self.read_clips).grid(column=0, row=2, sticky=W)
+
+        clips_dir = self.params.get(GOPRO, 'dir')
+
+        if clips_dir is not None and os.path.isdir(clips_dir):
+            self.open_clips_dir(clips_dir)
+
+    def read_clips(self):
+        initial_dir = self.params.get(GOPRO, 'dir')
+
+        dir_name = filedialog.askdirectory(initialdir=initial_dir)
+        if len(dir_name) == 0:
+            return
+
+        self.params.set(GOPRO, 'dir', dir_name)
+
+    def open_clips_dir(self, dir_name):
+        self.gopro = GoPro(dir_name, self.work_dir)
+        if len(self.gopro.clips) > 0:
+            self.current_clip_idx = 0
+            self.current_utc = self.gopro.clips[0]['start_utc']
+            duration_sec = (self.gopro.clips[-1]['stop_utc'] - self.current_utc).total_seconds()
+            self.vid_cap = cv2.VideoCapture(self.gopro.clips[0]['name'])
+            self.scale.configure(to=duration_sec)
+            self.show_frame()
 
     def show_frame(self):
         if not (self.gopro.clips[self.current_clip_idx]['start_utc'] <= self.current_utc
@@ -131,7 +147,7 @@ class GoProView:
             img_resized = Image.fromarray(cv2image).resize((self.img_width, self.img_height))
             self.img = ImageTk.PhotoImage(img_resized)
             self.canvas.create_image(0, 0, image=self.img, anchor='nw')
-            self.on_frame_change(self.current_utc)
+            self.params.set(GOPRO, 'utc', self.current_utc)
 
     def set_frame(self, current_utc):
         self.current_utc = current_utc
@@ -146,25 +162,6 @@ class GoProView:
         self.current_utc = self.gopro.clips[0]['start_utc'] + timedelta(seconds=self.scale_val.get())
         self.show_frame()
 
-    def read_clips(self):
-        initial_dir = self.params.get(GOPRO, 'dir')
-
-        dir_name = filedialog.askdirectory(initialdir=initial_dir)
-        print(f'{dir_name}')
-        if len(dir_name) == 0:
-            return
-
-        self.gopro = GoPro(dir_name, self.work_dir)
-        if len(self.gopro.clips) > 0:
-            self.current_clip_idx = 0
-            self.current_utc = self.gopro.clips[0]['start_utc']
-            duration_sec = (self.gopro.clips[-1]['stop_utc'] - self.current_utc).total_seconds()
-            self.vid_cap = cv2.VideoCapture(self.gopro.clips[0]['name'])
-            self.scale.configure(to=duration_sec)
-            self.show_frame()
-
-        self.params.set(GOPRO, 'dir', dir_name)
-
 
 class TimeLapseView:
     def __init__(self, side, params, root, on_frame_change):
@@ -172,7 +169,7 @@ class TimeLapseView:
         self.params = params
         self.on_frame_change = on_frame_change
         self.img_list = []
-        self.current_idx = 0
+        self.current_idx = self.params.get(self.side, 'img_idx')
         self.current_utc = None
         self.img = None
 
@@ -197,20 +194,30 @@ class TimeLapseView:
         ttk.Button(controls_frame, text="Open Cam Folder",
                    command=self.read_files).grid(column=0, row=2, sticky=W)
 
+        images_dir = self.params.get(self.side, 'dir')
+        if images_dir is not None and os.path.isdir(images_dir):
+            self.open_images_dir(images_dir)
+
     def read_files(self):
         print(f'{self.side}')
         initial_dir = self.params.get(self.side, 'dir')
 
         dir_name = filedialog.askdirectory(initialdir=initial_dir)
-        print(f'{dir_name}')
         if len(dir_name) == 0:
             return
 
-        self.img_list = sorted(glob.glob(dir_name + os.sep + '/**/T*.JPG',  recursive=True), reverse=False)
+        if dir_name != initial_dir:
+            self.current_idx = 0
+
+        self.open_images_dir(dir_name)
         self.params.set(self.side, 'dir', dir_name)
+
+    def open_images_dir(self, dir_name):
+        self.img_list = sorted(glob.glob(dir_name + os.sep + '/**/T*.JPG', recursive=True), reverse=False)
         if len(self.img_list) > 0:
             self.scale.configure(to=len(self.img_list))
-            self.current_idx = 0
+            if self.current_idx >= len(self.img_list):
+                self.current_idx = 0
             self.show_image()
 
     def move_frame(self, count):
@@ -238,17 +245,32 @@ class TimeLapseView:
 
     def show_image(self):
         if len(self.img_list) > 0:
-
             file_name = self.img_list[self.current_idx]
             short_name = os.sep.join(file_name.split(os.sep)[-2:])
             self.current_utc = datetime.utcfromtimestamp(os.path.getmtime(file_name))
-
             self.clip_label.configure(text=f'{short_name} {self.current_utc.strftime(TIME_FORMAT)}')
             image = Image.open(file_name)
             image.thumbnail((self.img_height, self.img_width), Image.ANTIALIAS)
             rotated_img = image.transpose(method=Image.ROTATE_270)
             self.img = ImageTk.PhotoImage(rotated_img)
             self.canvas.create_image(0, 0, image=self.img, anchor='nw')
+            self.params.set(self.side, 'img_idx', self.current_idx)
+
+    def create_csv(self, csv_out_dir, true_utc):
+        csv_file_name = os.path.join(csv_out_dir, self.side + '.csv')
+        name_field = self.side + '_image_name'
+        img_name = self.img_list[self.current_idx]
+        uncorrected_utc = from_timestamp(os.path.getmtime(img_name))
+        utc_correction = true_utc - uncorrected_utc
+        with open(csv_file_name, 'wt') as csv_file:
+            writer = csv.DictWriter(csv_file, ['utc', name_field])
+            writer.writeheader()
+            for img_name in self.img_list:
+                utc_nc = datetime.utcfromtimestamp(os.path.getmtime(img_name))
+                img_utc = utc_nc + utc_correction
+                writer.writerow({'utc': img_utc, name_field: img_name})
+
+            print(f'Created {csv_file_name}')
 
 
 class SailView:
@@ -256,12 +278,6 @@ class SailView:
     def __init__(self, root, work_dir='/tmp'):
         self.work_dir = work_dir
         self.params = Params('~/.sail_view.json')
-        self.port_frame_idx = 0
-        self.stbd_frame_idx = 0
-        self.port_utc = None
-        self.stbd_utc = None
-        self.gopro_utc = None
-        self.time_sync = self.params.get_time_sync()
         root.title('Sail View')
 
         mainfarme = ttk.Frame(root, padding='3 3 12 12')
@@ -288,41 +304,33 @@ class SailView:
         bottom_frame = ttk.Frame(mainfarme, padding='3 3 12 12')
         bottom_frame.grid(column=0, row=1, sticky='nwes')
 
-        self.gopro_view = GoProView(self.params, bottom_frame, lambda x: self.on_gopro_frame_change(x), self.work_dir)
+        ttk.Button(mainfarme, text='Save CSV ...', command=self.store_csv).grid(column=0, row=2, sticky=W)
 
-        self.sync_gopro_frames = BooleanVar(value=False)
-        ttk.Checkbutton(mainfarme, text='Sync', variable=self.sync_gopro_frames, command=self.change_gopro_sync,
-                        onvalue=True, offvalue=False).grid(column=0, row=2, sticky='we')
+        self.gopro_view = GoProView(self.params, bottom_frame, self.work_dir)
 
-    # noinspection PyUnusedLocal
-    def change_gopro_sync(self, *args):
-        if self.sync_gopro_frames.get():
-            self.set_time_sync()
+        self.port_frame_idx = self.port_view.current_idx
+        self.stbd_frame_idx = self.stbd_view.current_idx
 
-    def on_gopro_frame_change(self, current_utc):
-        self.gopro_utc = current_utc
-        if self.sync_gopro_frames.get():
-            self.set_time_sync()
+    def store_csv(self):
 
-    def set_time_sync(self):
-        self.time_sync = {'gopro_utc': self.gopro_utc, 'port_utc': self.port_utc, 'stbd_utc': self.stbd_utc}
-        self.params.set_time_sync(self.time_sync)
+        csv_out_dir = filedialog.askdirectory(title='Directory to store CSV files')
+        print(f'Saving to {csv_out_dir}')
+        self.port_view.create_csv(csv_out_dir, self.gopro_view.current_utc)
+        self.stbd_view.create_csv(csv_out_dir, self.gopro_view.current_utc)
 
     def on_port_frame_change(self, frame_idx, current_utc):
-        self.port_utc = current_utc
-        self.port_frame_idx = frame_idx
         if self.sync_top_frames.get():
             delta = frame_idx - self.port_frame_idx
             self.stbd_frame_idx += delta
             self.stbd_view.set_frame_idx(self.stbd_frame_idx)
+        self.port_frame_idx = frame_idx
 
     def on_stbd_frame_change(self, frame_idx, current_utc):
-        self.stbd_utc = current_utc
-        self.stbd_frame_idx = frame_idx
-        if self.sync_top_frames:
-            delta = self.stbd_frame_idx - frame_idx
+        if self.sync_top_frames.get():
+            delta = frame_idx - self.stbd_frame_idx
             self.port_frame_idx += delta
             self.port_view.set_frame_idx(self.port_frame_idx)
+        self.stbd_frame_idx = frame_idx
 
 
 def viewer():
