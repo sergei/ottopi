@@ -266,7 +266,7 @@ class TimeLapseView:
             writer = csv.DictWriter(csv_file, ['utc', name_field])
             writer.writeheader()
             for img_name in self.img_list:
-                utc_nc = datetime.utcfromtimestamp(os.path.getmtime(img_name))
+                utc_nc = from_timestamp(os.path.getmtime(img_name))
                 img_utc = utc_nc + utc_correction
                 writer.writerow({'utc': img_utc, name_field: img_name})
 
