@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from bokeh.models import RangeSlider, CustomJS, CheckboxGroup, HoverTool, Div, ColumnDataSource
+from bokeh.models import RangeSlider, CustomJS, CheckboxGroup, Div, ColumnDataSource, TapTool
 from bokeh.models import CDSView, CustomJSFilter
 from bokeh.plotting import figure, show
 from bokeh.layouts import layout
@@ -40,21 +40,25 @@ def perf_view(args):
             left=tws['left'], right=tws['right'],
             fill_color='red', line_color='black')
 
-    ht = HoverTool()
+    tap_tool = TapTool()
 
     p2 = figure(plot_height=400, plot_width=400,
                 title='Percent of target speed',
                 x_axis_label='UTC',
-                y_axis_label='Percent', tools=['box_select', 'reset', 'zoom_in', 'zoom_out', 'box_zoom', "tap", ht])
+                y_axis_label='Percent',
+                x_axis_type='datetime',
+                tools=['reset', 'zoom_in', 'zoom_out', 'box_zoom', tap_tool])
 
-    source = ColumnDataSource(data={'utc': data['utc'], 'sow': perc_vmg, 'tws': data['tws'], 'twa': data['twa'],
+    source = ColumnDataSource(data={'utc': data['utc'],
+                                    'perc_vmg': perc_vmg,
+                                    'perc_sow': perc_sow,
+                                    'tws': data['tws'],
+                                    'vmg': np.abs(vmg),
+                                    'twa': data['twa'],
+                                    'sow': data['sow'],
                                     'port_image_name': data['port_image_name'],
                                     'stbd_image_name': data['stbd_image_name'],
                                     })
-
-    # p2.circle(targets['utc'], perc_sow, size=2, color="red", alpha=0.8)
-    # p2.square(targets['utc'], perc_vmg, size=4, color="yellow", alpha=0.8)
-    # p2.square(targets['utc'], targets['twa'], size=1, color="green", alpha=0.8)
 
     min_tws = data['tws'].min()
     max_tws = data['tws'].max()
@@ -113,33 +117,13 @@ def perf_view(args):
 
     div = Div(text="Hello")
 
-    ht.callback = CustomJS(args=dict(div=div, source=source), code="""
-        const hit_test_result = cb_data.index;
-        const indices = hit_test_result.indices;
-        if (indices.length > 0) {
-            const idx = indices[0];
-            const port_img = encodeURI('file://' + source.data['port_image_name'][idx]);
-            const stbd_img = encodeURI('file://' + source.data['stbd_image_name'][idx]);
-            
-            console.log('idx=', indices[0], 'port_img=', port_img );
-            div.text = `
-            <table>
-                <tr>
-                    <td>
-                        <img src="${port_img}" height="300" style="transform:rotate(90deg);"/>
-                    </td>
-                    <td>
-                        <img src="${stbd_img}" height="300" style="transform:rotate(90deg);"/>
-                    </td>
-                </tr>
-            </table>
-            `;
-        }
-    """)
+    tap_tool_cb_code = open(os.path.dirname(os.path.abspath(__file__))
+                            + os.sep + 'js' + os.sep + 'tap_tool.js', 'rt').read()
+    tap_tool.callback = CustomJS(args=dict(div=div, source=source), code=tap_tool_cb_code)
 
     view = CDSView(source=source, filters=[filt])
-    p2.circle(x='utc', y='sow', source=source, view=view)
     p2.square(x='utc', y='twa', source=source, view=view, color='green')
+    p2.circle(x='utc', y='perc_vmg', source=source, view=view)
 
     # noinspection PyTypeChecker
     show(layout([
