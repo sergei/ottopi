@@ -1,5 +1,7 @@
+import csv
 import datetime
 import json
+import os
 
 from gpxpy.geo import Location
 
@@ -43,11 +45,19 @@ class RaceEventsRecorder(NavigationListener):
         self.finish_time_utc = finish_time_utc
         self.events = []
         self.instr_data = []
+        self.targets = []
+        self.target_summaries = []
         self.clips = clips
         self.ignore_events = [] if ignore_events is None else ignore_events
         self.exclude_ranges = [] if exclude_ranges is None else exclude_ranges
         self.max_sow_event = {'name': 'Top speed', 'sow': 0, 'utc': None, 'location': Location(37, -122),
                               'hist_idx': 0}
+
+        self.targets_csv_file_name = os.path.join(self.work_dir, 'targets.csv')
+        self.targets_csv_file = open(self.targets_csv_file_name, 'wt')
+        self.targets_writer = csv.DictWriter(self.targets_csv_file, ['utc', 'tws', 'sow', 'target_sow',
+                                                                     'twa', 'target_twa'])
+        self.targets_writer.writeheader()
 
     def is_excluded(self, utc):
         for exclude_range in self.exclude_ranges:
@@ -96,6 +106,19 @@ class RaceEventsRecorder(NavigationListener):
                 'hist_idx': len(self.instr_data) - NavStats.HALF_WIN,
             })
 
+    def on_targets(self, targets):
+        self.targets.append(targets)
+
+    def on_target_update(self, utc: datetime, loc: Location,
+                         distance_delta_m: float, speed_delta: float, twa_angle_delta: float):
+
+        start_idx = len(self.targets) - int(NavStats.STRAIGHT_THR)
+        for i in range(start_idx, len(self.targets)):
+            ii = self.instr_data[i]
+            tg = self.targets[i]
+            self.targets_writer.writerow({'utc': ii.utc, 'tws': ii.tws, 'sow': ii.sow, 'target_sow': tg.target_sow,
+                                          'twa': ii.twa, 'target_twa': tg.target_twa})
+
     def evt_utc(self, s):
         """ Get event utc time """
         utc = None
@@ -133,6 +156,9 @@ class RaceEventsRecorder(NavigationListener):
                     })
 
     def finalize(self):
+        print(f'Created TARGETS CSV file{self.targets_csv_file_name}')
+        self.targets_csv_file.close()
+
         # Add maximum speed event
         if self.max_sow_event['utc'] is not None:
             self.events.append(self.max_sow_event)
