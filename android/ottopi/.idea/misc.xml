@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../../../layout/custom_preview.xml" value="0.13564984964918142" />
+        <entry key="app/src/main/res/drawable-anydpi/ic_usb_connection.xml" value="0.368" />
+        <entry key="app/src/main/res/drawable-xxhdpi/grey_circle.xml" value="0.123" />
+        <entry key="app/src/main/res/drawable/animated_half_start_line.xml" value="0.369" />
+        <entry key="app/src/main/res/drawable/half_start_line.xml" value="0.369" />
+        <entry key="app/src/main/res/drawable/half_start_line_dashed.xml" value="0.225" />
+        <entry key="app/src/main/res/drawable/half_start_line_dotted.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/half_start_line_solid.xml" value="0.225" />
+        <entry key="app/src/main/res/drawable/ic_baseline_delete_24.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_buoy.xml" value="0.133" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.116" />
+        <entry key="app/src/main/res/drawable/ic_rcb.xml" value="0.1325" />
+        <entry key="app/src/main/res/drawable/ic_settings_black_24dp.xml" value="0.244" />
+        <entry key="app/src/main/res/drawable/remove_mark.xml" value="0.368" />
+        <entry key="app/src/main/res/drawable/start_half_line.xml" value="0.3505" />
+        <entry key="app/src/main/res/layout/activity_fullscreen.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_ottopi.xml" value="0.12916666666666668" />
+        <entry key="app/src/main/res/layout/circle.xml" value="0.11744791666666667" />
+        <entry key="app/src/main/res/layout/fragment_boat_setup.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/fragment_connection_state.xml" value="0.28833333333333333" />
+        <entry key="app/src/main/res/layout/fragment_nav.xml" value="0.10755208333333334" />
+        <entry key="app/src/main/res/layout/fragment_polar.xml" value="0.36822916666666666" />
+        <entry key="app/src/main/res/layout/fragment_race_setup.xml" value="0.10108864696734059" />
+        <entry key="app/src/main/res/layout/fragment_settings.xml" value="0.18" />
+        <entry key="app/src/main/res/layout/fragment_start.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/list_item.xml" value="0.25364583333333335" />
+        <entry key="app/src/main/res/layout/material_list_item_single_line.xml" value="0.13984375" />
+        <entry key="app/src/main/res/layout/material_list_item_three_line.xml" value="0.13984375" />
+        <entry key="app/src/main/res/layout/material_list_item_two_line.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/my_time_picker_content.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/navigation_header.xml" value="0.23802083333333332" />
+        <entry key="app/src/main/res/layout/route_list_group.xml" value="0.12916666666666668" />
+        <entry key="app/src/main/res/layout/route_list_item.xml" value="0.12916666666666668" />
+        <entry key="app/src/main/res/layout/routes_list_group.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/routes_list_item.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/start_type_list_item.xml" value="0.1" />
+        <entry key="app/src/main/res/menu/drawer_navigation_items.xml" value="0.23802083333333332" />
+        <entry key="app/src/main/res/xml/log_files_paths.xml" value="0.1" />
+        <entry key="app/src/main/res/xml/preferences.xml" value="0.36822916666666666" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+  <component name="SuppressKotlinCodeStyleNotification">
+    <option name="disableForAll" value="true" />
+  </component>
+</project>

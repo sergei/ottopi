@@ -46,7 +46,9 @@ movies:
 def s3_sk_nmea_logs(start_time_utc, finish_time_utc, bucket, uuid, profile):
     # Build object prefix
     prefix = uuid + '/' + 'skserver-raw_'
-    first_file = prefix + start_time_utc.strftime("%Y-%m-%dT%H.log.gz")
+
+    first_time_stamp = start_time_utc - datetime.timedelta(hours=1)
+    first_file = prefix + first_time_stamp.strftime("%Y-%m-%dT%H.log.gz")
 
     if profile is not None:
         boto3.setup_default_session(profile_name=profile)
@@ -61,20 +63,25 @@ def s3_sk_nmea_logs(start_time_utc, finish_time_utc, bucket, uuid, profile):
 
     response = client.list_objects_v2(Bucket=bucket, Prefix=prefix, StartAfter=first_file)
     keys = [x['Key'] for x in response['Contents']]
+    print(f'start_time_utc ={start_time_utc}')
+    print(f'finish_time_utc ={finish_time_utc}')
+    print(f'keys ={keys}')
     for key in keys:
         # Check if the log file belongs to the time range
         log_name = key.split('/')[1]
         d = datetime.datetime.strptime(log_name, 'skserver-raw_%Y-%m-%dT%H.log.gz')
         d = pytz.utc.localize(d)
-        if start_time_utc <= d <= finish_time_utc:
+
+        # File name is created when the last epoch is written, so the first epoch of the file is one hour less
+        d -= datetime.timedelta(hours=1)
+        print(f'log_name={log_name} d ={d}')
+
+        if d <= finish_time_utc:
             lines = read_nmea_file(bucket, client, key)
             for line in lines:
                 nmea = extract_nmea(line)
                 if nmea is not None:
                     yield nmea
-
-        else:
-            break
 
 
 def extract_nmea(line):
@@ -202,6 +209,11 @@ def create_events(args, config, movie_name, navigator, start_time_utc, finish_ti
                 log_name = member_name.split('/')[1]
                 d = datetime.datetime.strptime(log_name, 'skserver-raw_%Y-%m-%dT%H.log')
                 d = pytz.utc.localize(d)
+
+                # File name is created when the last epoch is written, so the first epoch of the file is one hour less
+                d -= datetime.timedelta(hours=1)
+                print(f'log_name={log_name} d ={d}')
+
                 from_utc_hr = start_time_utc.replace(minute=0, second=0, microsecond=0)
                 to_utc_hr = finish_time_utc.replace(minute=0, second=0, microsecond=0)
                 if from_utc_hr <= d <= to_utc_hr:

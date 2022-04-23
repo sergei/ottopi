@@ -1,0 +1,35 @@
+<resources>
+    <declare-styleable name="FullscreenAttrs">
+        <attr name="fullscreenBackgroundColor" format="color" />
+        <attr name="fullscreenTextColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="PolarDrawableView">
+        <attr name="axis_width" format="float"/>
+        <attr name="axis_color" format="color" />
+        <attr name="polar_curve_width" format="float"/>
+        <attr name="polar_curve_color" format="color" />
+        <attr name="target_angle_width" format="float"/>
+        <attr name="target_angle_color" format="color" />
+        <attr name="vmg_line_width" format="float"/>
+        <attr name="vmg_line_color" format="color" />
+        <attr name="history_radius" format="float" />
+        <attr name="current_point_radius" format="float" />
+        <attr name="history_color" format="color" />
+        <attr name="twa_line_width" format="float"/>
+        <attr name="twa_line_color" format="color" />
+        <attr name="current_point_color" format="color" />
+        <attr name="mark_color" format="color" />
+        <attr name="mark_width" format="float" />
+        <attr name="mark_base_width" format="float" />
+        <attr name="twa_stats_color" format="color" />
+        <attr name="twa_stats_width" format="float" />
+
+    </declare-styleable>
+
+    <declare-styleable name="CurrentDrawableView">
+        <attr name="arrow_width" format="float"/>
+        <attr name="arrow_color" format="color" />
+    </declare-styleable>
+
+</resources>

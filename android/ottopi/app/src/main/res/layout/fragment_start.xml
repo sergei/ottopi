@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.start_line.StartFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/Widget.Theme.OttoPi.ActionBar.Fullscreen"
+        >
+
+        <ImageButton
+            android:id="@+id/pinStartButton"
+            style="@style/StartLineIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:src="@drawable/ic_buoy"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/committeeStartButton"
+            style="@style/StartLineIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:src="@drawable/ic_rcb"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
+
+        <Button
+            android:id="@+id/timerButton"
+            style="@style/StartLineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/committeeStartButton"
+            app:layout_constraintEnd_toStartOf="@+id/committeeStartButton"
+            app:layout_constraintStart_toEndOf="@+id/pinStartButton"
+            app:layout_constraintTop_toTopOf="@+id/committeeStartButton"
+            tools:text="5:00" />
+
+        <TextView
+            android:id="@+id/distanceToLineTextView"
+            style="@style/StartLineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/timerButton"
+            tools:text="23" />
+
+        <TextView
+            android:id="@+id/distanceToLineOcsTextView"
+            style="@style/StartLineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/timerButton"
+            tools:text="34" />
+
+        <TextView
+            android:id="@+id/rcbFavorTextView"
+            style="@style/StartLineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/committeeStartButton"
+            app:layout_constraintEnd_toEndOf="@+id/committeeStartButton"
+            app:layout_constraintStart_toStartOf="@+id/committeeStartButton"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="3" />
+
+        <TextView
+            android:id="@+id/pinFavorTextView"
+            style="@style/StartLineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/pinStartButton"
+            app:layout_constraintEnd_toEndOf="@+id/pinStartButton"
+            app:layout_constraintStart_toStartOf="@+id/pinStartButton"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="5" />
+
+        <ImageView
+            android:id="@+id/pinHalfStartLineView"
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:scaleType="center"
+            android:src="@drawable/half_start_line_dotted"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/pinStartButton"
+            app:layout_constraintEnd_toStartOf="@+id/timerButton"
+            app:layout_constraintStart_toEndOf="@+id/pinStartButton"
+            app:layout_constraintTop_toTopOf="@+id/pinStartButton"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/rcbHalfStartLineView"
+            android:rotation="180"
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:scaleType="center"
+            android:src="@drawable/half_start_line_dotted"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/committeeStartButton"
+            app:layout_constraintEnd_toStartOf="@+id/committeeStartButton"
+            app:layout_constraintStart_toEndOf="@+id/timerButton"
+            app:layout_constraintTop_toTopOf="@+id/committeeStartButton"
+            tools:ignore="ContentDescription" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

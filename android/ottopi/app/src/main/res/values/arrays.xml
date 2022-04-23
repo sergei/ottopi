@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="race_types_array">
+        <item>@string/countdown</item>
+        <item>@string/cruising</item>
+        <item>@string/start_at</item>
+    </string-array>
+</resources>

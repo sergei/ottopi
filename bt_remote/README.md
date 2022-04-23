@@ -44,3 +44,37 @@ sudo systemctl restart bluetooth
 ````
 journalctl --unit=bluetooth -f
 ````
+
+
+## Android info on Chubby buttons:
+```
+1.Bluetooth Device : Chubby Buttons 2 (KS)
+2.MAC Address : D0:B1:F4:39:36:0B
+3.Type : Low Energy
+4.Profiles Supported:
+GATT - HID
+5.UUID List :
+00001812-0000-1000-8000-00805f9b34fb 
+
+```
+
+After chubby pairung on rpi
+````
+Device D0:B1:F4:39:36:0B (random)
+	Name: Chubby Buttons 2 (KS)
+	Alias: Chubby Buttons 2 (KS)
+	Appearance: 0x03c0
+	Paired: yes
+	Trusted: yes
+	Blocked: no
+	Connected: yes
+	LegacyPairing: no
+	UUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)
+	UUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)
+	UUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)
+	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)
+	UUID: Human Interface Device    (00001812-0000-1000-8000-00805f9b34fb)
+	UUID: Nordic Semiconductor AS.. (0000fe59-0000-1000-8000-00805f9b34fb)
+	Modalias: usb:v1915pEEEEd0024
+	Battery Percentage: 0x5d (93)
+````

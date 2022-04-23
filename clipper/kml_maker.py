@@ -26,16 +26,18 @@ def make_kml(kml_file, race_events, instr_data, clips):
     events_folder = kml.newfolder(name="Events")
 
     for evt in race_events:
+        this_event_folder = events_folder.newfolder(name=evt['name'])
         lng_lat = (evt['location'].longitude, evt['location'].latitude)
-        point = events_folder.newpoint(name=evt['name'], coords=[lng_lat])
+        point = this_event_folder.newpoint(name=evt['name'], coords=[lng_lat])
         point.description = f"{'='*40}<br/>{evt['utc']}<br/>"
         point.style = mark_style
         point.timestamp.when = evt['utc'].strftime(TIME_FORMAT)
 
         history_pts = evt['history']
+        this_history_folder = this_event_folder.newfolder(name="Event history")
         for pt_idx, pt in enumerate(history_pts):
             lng_lat = (pt.lon, pt.lat)
-            point = events_folder.newpoint(name='', coords=[lng_lat])
+            point = this_history_folder.newpoint(name='', coords=[lng_lat])
             point.description = f"{pt_idx}<br/>{pt.utc}<br/>"
             point.style = evt_pt_style
             point.timestamp.when = pt.utc.strftime(TIME_FORMAT)
@@ -61,10 +63,11 @@ def make_kml(kml_file, race_events, instr_data, clips):
         point = route_folder.newpoint(name='', coords=[lng_lat])
         point.description = f"{pt_idx}<br/>{utc}<br/>"
         if clip_time is not None:
-            point.description += f"vlc --start-time={clip_time} {clip_name}<br/>"
             minutes = clip_time // 60
             seconds = clip_time % 60
-            point.description += f"clip/{os.path.basename(clip_name)}/{minutes:02d}:{seconds:02d}<br/>"
+            vlc_cmd = f"vlc --start-time={clip_time} {clip_name}<br/>"
+            vlc_cmd += f"clip/{os.path.basename(clip_name)}/{minutes:02d}:{seconds:02d}<br/>"
+            point.description += f'<pre>{vlc_cmd}</pre>'
         else:
             # Probably was gap in the clips, reset the clip finder
             clip_idx = 0

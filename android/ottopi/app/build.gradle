@@ -1,0 +1,111 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'androidx.navigation.safeargs'
+    id 'dagger.hilt.android.plugin'
+}
+
+android {
+    compileSdk 31
+
+    def getGitHash = { ->
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+        }
+        return "\"" + stdout.toString().trim() + "\""
+    }
+
+    def getGitBranch = { ->
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+            standardOutput = stdout
+        }
+        return "\"" + stdout.toString().trim() + "\""
+    }
+
+    defaultConfig {
+        applicationId "com.santacruzinstruments.ottopi"
+        minSdk 28
+        targetSdk 31
+        versionCode 5
+        versionName "1.4"
+
+        buildConfigField "String", "GIT_HASH", getGitHash()
+        buildConfigField "String", "GIT_BRANCH", getGitBranch()
+
+        testInstrumentationRunner "com.santacruzinstruments.ottopi.utils.CustomTestRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+
+dependencies {
+    implementation 'com.google.android.material:material:1.6.1'
+
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.navigation:navigation-fragment:2.4.2'
+    implementation 'androidx.navigation:navigation-ui:2.4.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
+    implementation "androidx.preference:preference:1.2.0"
+    implementation files('libs/mapx-0.8.jar')
+
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.4.0'
+
+    implementation "com.google.dagger:hilt-android:2.38.1"
+    kapt "com.google.dagger:hilt-compiler:2.38.1"
+    kaptTest 'com.google.dagger:hilt-android-compiler:2.38.1'
+
+    // Timber logging framework
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    // Hilt testing
+    // For Robolectric tests.
+    testImplementation 'com.google.dagger:hilt-android-testing:2.38.1'
+    kaptTest 'com.google.dagger:hilt-android-compiler:2.38.1'
+    testAnnotationProcessor 'com.google.dagger:hilt-android-compiler:2.38.1'
+
+    // For instrumented tests.
+    androidTestImplementation 'com.google.dagger:hilt-android-testing:2.38.1'
+    kaptAndroidTest 'com.google.dagger:hilt-android-compiler:2.38.1'
+    androidTestAnnotationProcessor 'com.google.dagger:hilt-android-compiler:2.38.1'
+
+    implementation 'org.locationtech.jts:jts-core:1.15.0'
+
+    androidTestImplementation 'com.google.code.gson:gson:2.9.0'
+
+
+    // Data base access
+    def room_version = "2.4.2"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    testImplementation "androidx.room:room-testing:$room_version"
+
+    implementation "androidx.room:room-ktx:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+}

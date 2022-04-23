@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="OpenCPN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:opencpn="http://www.opencpn.org">
+  <wpt lat="36.958000000" lon="-122.012166667">
+    <time>2019-06-05T07:58:56Z</time>
+    <name>GOV</name>
+    <desc>Large white metal ball marked “CG” </desc>
+    <sym>Symbol-Glow-LargeWhite</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>3c30d85d-5599-4152-9da2-72ad69c42326</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.938833333" lon="-122.009500000">
+    <time>2019-06-05T07:58:56Z</time>
+    <name>MILE</name>
+    <desc>Large RW “SC” WHISTLE buoy</desc>
+    <sym>Marks-Lateral-Port-IALA-A</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>3c30d85d-5599-4152-9da2-72ad69c42326</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:shared>1</opencpn:shared>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="true" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.946833333" lon="-122.038833333">
+    <time>2019-06-05T08:01:43Z</time>
+    <name>MC</name>
+    <desc>Mitchell Cove (MC) Unmarked yellow ball 
+</desc>
+    <sym>Symbol-Circle-Yellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>04fb844d-3956-4b8d-9934-39611a0e3767</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.943333333" lon="-122.061666667">
+    <time>2019-06-05T07:58:56Z</time>
+    <name>NB</name>
+    <desc>Yellow Ball - Marked "SCYC 4"
+
+</desc>
+    <sym>Symbol-Glow-LargeYellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>3c30d85d-5599-4152-9da2-72ad69c42326</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:shared>1</opencpn:shared>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="true" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.960393333" lon="-122.000760000">
+    <time>2019-06-05T08:09:33Z</time>
+    <name>HARBOR</name>
+    <sym>triangle</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>0e06bfdb-ba3b-4d78-b9d0-bded2ada9b5a</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="-1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.941666667" lon="-121.966500000">
+    <time>2019-06-05T08:04:43Z</time>
+    <name>Soquel(SC3)</name>
+    <desc>Unmarked yellow ball </desc>
+    <sym>Symbol-Glow-LargeYellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>4a599542-7ead-43e0-827c-a14042f13e45</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.952500000" lon="-121.985666667">
+    <time>2019-06-05T07:56:50Z</time>
+    <name>BLACK</name>
+    <desc>Unmarked yellow ball </desc>
+    <sym>Symbol-Glow-LargeYellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>5ef9c64e-c094-4533-b923-d6a344a7ed23</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="-1" colour="#FFFFFF" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.951000000" lon="-121.993833333">
+    <time>2022-09-05T13:50:14Z</time>
+    <name>START</name>
+    <sym>Symbol-Circle-Yellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>0b36e96b-842c-40ff-946b-246534a21665</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.947166667" lon="-122.021333333">
+    <time>2022-09-05T13:52:16Z</time>
+    <name>Schuyler</name>
+    <sym>Symbol-Glow-LargeYellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>7a6d7546-505d-4e24-87e1-f47779da9581</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.956000000" lon="-122.009833333">
+    <time>2022-09-05T13:55:51Z</time>
+    <name>SC2</name>
+    <sym>Symbol-Circle-Yellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>38425b41-18ea-4dc1-975f-b4af41642c02</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.956749000" lon="-121.951000000">
+    <time>2022-09-05T14:22:00Z</time>
+    <name>Capitola</name>
+    <sym>Symbol-Glow-LargeYellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>029658c4-b93b-47a9-9649-b16312354803</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+  <wpt lat="36.925666667" lon="-121.966500000">
+    <time>2022-09-05T14:37:56Z</time>
+    <name>SC4</name>
+    <sym>Symbol-Circle-Yellow</sym>
+    <type>WPT</type>
+    <extensions>
+      <opencpn:guid>0b9d46aa-0515-496a-a08d-10374392ff7d</opencpn:guid>
+      <opencpn:viz_name>1</opencpn:viz_name>
+      <opencpn:arrival_radius>0.050</opencpn:arrival_radius>
+      <opencpn:waypoint_range_rings visible="false" number="0" step="1" units="0" colour="#FF0000" />
+      <opencpn:scale_min_max UseScale="false" ScaleMin="2147483646" ScaleMax="0" />
+    </extensions>
+  </wpt>
+</gpx>

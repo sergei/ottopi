@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <NetworkLink>
+      <name>Local NMEA simulator</name>
+      <visibility>1</visibility>
+      <open>1</open>
+      <flyToView>0</flyToView>
+      <Link>
+        <href>http://localhost:8080</href>
+        <refreshMode>onInterval</refreshMode>
+        <refreshInterval>1</refreshInterval>
+      </Link>
+    </NetworkLink>
+</kml>

@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">OttoPi</string>
+    <string name="title_activity_ottopi">OttoPi</string>
+    <string name="logs_enabled">Enable Logging</string>
+
+    <string name="countdown">Countdown</string>
+    <string name="cruising">Cruising</string>
+    <string name="start_at">Start at</string>
+
+    <string name="preference_file_key">com.santacruzinstruments.ottopi.PREFERENCE_FILE_KEY</string>
+    <string name="pref_key_start_time">startTime</string>
+    <string name="pref_key_start_type">StartType</string>
+    <string name="pref_key_use_wifi">USE_WIFI</string>
+    <string name="pref_key_instr_ssid">INSTR_SSID</string>
+    <string name="pref_key_instr_host">INSTR_HOST</string>
+    <string name="pref_key_instr_port">INSTR_PORT</string>
+    <string name="pref_key_current_log_cal">pref_key_current_log_cal</string>
+    <string name="pref_key_current_misaligned">pref_key_current_misaligned</string>
+
+    <string name="click_here_to_set_time">Set start time …</string>
+    <string name="left_sign">&#9664;</string>
+    <string name="right_sign">&#9654;</string>
+    <string name="starboard_tack_sign">&#9115;</string>
+    <string name="port_tack_symbol">&#9118;</string>
+    <string name="far">FAR</string>
+    <string name="add_entire_route">[Add entire route]</string>
+    <string name="start_line">Start Line</string>
+    <string name="finish_line">Finish Line</string>
+    <string name="long_press_for_startboad_mark">Long press for starboard mark</string>
+    <string name="select_port_mark">Select port mark</string>
+    <string name="inflatable_mark">Inflatable mark</string>
+    <string name="non_fixed_marks">Non fixed marks</string>
+    <string name="finish_race">Finish race</string>
+    <string name="race_type">Race type</string>
+    <string name="gpx_name">GPX name</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="do_you_want_to_delete_gpx">Do you want to delete %s ?</string>
+    <string name="ssid">SSID</string>
+    <string name="race_setup">Race Setup</string>
+    <string name="boat_setup">Boat Setup</string>
+    <string name="app_settings">App Settings</string>
+    <string name="race_start">Race Start</string>
+    <string name="navigation">Navigation</string>
+    <string name="share_log_files">Share log files</string>
+    <string name="no_logs_to_share">Hmm, it seems there are no logs to share</string>
+    <string name="oh_well">Oh, well</string>
+    <string name="delete_previously_shared_files">Delete previously shared files</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="yes_delete_them">Yes, delete them</string>
+    <string name="no_i_changed_my_mind">No, I changed my mind</string>
+    <string name="file_provider_authority">com.santacruzinstruments.fileprovider</string>
+    <string name="key_log_enabled">logs_enabled</string>
+    <string name="use_internal_gps">Use internal GPS</string>
+    <string name="key_use_internal_gps">use_internal_gps</string>
+    <string name="speed_bias_value">(SOW - SOG)/SOG = %d %%</string>
+    <string name="speed_bias_invalid">(SOW - SOG)/SOG not known</string>
+    <string name="current_log_cal">Current LOG CAL %.2f (use slider to set)</string>
+    <string name="suggested_log_cal">Suggested LOG CAL %.2f</string>
+    <string name="suggested_log_cal_not_valid">No suggested LOG CAL</string>
+    <string name="start_calibration">Start calibration</string>
+    <string name="stop_calibration">Stop calibration</string>
+    <string name="awa_port_awa_stbd">AWAp - AWAs = %d</string>
+    <string name="suggested_offset">Suggested offset: %d</string>
+    <string name="awa_port_awa_stbd_not_valid">AWAp - AWAs unknown</string>
+    <string name="suggested_offset_not_valid">Suggested offset unknown</string>
+    <string name="current_offset">Current offset %d (use slider to set)</string>
+    <string name="gps_symbol">&#8982;</string>
+    <string name="wind_symbol">&#9872;</string>
+    <string name="speed_symbol">&#8779;</string>
+    <string name="compass_symbol">&#9784;</string>
+    <string name="host">Host:</string>
+    <string name="port">Port:</string>
+    <string name="git_s">Git: %s</string>
+    <string name="ver_s">Ver %s</string>
+    <string name="arrow_down">▼</string>
+    <string name="dont_use_wifi">[Don\'t use WiFi]</string>
+    <string name="wifi_is_disabled">WiFi is disabled</string>
+</resources>

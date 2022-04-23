@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="http://www.gybetime.com" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gybetime="http://www.gybetime.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="37.81073" lon="-122.44519">
+<name>A</name>
+</wpt>
+<wpt lat="37.86037" lon="-122.69523">
+<name>1DR</name>
+</wpt>
+<wpt lat="37.7497" lon="-122.6925">
+<name>SF</name>
+</wpt>
+<wpt lat="37.810062" lon="-122.468189">
+<name>YRA16-OFF</name>
+</wpt>
+<wpt lat="37.83783" lon="-122.446">
+<name>YRA17</name>
+</wpt>
+<wpt lat="37.83555" lon="-122.39885">
+<name>YRA 7</name>
+</wpt>
+<wpt lat="37.92927" lon="-122.43093">
+<name>RED RK</name>
+</wpt>
+<wpt lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+</wpt>
+<rte>
+<name>ocean</name>
+<rtept lat="37.81073" lon="-122.44519">
+<name>A</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.86037" lon="-122.69523">
+<name>1DR</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.7497" lon="-122.6925">
+<name>SF</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.81073" lon="-122.44519">
+<name>A</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>bay</name>
+<rtept lat="37.81073" lon="-122.44519">
+<name>A</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.810062" lon="-122.468189">
+<name>YRA16-OFF</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.83783" lon="-122.446">
+<name>YRA17</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.83555" lon="-122.39885">
+<name>YRA 7</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.92927" lon="-122.43093">
+<name>RED RK</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.8101" lon="-122.46678">
+<name>YRA16</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.81073" lon="-122.44519">
+<name>A</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+</gpx>

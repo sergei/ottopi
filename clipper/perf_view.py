@@ -47,7 +47,7 @@ def perf_view(args):
                 x_axis_label='UTC',
                 y_axis_label='Percent',
                 x_axis_type='datetime',
-                tools=['reset', 'zoom_in', 'zoom_out', 'box_zoom', tap_tool])
+                tools=['reset', 'zoom_in', 'zoom_out', 'box_zoom', 'crosshair', tap_tool])
 
     source = ColumnDataSource(data={'utc': data['utc'],
                                     'perc_vmg': perc_vmg,

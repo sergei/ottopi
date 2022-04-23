@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.race_setup.RaceSetupFragment">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/Widget.Theme.OttoPi.ActionBar.Fullscreen"
+        >
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/finish_race_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="24dp"
+            android:text="@string/finish_race"
+            app:layout_constraintEnd_toStartOf="@+id/race_route_recycler_view"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/race_type_menu"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+
+            android:hint="@string/race_type"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/finish_race_button">
+
+            <AutoCompleteTextView
+                android:id="@+id/race_type_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/startAtButton"
+            style="@style/StarTimeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            tools:text="Start at "
+            app:layout_constraintBottom_toBottomOf="@+id/race_type_menu"
+            app:layout_constraintStart_toEndOf="@+id/race_type_menu"
+            app:layout_constraintTop_toTopOf="@+id/race_type_menu" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/gpx_list_menu"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:visibility="invisible"
+
+            android:hint="@string/gpx_name"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/race_type_menu">
+
+            <AutoCompleteTextView
+                android:id="@+id/gpx_name_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/gpxDeleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:visibility="invisible"
+            android:src="@drawable/ic_baseline_delete_24"
+            app:layout_constraintTop_toTopOf="@+id/gpx_list_menu"
+            app:layout_constraintStart_toEndOf="@+id/gpx_list_menu"
+             />
+
+        <ExpandableListView
+            android:id="@+id/routesListView"
+            android:layout_height="0dp"
+            android:layout_width="0dp"
+            app:layout_constraintWidth_default="percent"
+            app:layout_constraintWidth_percent=".45"
+            app:layout_constraintTop_toBottomOf="@+id/gpx_list_menu"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"
+            android:background="@color/secondaryDarkColor"
+            android:indicatorLeft="?android:attr/expandableListPreferredItemIndicatorLeft"
+            android:divider="@color/primaryLightColor"
+            android:visibility="invisible"
+            android:dividerHeight="0.5dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/race_route_recycler_view"
+            android:layout_height="0dp"
+            android:layout_width="0dp"
+            app:layout_constraintWidth_default="percent"
+            app:layout_constraintWidth_percent=".45"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="16dp"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</FrameLayout>

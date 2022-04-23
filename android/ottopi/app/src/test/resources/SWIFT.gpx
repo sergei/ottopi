@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="http://www.gybetime.com" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gybetime="http://www.gybetime.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+</wpt>
+<wpt lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+</wpt>
+<wpt lat="37.81525" lon="-122.43159">
+<name>sw-3g</name>
+</wpt>
+<wpt lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+</wpt>
+<wpt lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+</wpt>
+<rte>
+<name>A</name>
+<rtept lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81525" lon="-122.43159">
+<name>sw-3g</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="leeward_gate"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>B</name>
+<rtept lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81525" lon="-122.43159">
+<name>sw-3g</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="leeward_gate"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81525" lon="-122.43159">
+<name>sw-3g</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="leeward_gate"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>C</name>
+<rtept lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="starboard" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>D</name>
+<rtept lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81525" lon="-122.43159">
+<name>sw-3g</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="leeward_gate"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>E</name>
+<rtept lat="37.81539" lon="-122.42833">
+<name>start-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="start"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81833" lon="-122.40333">
+<name>YRA18</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.80956" lon="-122.46279">
+<name>sw-1</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="windward"/>
+</extensions>
+</rtept>
+<rtept lat="37.81624" lon="-122.42837">
+<name>finish-sw</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="finish"/>
+</extensions>
+</rtept>
+</rte>
+</gpx>

@@ -143,7 +143,7 @@ class RaceEventsRecorder(NavigationListener):
             half_span = duration // 2
             utc = self.evt_utc(evt['in']) + datetime.timedelta(seconds=half_span)
             for hist_idx, ii in enumerate(self.instr_data):
-                if int(utc.timestamp()) == int(ii.utc.timestamp()):  # Ignore milliseconds
+                if int(ii.utc.timestamp()) >= int(utc.timestamp()):  # Ignore milliseconds
                     print(f"Adding {evt['name']}")
                     self.events.append({
                         'name': evt['name'],
@@ -154,6 +154,7 @@ class RaceEventsRecorder(NavigationListener):
                         'location': Location(ii.lat, ii.lon),
                         'hist_idx': hist_idx
                     })
+                    break
 
     def finalize(self):
         print(f'Created TARGETS CSV file{self.targets_csv_file_name}')

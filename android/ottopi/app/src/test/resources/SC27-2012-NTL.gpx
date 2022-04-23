@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="http://www.gybetime.com" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gybetime="http://www.gybetime.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<wpt lat="37.91414" lon="-122.44572">
+<name>NR12</name>
+</wpt>
+<wpt lat="37.931" lon="-122.44409">
+<name>NR14</name>
+</wpt>
+<wpt lat="37.88109" lon="-122.41602">
+<name>24</name>
+</wpt>
+<wpt lat="37.90127" lon="-122.43688">
+<name>NR10</name>
+</wpt>
+<wpt lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+</wpt>
+<wpt lat="37.92518" lon="-122.42752">
+<name>NG7</name>
+</wpt>
+<wpt lat="37.88244" lon="-122.40091">
+<name>14</name>
+</wpt>
+<rte>
+<name>6</name>
+<rtept lat="37.91414" lon="-122.44572">
+<name>NR12</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.931" lon="-122.44409">
+<name>NR14</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.88109" lon="-122.41602">
+<name>24</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90127" lon="-122.43688">
+<name>NR10</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>7</name>
+<rtept lat="37.91414" lon="-122.44572">
+<name>NR12</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.88109" lon="-122.41602">
+<name>24</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.92518" lon="-122.42752">
+<name>NG7</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>8</name>
+<rtept lat="37.90127" lon="-122.43688">
+<name>NR10</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.931" lon="-122.44409">
+<name>NR14</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.91414" lon="-122.44572">
+<name>NR12</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>9</name>
+<rtept lat="37.90127" lon="-122.43688">
+<name>NR10</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.92518" lon="-122.42752">
+<name>NG7</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.931" lon="-122.44409">
+<name>NR14</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+</rte>
+<rte>
+<name>10</name>
+<rtept lat="37.931" lon="-122.44409">
+<name>NR14</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.88244" lon="-122.40091">
+<name>14</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90127" lon="-122.43688">
+<name>NR10</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+<rtept lat="37.90713" lon="-122.38684">
+<name>Fin</name>
+<extensions>
+<gybetime:raceinfo leave_to="port" location="fixed" type="rounding"/>
+</extensions>
+</rtept>
+</rte>
+</gpx>

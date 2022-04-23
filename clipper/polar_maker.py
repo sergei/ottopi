@@ -150,12 +150,12 @@ class PolarMaker:
         self.min_speed = 0
         self.max_speed += self.speed_step
 
+        self.update_scale()
+
         if self.is_tack:
             self.y0 = 0
         else:
             self.y0 = self.height - 2 * self.y_pad
-
-        self.update_scale()
 
 
 def fake_epochs(start_angle):
