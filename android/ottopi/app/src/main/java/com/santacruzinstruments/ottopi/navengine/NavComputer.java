@@ -1,8 +1,11 @@
 package com.santacruzinstruments.ottopi.navengine;
 
+import static com.santacruzinstruments.ottopi.navengine.Const.MAG_FILTER_CONST;
+
 import java.util.LinkedList;
 
 import com.santacruzinstruments.ottopi.navengine.geo.Direction;
+import com.santacruzinstruments.ottopi.navengine.geo.DirectionSmoother;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
 public class NavComputer implements InstrumentInputListener {
@@ -12,6 +15,7 @@ public class NavComputer implements InstrumentInputListener {
 	private final TrueWindComputer trueWindComputer = new TrueWindComputer();
 	private final LegComputer legComputer = new LegComputer();
 	private final WindStats windStats = new WindStats();
+	private final DirectionSmoother magSmoother = new DirectionSmoother(MAG_FILTER_CONST, 5);
 
 	public void addListener(NavComputerOutputListener  l){
 		listeners.add(l);
@@ -23,8 +27,9 @@ public class NavComputer implements InstrumentInputListener {
 		trueWindComputer.computeTrueWind(ii.sow, ii.aws, ii.awa, ii.mag);
 		
 		Direction twd = trueWindComputer.getFilteredTwd();
+		Direction mag = magSmoother.update(ii.mag);
 
-		legComputer.update(ii.loc, ii.mag, twd);
+		legComputer.update(ii.loc, mag, twd);
 		windStats.update(trueWindComputer.getTrueWindAngle());
 
 		NavComputerOutput nout = new NavComputerOutput.Builder(ii)
