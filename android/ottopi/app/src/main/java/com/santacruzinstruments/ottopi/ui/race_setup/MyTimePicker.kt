@@ -15,7 +15,7 @@ import com.santacruzinstruments.ottopi.R
  * to use only minutes and seconds by setting
  * to false the property "includeHours".
  */
-class MyTimePicker() : DialogFragment() {
+class MyTimePicker : DialogFragment() {
 
     private lateinit var timePickerLayout: View
     private lateinit var hourPicker: NumberPicker
@@ -52,40 +52,40 @@ class MyTimePicker() : DialogFragment() {
      * Max value for the Hour picker.
      * Default value is 23.
      */
-    var maxValueHour: Int = 23
+    private var maxValueHour: Int = 23
     /**
      * Max value for the Minute picker.
      * Default value is 59.
      */
-    var maxValueMinute: Int = 59
+    private var maxValueMinute: Int = 59
     /**
      * Max value for the Second picker.
      * Default value is 59.
      */
-    var maxValueSeconds: Int = 59
+    private var maxValueSeconds: Int = 59
 
     /**
      * Min value for the Hour picker.
      * Default value is 0.
      */
-    var minValueHour: Int = 0
+    private var minValueHour: Int = 0
     /**
      * Min value for the Minute picker.
      * Default value is 0.
      */
-    var minValueMinute: Int = 0
+    private var minValueMinute: Int = 0
     /**
      * Min value for the Second picker.
      * Default value is 0.
      */
-    var minValueSecond: Int = 0
+    private var minValueSecond: Int = 0
 
     /**
      * Default value is true.
      * If set to false the hour picker is not
      * visible in the Dialog
      */
-    var includeHours: Boolean = true
+    private var includeHours: Boolean = true
 
     private var title: String? = null
 
@@ -157,9 +157,9 @@ class MyTimePicker() : DialogFragment() {
     }
 
     private fun bindViews() {
-        hourPicker = timePickerLayout.findViewById<NumberPicker>(R.id.hours)
-        minPicker = timePickerLayout.findViewById<NumberPicker>(R.id.minutes)
-        secPicker = timePickerLayout.findViewById<NumberPicker>(R.id.seconds)
+        hourPicker = timePickerLayout.findViewById(R.id.hours)
+        minPicker = timePickerLayout.findViewById(R.id.minutes)
+        secPicker = timePickerLayout.findViewById(R.id.seconds)
     }
 
     private fun setupMaxValues () {

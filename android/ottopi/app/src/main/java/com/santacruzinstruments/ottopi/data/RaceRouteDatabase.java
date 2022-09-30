@@ -12,7 +12,7 @@ import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 // # su
 // # sqlite3  /data/data/com.santacruzinstruments.ottopi/databases/race_route
 // .dump
-@Database(entities = {RoutePoint.class}, version = 5)
+@Database(entities = {RoutePoint.class}, version = 5, exportSchema = false)
 @TypeConverters(Converters.class)
 public abstract class RaceRouteDatabase  extends RoomDatabase {
     public abstract RaceRouteDao raceRouteDao();
