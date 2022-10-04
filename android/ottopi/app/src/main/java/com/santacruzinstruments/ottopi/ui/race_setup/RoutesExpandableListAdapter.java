@@ -1,7 +1,9 @@
 package com.santacruzinstruments.ottopi.ui.race_setup;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Typeface;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ public class RoutesExpandableListAdapter extends BaseExpandableListAdapter {
 
     final private Context context;
     final private RouteCollection routeCollection;
+    int [] NOT_FIXED_ENTRIES = {R.string.windward_mark,  R.string.leeward_mark};
 
     public RoutesExpandableListAdapter(Context context, RouteCollection routeCollection) {
         this.context = context;
@@ -31,6 +34,7 @@ public class RoutesExpandableListAdapter extends BaseExpandableListAdapter {
         }
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public View getGroupView(int listPosition, boolean isExpanded,
                              View convertView, ViewGroup parent) {
@@ -45,7 +49,7 @@ public class RoutesExpandableListAdapter extends BaseExpandableListAdapter {
 
         String routeName;
         if( listPosition == 0 ){
-            routeName = context.getString(R.string.non_fixed_marks);
+            routeName = context.getString(R.string.inflatable_marks);
         }else{
             routeName = this.routeCollection.getRoutes().get(listPosition-1).getName();
         }
@@ -54,8 +58,7 @@ public class RoutesExpandableListAdapter extends BaseExpandableListAdapter {
         return convertView;
     }
 
-    int [] NOT_FIXED_ENTRIES = {R.string.start_line,  R.string.inflatable_mark, R.string.finish_line};
-
+    @SuppressLint("InflateParams")
     @Override
     public View getChildView(int listPosition, final int expandedListPosition,
                              boolean isLastChild, View convertView, ViewGroup parent) {
@@ -66,21 +69,27 @@ public class RoutesExpandableListAdapter extends BaseExpandableListAdapter {
             convertView = layoutInflater.inflate(R.layout.routes_list_item, null);
         }
 
-        String wptName;
+        String text;
 
         if( listPosition == 0 ) {
-            wptName = context.getString(NOT_FIXED_ENTRIES[expandedListPosition]);
+            text = context.getString(NOT_FIXED_ENTRIES[expandedListPosition]);
         }else{
             if ( expandedListPosition == 0){
-                wptName = context.getString(R.string.add_entire_route);
+                text = context.getString(R.string.add_entire_route);
             }else{
                 RoutePoint rpt = this.routeCollection.getRoutes().get(listPosition-1).getRpt(expandedListPosition-1);
-                wptName = rpt.name;
+                text = rpt.name;
+                if ( rpt.time.isValid() ){
+                    long now = System.currentTimeMillis();
+                    CharSequence ago =
+                            DateUtils.getRelativeTimeSpanString(rpt.time.toMiliSec(), now, DateUtils.MINUTE_IN_MILLIS);
+                    text = text + " [" + ago + "]";
+                }
             }
         }
 
         TextView expandedListTextView = convertView.findViewById(R.id.wptName);
-        expandedListTextView.setText(wptName);
+        expandedListTextView.setText(text);
         return convertView;
     }
 

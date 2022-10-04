@@ -45,17 +45,16 @@ public class LegComputer {
         watm = Angle.INVALID;
 
         if ( loc.isValid() ) {
-            Geodesy geodesy = Geodesy.geodesyFactory(loc);
             if ( dest.loc.isValid()){
 
                 destName = dest.name;
-                Direction btm = geodesy.bearing(loc, dest.loc);
+                Direction btm = loc.bearingTo(dest.loc);
                 atm = Direction.angleBetween(mag, btm);
-                dtm = geodesy.dist(loc, dest.loc);
+                dtm = loc.distTo(dest.loc);
 
                 if( nextDest.loc.isValid() && twd.isValid() ){
                     nextDestName = nextDest.name;
-                    Direction legDir = geodesy.bearing(dest.loc, nextDest.loc);
+                    Direction legDir = dest.loc.bearingTo(nextDest.loc);
                     nextLegTwa = Direction.angleBetween(legDir, twd);
                 }
 

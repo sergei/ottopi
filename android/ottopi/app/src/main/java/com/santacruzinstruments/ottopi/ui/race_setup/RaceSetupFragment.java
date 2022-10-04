@@ -1,10 +1,6 @@
 package com.santacruzinstruments.ottopi.ui.race_setup;
 
-import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.FINISH_PORT;
-import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.FINISH_STBD;
 import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.ROUNDING;
-import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.START_PORT;
-import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.START_STBD;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -27,7 +23,7 @@ import com.santacruzinstruments.ottopi.R;
 import com.santacruzinstruments.ottopi.data.SailingState;
 import com.santacruzinstruments.ottopi.data.StartType;
 import com.santacruzinstruments.ottopi.databinding.FragmentRaceSetupBinding;
-import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
+import com.santacruzinstruments.ottopi.init.PathsConfig;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 import com.santacruzinstruments.ottopi.ui.NavViewModel;
@@ -74,7 +70,7 @@ public class RaceSetupFragment extends Fragment {
 
         String startupGpx = RaceSetupFragmentArgs.fromBundle(getArguments()).getGpxName();
         if (startupGpx != null){
-            navViewModel.ctrl().addGpxFile(new File( requireContext().getExternalFilesDir(null) , startupGpx));
+            navViewModel.ctrl().addGpxFile(new File(PathsConfig.getGpxDir(), startupGpx));
         }
 
         return binding.getRoot();
@@ -134,18 +130,13 @@ public class RaceSetupFragment extends Fragment {
 
             routesListView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
 
-                if ( groupPosition == 0 ){
+                if ( groupPosition == 0 ){  // Inflatable marks folder
                     switch (childPosition){
-                        case 0:  // Start line
-                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint(GeoLoc.INVALID, "pin", START_PORT, RoutePoint.LeaveTo.PORT, RoutePoint.Location.UNKNOWN));
-                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint(GeoLoc.INVALID, "rcb", START_STBD, RoutePoint.LeaveTo.STARBOARD, RoutePoint.Location.UNKNOWN));
+                        case 0:  // Windward mark
+                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint.Builder().name("WM").type(ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build());
                             break;
-                        case 1:  // Mark
-                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint(GeoLoc.INVALID, "mark", ROUNDING, RoutePoint.LeaveTo.STARBOARD, RoutePoint.Location.UNKNOWN));
-                            break;
-                        case 2: // Finish line
-                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint(GeoLoc.INVALID, "port", FINISH_PORT, RoutePoint.LeaveTo.PORT, RoutePoint.Location.UNKNOWN));
-                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint(GeoLoc.INVALID, "stbd", FINISH_STBD, RoutePoint.LeaveTo.STARBOARD, RoutePoint.Location.UNKNOWN));
+                        case 1: // Leeward mark
+                            navViewModel.ctrl().addRaceRouteWpt(new RoutePoint.Builder().name("LM").type(ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build());
                             break;
                     }
                 }else{
@@ -166,11 +157,13 @@ public class RaceSetupFragment extends Fragment {
                 int groupPosition = ExpandableListView.getPackedPositionGroup(id);
                 int childPosition = ExpandableListView.getPackedPositionChild(id);
                 if ( childPosition > 0 ) {
-                    Route route = routeCollection.getRoutes().get(groupPosition);
-                    RoutePoint wpt = route.getRpt(childPosition);
-                    RoutePoint rpt = new RoutePoint(wpt.loc, wpt.name, START_STBD, wpt.leaveTo, wpt.location);
+                    Route route = routeCollection.getRoutes().get(groupPosition-1);
+                    RoutePoint wpt = route.getRpt(childPosition-1);
+                    RoutePoint rpt = new RoutePoint.Builder()
+                            .copy(wpt)
+                            .build();
                     Timber.d("%s from %s selected as starboard", wpt.name, route.getName());
-                    navViewModel.ctrl().addRaceRouteWpt(rpt);
+                    navViewModel.ctrl().addStartLineEnd(rpt);
                 }
                 return false;
             });

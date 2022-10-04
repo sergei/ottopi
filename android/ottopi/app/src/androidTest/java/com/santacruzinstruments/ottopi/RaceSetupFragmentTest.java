@@ -155,11 +155,12 @@ public class RaceSetupFragmentTest {
     public void showRaceRoute() {
         Route route = new Route();
 
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "RCB",
-                RoutePoint.Type.START_STBD,
-                RoutePoint.LeaveTo.STARBOARD,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("RCB")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
 
@@ -167,69 +168,77 @@ public class RaceSetupFragmentTest {
 
         route = new Route();
 
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "PIN",
-                RoutePoint.Type.START_PORT,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("PIN")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
 
         screenShotRecorder.captureScreen("PIN only" );
         route = new Route();
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "PIN",
-                RoutePoint.Type.START_PORT,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN));
 
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "RCB",
-                RoutePoint.Type.START_STBD,
-                RoutePoint.LeaveTo.STARBOARD,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("PIN")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
+
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("RCB")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
         screenShotRecorder.captureScreen("Start line only" );
 
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "W1",
-                RoutePoint.Type.ROUNDING,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("W1")
+                .type(RoutePoint.Type.ROUNDING)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
 
         screenShotRecorder.captureScreen("Start line and top mark" );
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "L1",
-                RoutePoint.Type.ROUNDING,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("L1")
+                .type(RoutePoint.Type.ROUNDING)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
         screenShotRecorder.captureScreen("Start line and bottom mark" );
 
         screenShotRecorder.captureScreen("Start line and top mark" );
 
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "Finish",
-                RoutePoint.Type.FINISH_PORT,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("Finish")
+                .type(RoutePoint.Type.FINISH)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
+
 
         fakeNavManager.addRouteToRace(route);
 
         screenShotRecorder.captureScreen(" Added finish pin" );
-        route.addRpt(new RoutePoint(new GeoLoc(37, -122),
-                "RCB",
-                RoutePoint.Type.FINISH_STBD,
-                RoutePoint.LeaveTo.STARBOARD,
-                RoutePoint.Location.UNKNOWN));
+        route.addRpt(new RoutePoint.Builder()
+                .loc((new GeoLoc(37, -122)))
+                .name("RCB")
+                .type(RoutePoint.Type.FINISH)
+                .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
         screenShotRecorder.captureScreen(" Added finish line" );
-
     }
 
     @Test
@@ -237,43 +246,51 @@ public class RaceSetupFragmentTest {
         Route route = new Route();
 
         long id = 0;
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "PIN",
-                RoutePoint.Type.START_PORT,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN,
-                false));
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "RCB",
-                RoutePoint.Type.START_STBD,
-                RoutePoint.LeaveTo.STARBOARD,
-                RoutePoint.Location.UNKNOWN,
-                false));
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "W1",
-                RoutePoint.Type.ROUNDING,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN,
-                false));
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "L1",
-                RoutePoint.Type.ROUNDING,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN,
-                false));
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "Finish",
-                RoutePoint.Type.FINISH_PORT,
-                RoutePoint.LeaveTo.PORT,
-                RoutePoint.Location.UNKNOWN,
-                false));
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("PIN")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
 
-        route.addRpt(new RoutePoint(++id, new GeoLoc(37, -122),
-                "RCB",
-                RoutePoint.Type.FINISH_STBD,
-                RoutePoint.LeaveTo.STARBOARD,
-                RoutePoint.Location.UNKNOWN,
-                false));
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("RCB")
+                .type(RoutePoint.Type.START)
+                .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                .build());
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("W1")
+                .type(RoutePoint.Type.ROUNDING)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("L1")
+                .type(RoutePoint.Type.ROUNDING)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("Finish")
+                .type(RoutePoint.Type.FINISH)
+                .leaveTo(RoutePoint.LeaveTo.PORT)
+                .build());
+
+        screenShotRecorder.captureScreen(" Added finish pin" );
+        route.addRpt(new RoutePoint.Builder()
+                .id(++id)
+                .loc((new GeoLoc(37, -122)))
+                .name("RCB")
+                .type(RoutePoint.Type.FINISH)
+                .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                .build());
 
         fakeNavManager.addRouteToRace(route);
         screenShotRecorder.captureScreen("Route created" );
@@ -400,7 +417,7 @@ public class RaceSetupFragmentTest {
 
         screenShotRecorder.captureScreen("GPX file selected" );
 
-        onView(withText(R.string.non_fixed_marks))
+        onView(withText(R.string.inflatable_marks))
                 .perform(click());
 
         screenShotRecorder.captureScreen("Non fixed marks clicked" );
@@ -410,15 +427,11 @@ public class RaceSetupFragmentTest {
 
         screenShotRecorder.captureScreen("Start Line" );
 
-        onView(withText(R.string.inflatable_mark))
+        onView(withText(R.string.windward_mark))
                 .perform(click());
 
         screenShotRecorder.captureScreen("Inflatable mark" );
 
-        onView(withText(R.string.finish_line))
-                .perform(click());
-
-        screenShotRecorder.captureScreen("Finish Line" );
     }
 
 }

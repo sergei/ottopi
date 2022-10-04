@@ -5,7 +5,6 @@ import com.santacruzinstruments.ottopi.navengine.geo.Angle;
 import com.santacruzinstruments.ottopi.navengine.geo.Direction;
 import com.santacruzinstruments.ottopi.navengine.geo.Distance;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
-import com.santacruzinstruments.ottopi.navengine.geo.Geodesy;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
@@ -17,7 +16,6 @@ import org.locationtech.jts.algorithm.distance.PointPairDistance;
 
 public class StartLineComputer {
 
-    private Geodesy mGeodesy;
     private LineSegment startLine;
     private Direction startLineNormal = new Direction();
     private final StartLineInfo startLineInfo = new StartLineInfo();
@@ -33,17 +31,16 @@ public class StartLineComputer {
         startLineInfo.pinFavoredBy = new Angle();
         startLineNormal = new Direction();
         for(RoutePoint rpt : route) {
-            if( rpt.type == RoutePoint.Type.START_PORT)
+            if( rpt.type == RoutePoint.Type.START && rpt.leaveTo == RoutePoint.LeaveTo.PORT)
                 startLineInfo.pin = rpt.loc;
-            if( rpt.type == RoutePoint.Type.START_STBD)
+            if( rpt.type == RoutePoint.Type.START && rpt.leaveTo == RoutePoint.LeaveTo.STARBOARD)
                 startLineInfo.rcb = rpt.loc;
         }
 
         if( startLineInfo.pin.isValid() && startLineInfo.rcb.isValid()) {
-            mGeodesy = Geodesy.geodesyFactory(startLineInfo.pin);
-            startLine = new LineSegment(mGeodesy.toCoordinate(startLineInfo.pin),
-                    mGeodesy.toCoordinate(startLineInfo.rcb));
-            Direction startLineDir = mGeodesy.bearing(startLineInfo.rcb, startLineInfo.pin);
+            startLine = new LineSegment(startLineInfo.pin.toCoordinate(),
+                    startLineInfo.rcb.toCoordinate());
+            Direction startLineDir = startLineInfo.rcb.bearingTo(startLineInfo.pin);
             startLineNormal = startLineDir.addAngleDeg( 90.);
         }
 
@@ -53,7 +50,7 @@ public class StartLineComputer {
     public StartLineInfo updateStartLineInfo(GeoLoc loc, Direction twd){
 
         if( loc.isValid() && startLineInfo.pin.isValid() && startLineInfo.rcb.isValid() ){
-            Coordinate pt = mGeodesy.toCoordinate(loc);
+            Coordinate pt = loc.toCoordinate();
             PointPairDistance pointPairDistance = new PointPairDistance();
             DistanceToPoint.computeDistance(startLine, pt, pointPairDistance);
             startLineInfo.distToLine = new Distance(pointPairDistance.getDistance() / 1852.);
@@ -66,7 +63,7 @@ public class StartLineComputer {
 
             // Check if we are OCS
             if(loc.isValid()){
-                Direction boatDir = mGeodesy.bearing(loc, startLineInfo.rcb);
+                Direction boatDir = loc.bearingTo(startLineInfo.rcb);
                 Angle a = Direction.angleBetween(twd, boatDir);
                 // If absolute angle less than 90, then we are downwind of RCB
                 startLineInfo.isOcs = Math.abs(a.toDegrees()) > 90;

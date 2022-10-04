@@ -28,8 +28,9 @@
     <string name="finish_line">Finish Line</string>
     <string name="long_press_for_startboad_mark">Long press for starboard mark</string>
     <string name="select_port_mark">Select port mark</string>
-    <string name="inflatable_mark">Inflatable mark</string>
-    <string name="non_fixed_marks">Non fixed marks</string>
+    <string name="windward_mark">Windward mark</string>
+    <string name="leeward_mark">Leeward mark</string>
+    <string name="inflatable_marks">Inflatable marks</string>
     <string name="finish_race">Finish race</string>
     <string name="race_type">Race type</string>
     <string name="gpx_name">GPX name</string>
@@ -76,4 +77,5 @@
     <string name="arrow_down">▼</string>
     <string name="dont_use_wifi">[Don\'t use WiFi]</string>
     <string name="wifi_is_disabled">WiFi is disabled</string>
+    <string name="unknown_location">Unknown Location</string>
 </resources>

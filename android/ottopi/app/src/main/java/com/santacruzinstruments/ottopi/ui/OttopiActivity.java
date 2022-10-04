@@ -43,6 +43,7 @@ import com.santacruzinstruments.ottopi.BuildConfig;
 import com.santacruzinstruments.ottopi.NavGraphDirections;
 import com.santacruzinstruments.ottopi.R;
 import com.santacruzinstruments.ottopi.databinding.ActivityOttopiBinding;
+import com.santacruzinstruments.ottopi.init.PathsConfig;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 import com.santacruzinstruments.ottopi.navengine.route.RouteCollection;
 
@@ -247,25 +248,29 @@ public class OttopiActivity extends AppCompatActivity {
                 byte [] buffer = new byte[size];
                 for( int i=0; i < size; i++)
                     buffer[i] = (byte) inputStream.read();
+                inputStream.close();
 
                 final ByteArrayInputStream is = new ByteArrayInputStream(buffer);
                 boolean isFileValid = false;
+                File directory = null;
                 if( fileName.toLowerCase().endsWith(".gpx")) {
                     // Verify if it's valid GPX file
                     RouteCollection rc = new RouteCollection(fileName);
                     rc.loadFromGpx(is);
                     // Since we did catch an exception let's store the GPX file
                     isFileValid = true;
+                    directory = PathsConfig.getGpxDir();
                 }else if( fileName.toLowerCase().endsWith(".pol")) {
                     // Verify if it's valid polar file
                     new PolarTable(is);
                     // Since we did catch an exception let's store the polar file
                     isFileValid = true;
                     fileName = POLAR_FILE_NAME; // Always have just one polar file with hardcoded name
+                    directory = PathsConfig.getPolarDir();
                 }
 
                 if( isFileValid ) {
-                    File f =new File(getExternalFilesDir(null) , fileName);
+                    File f =new File(directory , fileName);
                     FileOutputStream fs = new FileOutputStream( f );
                     fs.write(buffer);
                     fs.close();

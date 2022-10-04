@@ -1,5 +1,6 @@
 package com.santacruzinstruments.ottopi.ui.race_setup;
 
+import android.text.format.DateUtils;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import com.santacruzinstruments.ottopi.ui.NavViewModel;
 
 import com.google.android.material.lists.*;
 
+@SuppressWarnings("rawtypes")
 public class RaceRouteAdapter extends RecyclerView.Adapter {
     Route route;
     final NavViewModel navViewModel;
@@ -36,8 +38,8 @@ public class RaceRouteAdapter extends RecyclerView.Adapter {
             final RoutePoint rcbRpt = this.route.getRpt(position + 1);
             text = pinRpt.name + " - " + rcbRpt.name;
             vh.secondary.setText(R.string.start_line);
-            // If set as active,  navigate to RCB
-            vh.text.setOnClickListener(view -> navViewModel.ctrl().makeActiveWpt(position + 1));
+            // If set as active,  navigate to PIN
+            vh.text.setOnClickListener(view -> navViewModel.ctrl().makeActiveWpt(position));
             vh.icon.setOnClickListener(view -> navViewModel.ctrl().removeRaceRouteWpt(position));
             if ( this.route.getActiveWptIdx() < 2 ){
                 text = "> " + text;
@@ -60,10 +62,10 @@ public class RaceRouteAdapter extends RecyclerView.Adapter {
             final int rptIdx = this.route.hasStartLine() ? position + 1 : position;
 
             final RoutePoint rpt = this.route.getRpt(rptIdx);
-            if (rpt.type == RoutePoint.Type.START_STBD || rpt.type == RoutePoint.Type.FINISH_STBD) {
+            if ((rpt.type == RoutePoint.Type.START || rpt.type == RoutePoint.Type.FINISH) && rpt.leaveTo == RoutePoint.LeaveTo.STARBOARD) {
                 text = "____ - " + rpt.name;
                 vh.secondary.setText(R.string.select_port_mark);
-            } else if (rpt.type == RoutePoint.Type.START_PORT || rpt.type == RoutePoint.Type.FINISH_PORT) {
+            } else if ((rpt.type == RoutePoint.Type.START || rpt.type == RoutePoint.Type.FINISH) && rpt.leaveTo == RoutePoint.LeaveTo.PORT) {
                 text = rpt.name + " - ____";
                 vh.secondary.setText(R.string.long_press_for_startboad_mark);
             } else {
@@ -73,6 +75,16 @@ public class RaceRouteAdapter extends RecyclerView.Adapter {
             vh.icon.setOnClickListener(view -> navViewModel.ctrl().removeRaceRouteWpt(rptIdx));
             if ( this.route.getActiveWptIdx() == rptIdx ){
                 text = "> " + text;
+            }
+            if( !rpt.loc.isValid()){
+                vh.secondary.setText(R.string.unknown_location);
+            }else if ( rpt.time.isValid()){
+                long now = System.currentTimeMillis();
+                CharSequence ago =
+                        DateUtils.getRelativeTimeSpanString(rpt.time.toMiliSec(), now, DateUtils.MINUTE_IN_MILLIS);
+                vh.secondary.setText(ago);
+            }else{
+                vh.secondary.setText("");
             }
         }
 

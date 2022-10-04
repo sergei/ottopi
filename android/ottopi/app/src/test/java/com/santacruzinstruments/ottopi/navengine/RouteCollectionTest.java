@@ -38,9 +38,17 @@ public class RouteCollectionTest extends TestCase {
 		assertEquals(37.81833,   pt.loc.lat, 0.000001);
 		assertEquals(-122.40333, pt.loc.lon, 0.000001);
 		assertEquals(RoutePoint.LeaveTo.PORT, pt.leaveTo);
-		assertEquals(RoutePoint.Location.KNOWN, pt.location);
 		assertEquals(RoutePoint.Type.ROUNDING, pt.type);
-		
+
+		route = rc.getRoutes().get(0);
+		assertEquals("A", route.getName());
+		assertEquals(5, route.getRptsNum());
+
+		pt = route.getRpt(0);
+		assertEquals("start-sw", pt.name);
+		assertEquals(RoutePoint.LeaveTo.PORT, pt.leaveTo);
+		assertEquals(RoutePoint.Type.START, pt.type);
+
 	}
 
 	public final void testLoadingLoosePts()
@@ -62,7 +70,6 @@ public class RouteCollectionTest extends TestCase {
 		assertEquals(36.95800,   pt.loc.lat, 0.000001);
 		assertEquals(-122.012166667, pt.loc.lon, 0.000001);
 		assertEquals(RoutePoint.LeaveTo.PORT, pt.leaveTo);
-		assertEquals(RoutePoint.Location.KNOWN, pt.location);
 		assertEquals(RoutePoint.Type.ROUNDING, pt.type);
 
 	}

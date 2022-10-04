@@ -1,10 +1,11 @@
 package com.santacruzinstruments.ottopi.logging;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.VisibleForTesting;
+
+import com.santacruzinstruments.ottopi.init.PathsConfig;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,35 +39,25 @@ public class FileLoggingTree extends Timber.DebugTree {
     private static final String COUNTS_DELIMITER = "-";
     private static final String OUTBOX_DIR = "outbox";
 
-    private File mLogFir = null;
+    private final File mLogFir;
     private int mLinesCount = 0;
-    private UUID mRunUuid = null;
+    private final UUID mRunUuid;
     private FileWriter mLogWriter;
     private String fileId = "";
 
-
     @SuppressLint("LogNotTimber")
-    public FileLoggingTree(Context context){
-        File logsDir = new File(context.getExternalCacheDir(), "logs");
-        boolean dirExists = true;
-        if (!logsDir.exists()) {
-            dirExists = logsDir.mkdirs();
-        }
+    public FileLoggingTree(){
+        mLogFir = PathsConfig.getLogsDir();
 
-        if (dirExists) {
-            Log.i(TAG, String.format("Use %s directory to collect log files", logsDir));
-            mLogFir = logsDir;
+        Log.i(TAG, String.format("Use %s directory to collect log files", mLogFir));
 
-            // Rotate logs from the previous runs retaining the last
-            rotatePreviousRunsLogs(logsDir);
+        // Rotate logs from the previous runs retaining the last
+        rotatePreviousRunsLogs(mLogFir);
 
-            mRunUuid = UUID.randomUUID();
+        mRunUuid = UUID.randomUUID();
 
-            // Open new log
-            openNewLog();
-        }else{
-            Log.e(TAG, String.format("Failed to create %s directory. No log files will be collected", logsDir));
-        }
+        // Open new log
+        openNewLog();
     }
 
     @SuppressLint("LogNotTimber")
@@ -198,16 +189,20 @@ public class FileLoggingTree extends Timber.DebugTree {
         return new File(logFile.getParent(), newBaseName);
     }
 
+    void reOpenLogFile(){
+        try { mLogWriter.close(); } catch (IOException ignore) {}
+        mLogWriter = null;
+        mLinesCount = 0;
+        rotateThisRunLogs();
+        openNewLog();
+    }
+
     @Override
     protected void log(int priority, String tag, @NotNull String message, Throwable t) {
 
         if ( mLogWriter != null ) {
             if ( mLinesCount >= MAX_LINES_IN_LOG ){
-                try { mLogWriter.close(); } catch (IOException ignore) {}
-                mLogWriter = null;
-                mLinesCount = 0;
-                rotateThisRunLogs();
-                openNewLog();
+                reOpenLogFile();
             }
         }
 
@@ -307,21 +302,33 @@ public class FileLoggingTree extends Timber.DebugTree {
             try {
                 ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));
                 byte [] buffer = new byte[4096];
+
+                // Add log files to zip
                 for (final File fileEntry : Objects.requireNonNull(logFolder.listFiles())) {
                     if (fileEntry.isFile() && fileEntry.getName().endsWith(".txt")){
-                        ZipEntry e = new ZipEntry(fileEntry.getName());
-                        zipOut.putNextEntry(e);
-                        FileInputStream is = new FileInputStream(fileEntry);
-                        while ( true ) {
-                            int n = is.read(buffer);
-                            if ( n >= 0 )
-                                zipOut.write(buffer, 0, n);
-                            else
-                                break;
-                        }
-                        zipOut.closeEntry();
+                        ZipEntry zipEntry = new ZipEntry("logs/" + fileEntry.getName());
+                        createEntry(zipOut, buffer, fileEntry, zipEntry);
                     }
                 }
+
+                // Add GPX files to ZIP
+                File [] gpxFiles = PathsConfig.getGpxDir().listFiles();
+                if( gpxFiles != null){
+                    for (final File fileEntry : gpxFiles) {
+                        ZipEntry zipEntry = new ZipEntry("gpx/" + fileEntry.getName());
+                        createEntry(zipOut, buffer, fileEntry, zipEntry);
+                    }
+                }
+
+                // Add Polar files to ZIP
+                File [] polarFiles = PathsConfig.getPolarDir().listFiles();
+                if( polarFiles != null){
+                    for (final File fileEntry : polarFiles) {
+                        ZipEntry zipEntry = new ZipEntry("polars/" + fileEntry.getName());
+                        createEntry(zipOut, buffer, fileEntry, zipEntry);
+                    }
+                }
+
                 zipOut.close();
                 return zipFile;
             } catch (IOException e) {
@@ -329,6 +336,19 @@ public class FileLoggingTree extends Timber.DebugTree {
             }
         }
         return null;
+    }
+
+    private void createEntry(ZipOutputStream zipOut, byte[] buffer, File fileEntry, ZipEntry e) throws IOException {
+        zipOut.putNextEntry(e);
+        FileInputStream is = new FileInputStream(fileEntry);
+        while ( true ) {
+            int n = is.read(buffer);
+            if ( n >= 0 )
+                zipOut.write(buffer, 0, n);
+            else
+                break;
+        }
+        zipOut.closeEntry();
     }
 
     public String getLogFileId() {

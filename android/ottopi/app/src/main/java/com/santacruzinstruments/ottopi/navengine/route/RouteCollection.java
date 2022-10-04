@@ -1,10 +1,16 @@
 package com.santacruzinstruments.ottopi.navengine.route;
 
+import android.annotation.SuppressLint;
+
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
+import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
+import java.util.TimeZone;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -17,11 +23,16 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import timber.log.Timber;
+
 
 public class RouteCollection implements ContentHandler {
 
 	enum State {UNKNOWN, WAITING_FOR_ROUTE_NAME, WAITING_FOR_POINT_NAME}
-	
+
+	@SuppressLint("SimpleDateFormat")
+	static final SimpleDateFormat GPX_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
+
 	final private String name;
 	final private LinkedList<Route> routes;
 
@@ -34,6 +45,7 @@ public class RouteCollection implements ContentHandler {
 	public RouteCollection(String name){
 		this.name = name;
 		this.routes = new LinkedList<>();
+		GPX_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 	
 	public String getName() {
@@ -89,10 +101,24 @@ public class RouteCollection implements ContentHandler {
 			case "wpt": {
 				double lat = Double.parseDouble(atts.getValue("lat"));
 				double lon = Double.parseDouble(atts.getValue("lon"));
-				pointBuilder = new RoutePoint.Builder(new GeoLoc(lat, lon));
+				pointBuilder = new RoutePoint.Builder().loc(new GeoLoc(lat, lon));
 				state = State.WAITING_FOR_POINT_NAME;
 				break;
 			}
+			case "gybetime:raceinfo":
+				String leaveTo = atts.getValue("leave_to");
+				if("port".equals(leaveTo)){
+					pointBuilder.leaveTo(RoutePoint.LeaveTo.PORT);
+				} else if("starboard".equals(leaveTo)){
+					pointBuilder.leaveTo(RoutePoint.LeaveTo.STARBOARD);
+				}
+				String type = atts.getValue("type");
+				if("start".equals(type)){
+					pointBuilder.type(RoutePoint.Type.START);
+				} else if("finish".equals(type)){
+					pointBuilder.type(RoutePoint.Type.FINISH);
+				}
+				break;
 		}
 		
 		textBuilder.setLength(0);
@@ -114,6 +140,15 @@ public class RouteCollection implements ContentHandler {
 			case "wpt": {
 				RoutePoint pt = pointBuilder.build();
 				loosePts.addRpt(pt);
+				break;
+			}
+			case "time": {
+				String s = textBuilder.toString();
+				try {
+					pointBuilder.time(new UtcTime(GPX_TIME_FORMAT.parse(s)));
+				} catch (ParseException e) {
+					Timber.e("Failed to parse time string [%s] (%s)", s, e.getMessage());
+				}
 				break;
 			}
 			case "name":

@@ -1,3 +1,4 @@
 --nmea-file=/Users/sergei/debuglog/ottopi/781c5630-a269-47aa-b764-d935b36c38ab/race1.nmea
+--epoch-ms=100
 --tcp-port=12346
 --http-port=8080

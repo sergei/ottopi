@@ -22,6 +22,7 @@ public interface CtrlInterface {
     void addGpxFile(File gpxFile);
     void deleteGpxFile(File gpxFile);
     void addRaceRouteWpt(RoutePoint rpt);
+    void addStartLineEnd(RoutePoint rpt);
     void removeRaceRouteWpt(int idx);
     void makeActiveWpt(int idx);
     void addRouteToRace(Route route);
@@ -40,4 +41,5 @@ public interface CtrlInterface {
     void setNextMark();
     void setPrevMark();
     void setupUsbAccessory(UsbAccessory accessory);
+
 }

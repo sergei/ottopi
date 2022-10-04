@@ -88,6 +88,10 @@ public class FakeCtrlManager implements CtrlInterface {
     }
 
     @Override
+    public void addStartLineEnd(RoutePoint rpt) {
+    }
+
+    @Override
     public void addRouteToRace(Route route) {
         raceRoute = route;
         this.viewInterface.onRaceRouteChange(raceRoute);
@@ -95,6 +99,11 @@ public class FakeCtrlManager implements CtrlInterface {
 
     @Override
     public void refreshPolarTable(String polarName) {
+
+    }
+
+    @Override
+    public void useWifi(boolean useWifi) {
 
     }
 
@@ -155,7 +164,13 @@ public class FakeCtrlManager implements CtrlInterface {
 
     @Override
     public void removeRaceRouteWpt(int idx) {
-        this.viewInterface.onRaceRouteChange(raceRoute);
+        Route newRoute = new Route();
+        for( int i=0; i < raceRoute.getRptsNum(); i++){
+            if ( i != idx){
+                newRoute.addRpt(raceRoute.getRpt(i));
+            }
+        }
+        this.viewInterface.onRaceRouteChange(newRoute);
     }
 
     @Override

@@ -17,7 +17,7 @@ public class UtcTime extends Quantity{
 
 	public UtcTime() {
 		super(false);
-		mdate = null;
+		mdate = new Date();
 	}
 
 	public UtcTime(Date date) {

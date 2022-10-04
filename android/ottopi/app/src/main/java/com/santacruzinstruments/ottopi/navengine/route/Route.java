@@ -56,6 +56,17 @@ public class Route implements Iterable<RoutePoint>{
 		return pts.get(idx);
 	}
 
+	public void replaceRpt(int idx, RoutePoint newRpt) {
+		// Forget not replace the active points
+		RoutePoint oldRpt = pts.get(idx);
+		if( activeRpt.equals(oldRpt))
+			activeRpt = newRpt;
+		if( nextActiveRpt.equals(oldRpt))
+			nextActiveRpt = newRpt;
+		// Now replace the point itself
+		pts.set(idx, newRpt);
+	}
+
 	public RoutePoint getActivePoint() {
 		return activeRpt;
 	}
@@ -85,15 +96,15 @@ public class Route implements Iterable<RoutePoint>{
 
 	public boolean hasStartLine(){
 		return pts.size() > 1
-				&& pts.get(0).type == RoutePoint.Type.START_PORT
-				&& pts.get(1).type == RoutePoint.Type.START_STBD;
+				&& (pts.get(0).type == RoutePoint.Type.START && pts.get(0).leaveTo == RoutePoint.LeaveTo.PORT)
+				&& (pts.get(1).type == RoutePoint.Type.START && pts.get(1).leaveTo == RoutePoint.LeaveTo.STARBOARD);
 	}
 
 	public boolean hasFinishLine(){
 		int lastIdx = pts.size() -1;
 		return pts.size() > 1
-				&& pts.get(lastIdx-1).type == RoutePoint.Type.FINISH_PORT
-				&& pts.get(lastIdx).type == RoutePoint.Type.FINISH_STBD;
+				&& pts.get(lastIdx-1).type == RoutePoint.Type.FINISH && pts.get(lastIdx-1).leaveTo == RoutePoint.LeaveTo.PORT
+				&& pts.get(lastIdx).type == RoutePoint.Type.FINISH && pts.get(lastIdx).leaveTo == RoutePoint.LeaveTo.STARBOARD;
 	}
 
 	public int getActiveWptIdx() {

@@ -24,11 +24,11 @@ public class LegComputerTest extends TestCase {
         assertFalse(legComputer.dtm.isValid());
         assertFalse(legComputer.nextLegTwa.isValid());
 
-        RoutePoint dest = new RoutePoint(new GeoLoc( 37.811229, -122.466103), "dest",
-                RoutePoint.Type.ROUNDING, RoutePoint.LeaveTo.PORT, RoutePoint.Location.KNOWN);
+        RoutePoint dest = new RoutePoint.Builder().loc(new GeoLoc( 37.811229, -122.466103)).name("dest")
+            .type(RoutePoint.Type.ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build();
 
-        RoutePoint next = new RoutePoint(new GeoLoc( 37.818154, -122.443944), "next",
-                RoutePoint.Type.ROUNDING, RoutePoint.LeaveTo.PORT, RoutePoint.Location.KNOWN);
+        RoutePoint next = new RoutePoint.Builder().loc(new GeoLoc( 37.818154, -122.443944)).name("next")
+            .type(RoutePoint.Type.ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build();
 
         GeoLoc boat = new GeoLoc( 37.810517, -122.450527);
         Direction mag = new Direction(240);
@@ -46,15 +46,15 @@ public class LegComputerTest extends TestCase {
 
         assertTrue(legComputer.nextLegTwa.isValid());
         assertEquals("next", legComputer.nextDestName);
-        assertEquals(-144, legComputer.nextLegTwa.toDegrees(), 1);
+        assertEquals(-144, legComputer.nextLegTwa.toDegrees(), 2);
     }
 
     public final void testTacking() {
         LegComputer legComputer = new LegComputer();
         assertFalse(legComputer.watm.isValid());
 
-        RoutePoint dest = new RoutePoint(new GeoLoc( 37, -122), "dest",
-                RoutePoint.Type.ROUNDING, RoutePoint.LeaveTo.PORT, RoutePoint.Location.KNOWN);
+        RoutePoint dest = new RoutePoint.Builder().loc(new GeoLoc( 37, -122)).name("dest")
+                .type(RoutePoint.Type.ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build();
 
         Direction mag = Direction.INVALID;
         legComputer.setDestinations(dest, RoutePoint.INVALID);
@@ -87,7 +87,10 @@ public class LegComputerTest extends TestCase {
         legComputer.update(boat, mag, twd);
 
         assertTrue(legComputer.watm.isValid());
-        assertEquals(180, legComputer.watm.toDegrees(), 1);
+        if ( legComputer.watm.toDegrees() > 0)
+            assertEquals(180, legComputer.watm.toDegrees(), 1);
+        else
+            assertEquals(-180, legComputer.watm.toDegrees(), 1);
 
 
     }

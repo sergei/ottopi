@@ -2,6 +2,8 @@ package com.santacruzinstruments.ottopi.navengine.geo;
 
 import androidx.annotation.NonNull;
 
+import org.locationtech.jts.geom.Coordinate;
+
 import java.io.Serializable;
 import java.util.Locale;
 
@@ -30,7 +32,32 @@ public class GeoLoc implements Serializable {
 		lon = 0;
 		mIsValid = false;
 	}
-	
+
+	public Distance distTo(GeoLoc to){
+		if (isValid() && to.isValid()){
+			return Geodesy.geodesyFactory(this).dist(this, to);
+		}else{
+			return Distance.INVALID;
+		}
+	}
+
+	public Direction bearingTo(GeoLoc to){
+		if (isValid() && to.isValid()){
+			return Geodesy.geodesyFactory(this).bearing(this, to);
+		}else{
+			return Direction.INVALID;
+		}
+	}
+
+	public final Coordinate toCoordinate()
+	{
+		if (isValid() ){
+			return Geodesy.geodesyFactory(this).toCoordinate(this);
+		}else{
+			return new Coordinate();
+		}
+	}
+
 	public boolean isValid() {return mIsValid;}
 	
 	@NonNull
