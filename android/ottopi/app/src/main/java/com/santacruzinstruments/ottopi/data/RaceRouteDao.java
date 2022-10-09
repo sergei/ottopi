@@ -24,13 +24,13 @@ public interface RaceRouteDao {
     @Query("DELETE FROM RoutePoint")
     void deleteAll();
 
-    @Query("DELETE FROM RoutePoint where Type = :pointType")
-    void deleteByType(RoutePoint.Type pointType);
+    @Query("DELETE FROM RoutePoint where Type = :pointType AND LeaveTo = :leavePointTo")
+    void deleteByType(RoutePoint.Type pointType, RoutePoint.LeaveTo leavePointTo);
 
     @Update
     void update(RoutePoint... pts);
 
-    @Query("SELECT * FROM RoutePoint ORDER By Type")
+    @Query("SELECT * FROM RoutePoint ORDER By Type, LeaveTo")
     List<RoutePoint> getAll();
 
     @Query("SELECT * FROM RoutePoint WHERE isActive = 1")

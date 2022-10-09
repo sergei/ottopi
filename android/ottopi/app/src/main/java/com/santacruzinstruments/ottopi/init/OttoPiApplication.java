@@ -2,6 +2,8 @@ package com.santacruzinstruments.ottopi.init;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
+
 import com.santacruzinstruments.ottopi.logging.OttopiLogger;
 
 import dagger.hilt.android.HiltAndroidApp;
@@ -12,8 +14,8 @@ public class OttoPiApplication extends Application {
 
     private Thread.UncaughtExceptionHandler androidDefaultUEH;
 
-    private Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
-        public void uncaughtException(Thread thread, Throwable ex) {
+    private final Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
+        public void uncaughtException(@NonNull Thread thread, @NonNull Throwable ex) {
             Timber.wtf(ex);
             OttopiLogger.flush();
             androidDefaultUEH.uncaughtException(thread, ex);
@@ -23,6 +25,9 @@ public class OttoPiApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // Init file names
+        PathsConfig.init(getApplicationContext());
 
         // Init logging
         OttopiLogger.init(getApplicationContext());

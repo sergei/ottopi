@@ -1,4 +1,5 @@
 import argparse
+import gzip
 import selectors
 import socket
 import threading
@@ -148,55 +149,64 @@ def nmea_sim(args):
     if args.http_port is not None:
         start_http_server(args.http_port)
 
-    with open(args.nmea_file, 'rb') as nmea_file:
-        if args.tcp_port is not None:
-            sock = socket.socket()
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(('0.0.0.0', int(args.tcp_port)))
-            sock.listen(100)
-            sock.setblocking(False)
-            sel.register(sock, selectors.EVENT_READ, accept)
-            print('Listening on port {}'.format(args.tcp_port))
+    if args.nmea_file.endswith('.gz'):
+        with gzip.open(args.nmea_file, 'rb') as nmea_file:
+            return process_file(args, nmea_file)
+    else:
+        with open(args.nmea_file, 'rb') as nmea_file:
+            return process_file(args, nmea_file)
 
-        if args.serial_port is not None:
-            try:
-                ser = serial.Serial(args.serial_port, 4800, timeout=None,  bytesize=8, parity='N',
-                                    stopbits=1, xonxoff=0, rtscts=0)
 
-                sel.register(ser, selectors.EVENT_READ, read_serial)
-                serial_ports.append(ser)
+def process_file(args, nmea_file):
+    if args.tcp_port is not None:
+        sock = socket.socket()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('0.0.0.0', int(args.tcp_port)))
+        sock.listen(100)
+        sock.setblocking(False)
+        sel.register(sock, selectors.EVENT_READ, accept)
+        print('Listening on port {}'.format(args.tcp_port))
+    if args.serial_port is not None:
+        try:
+            ser = serial.Serial(args.serial_port, 4800, timeout=None, bytesize=8, parity='N',
+                                stopbits=1, xonxoff=0, rtscts=0)
 
-            except serial.serialutil.SerialException:
-                print('Failed to open {}'.format(args.serial_port))
-                return None
+            sel.register(ser, selectors.EVENT_READ, read_serial)
+            serial_ports.append(ser)
 
-        last_epoch = 0
-        while True:
-            events = sel.select(timeout=0)
-            for key, mask in events:
-                callback = key.data
-                callback(key.fileobj, mask)
+        except serial.serialutil.SerialException:
+            print('Failed to open {}'.format(args.serial_port))
+            return None
+    last_epoch = 0
 
-            # Read and send NMEA epoch
-            now = time.time()
-            if now - last_epoch > 1:
-                last_epoch = now
-                for raw_line in nmea_file:
-                    line = time_tagged_line(raw_line)
-                    if line is None:
-                        continue
+    time_between_rmc_sec = args.epoch_ms / 1000.
 
-                    chunk_size = 10
-                    for i in range(0, len(line), chunk_size):
-                        chunk_end = i + chunk_size
-                        if chunk_end > len(line):
-                            chunk_end = len(line)
-                        for conn in connections:
-                            conn.send(line[i:chunk_end])
-                        for port in serial_ports:
-                            port.write(line[i:chunk_end])
-                    if b'RMC,' in line:
-                        break
+    while True:
+        events = sel.select(timeout=0)
+        for key, mask in events:
+            callback = key.data
+            callback(key.fileobj, mask)
+
+        # Read and send NMEA epoch
+        now = time.time()
+        if now - last_epoch > time_between_rmc_sec:
+            last_epoch = now
+            for raw_line in nmea_file:
+                line = time_tagged_line(raw_line)
+                if line is None:
+                    continue
+
+                chunk_size = 10
+                for i in range(0, len(line), chunk_size):
+                    chunk_end = i + chunk_size
+                    if chunk_end > len(line):
+                        chunk_end = len(line)
+                    for conn in connections:
+                        conn.send(line[i:chunk_end])
+                    for port in serial_ports:
+                        port.write(line[i:chunk_end])
+                if b'RMC,' in line:
+                    break
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -233,4 +243,5 @@ if __name__ == '__main__':
     parser.add_argument("--tcp-port", help="TCP port", required=False)
     parser.add_argument("--serial-port", help="Serial port port", required=False)
     parser.add_argument("--http-port", help="HTTP port port", required=False, type=int)
+    parser.add_argument("--epoch-ms", help="Time between RMC messages (ms)", required=False, type=int, default=1000)
     nmea_sim(parser.parse_args())

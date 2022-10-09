@@ -1,5 +1,8 @@
 package com.santacruzinstruments.ottopi.control;
 
+import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.FINISH;
+import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.START;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,6 +30,7 @@ import com.santacruzinstruments.ottopi.data.StartType;
 import com.santacruzinstruments.ottopi.data.db.HostNameEntry;
 import com.santacruzinstruments.ottopi.data.db.BoatDataRepository;
 import com.santacruzinstruments.ottopi.data.db.HostPortEntry;
+import com.santacruzinstruments.ottopi.init.PathsConfig;
 import com.santacruzinstruments.ottopi.logging.OttopiLogger;
 import com.santacruzinstruments.ottopi.navengine.InstrumentInput;
 import com.santacruzinstruments.ottopi.navengine.NavComputer;
@@ -34,11 +38,13 @@ import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
 import com.santacruzinstruments.ottopi.navengine.StartLineComputer;
 import com.santacruzinstruments.ottopi.navengine.calibration.Calibrator;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
+import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaEpochAssembler;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaFormatter;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaReader;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
+import com.santacruzinstruments.ottopi.navengine.route.GpxBuilder;
 import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RouteManager;
@@ -47,7 +53,9 @@ import com.santacruzinstruments.ottopi.ui.ViewInterface;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -71,8 +79,9 @@ public class MainController {
         ,addRaceRouteWpt
         ,removeRaceRouteWpt
         ,makeActiveWpt
-        , addRouteToRace
+        ,addRouteToRace
         ,onStartLineEnd
+        ,addStartLineEnd
         ,onNetworkNmeaMessage
         ,onInternalNmeaMessage
         ,setStartTime
@@ -92,7 +101,7 @@ public class MainController {
         ,setCurrentAwaBiasValue
         ,setNextMark
         ,setPrevMark
-        , setupUsbAccessory
+        ,setupUsbAccessory
     }
 
     public static class Message {
@@ -144,17 +153,25 @@ public class MainController {
         @Override
         public void PracrLIN(NmeaParser.PracrLIN lin) {
             if( lin.bPinValid ){
-                RoutePoint rpt = new RoutePoint(new GeoLoc(lin.dPinLat, lin.dPinLon),
-                        "PIN", RoutePoint.Type.START_PORT,
-                        RoutePoint.LeaveTo.PORT,
-                        RoutePoint.Location.KNOWN);
+                RoutePoint rpt = new RoutePoint.Builder()
+                        .loc(new GeoLoc(lin.dPinLat, lin.dPinLon))
+                        .name("PIN")
+                        .type(START)
+                        .leaveTo(RoutePoint.LeaveTo.PORT)
+                        .time(lastKnownUtc)
+                        .build();
+
                 updateStartFinishRpt(rpt);
             }
             if( lin.bCmteValid ){
-                RoutePoint rpt = new RoutePoint(new GeoLoc(lin.dCmteLat, lin.dCmteLon),
-                        "RCB", RoutePoint.Type.START_STBD,
-                        RoutePoint.LeaveTo.STARBOARD,
-                        RoutePoint.Location.KNOWN);
+                RoutePoint rpt = new RoutePoint.Builder()
+                        .loc(new GeoLoc(lin.dPinLat, lin.dPinLon))
+                        .name("RCB")
+                        .type(START)
+                        .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                        .time(lastKnownUtc)
+                        .build();
+
                 updateStartFinishRpt(rpt);
             }
         }
@@ -200,7 +217,8 @@ public class MainController {
 
     private GpxCollection gpxCollection;
     private RaceRouteDao raceRouteDao;
-    private GeoLoc lastKnownLoc = new GeoLoc();
+    private GeoLoc lastKnownLoc = GeoLoc.INVALID;
+    private UtcTime lastKnownUtc = UtcTime.INVALID;
     private int epochCount = 0;
     private long lastNavEngOutRcvdAtMs = 0;
     private NetworkManager networkManager;
@@ -208,12 +226,20 @@ public class MainController {
 
     private final Handler handler = new Handler(Looper.myLooper());
     private final BoatDataRepository boatDataRepository;
+    private final GpxBuilder gpxBuilder = new GpxBuilder();
+    private File detectedMarksGpxName;
 
     @UiThread
     public MainController(Context ctx, ViewInterface viewInterface) {
         this.ctx = ctx;
         this.boatDataRepository = new BoatDataRepository(ctx);
         this.viewInterface = viewInterface;
+    }
+
+    private void makeMarksGpxFileName() {
+        File gpxDir = PathsConfig.getGpxDir();
+        String fileNameTimeStamp = new SimpleDateFormat("MMM_dd_HH_mm", Locale.US).format(new Date());
+        this.detectedMarksGpxName = new File(gpxDir, String.format(Locale.US, "marks-%s.gpx",fileNameTimeStamp));
     }
 
     @UiThread
@@ -226,8 +252,16 @@ public class MainController {
     boolean bKeepRunning = true;
     private void managerThread(){
 
-        routeManager.addRouteManagerListener((utc, rptIdx, arrivalType)
-                -> messageQueue.offer(new Message(MessageId.makeActiveWpt, rptIdx)));
+        routeManager.addRouteManagerListener(new RouteManager.RouteManagerListener() {
+            @Override
+            public void onNewActivePoint(UtcTime utc, int rptIdx, RouteManager.ArrivalType arrivalType) {
+                messageQueue.offer(new Message(MessageId.makeActiveWpt, rptIdx));
+            }
+             @Override
+             public void onMarkLocationDetermined(List<RoutePoint> rpts) {
+                doUpdateMarksLocation(rpts);
+            }
+        });
 
         navComputer.addListener(out ->
                 messageQueue.offer(new Message(MessageId.onNavComputerOutput, out)));
@@ -303,6 +337,10 @@ public class MainController {
 
         postStartLineEndsState();
 
+        if( sailingState == SailingState.RACING){
+            onRaceStart();
+        }
+
         // Finally start heartbeat
         startHeartbeat();
 
@@ -377,10 +415,10 @@ public class MainController {
                             doMakeActiveWpt((int)msg.arg);
                             break;
                         case setPrevMark:
-                            doSetPrevMark();
+                            doSetPrevMarkAsActive();
                             break;
                         case setNextMark:
-                            doSetNextMark();
+                            doSetNextMarkAsActive();
                             break;
                         case addRouteToRace:
                             assert msg.arg != null;
@@ -388,7 +426,11 @@ public class MainController {
                             break;
                         case onStartLineEnd:
                             assert msg.arg != null;
-                            doSetStartLineEnd((RoutePoint.Type) msg.arg);
+                            doSetStartLineEnd((RoutePoint.LeaveTo) msg.arg);
+                            break;
+                        case addStartLineEnd:
+                            assert msg.arg != null;
+                            addStartLineEnd((RoutePoint) msg.arg);
                             break;
                         case onNavComputerOutput:
                             assert msg.arg != null;
@@ -600,13 +642,69 @@ public class MainController {
                 raceRouteDao.update(notActive);
             }
         }
-
         RoutePoint newActive = pts.get(idx).changeActiveStatus(true);
         raceRouteDao.update(newActive);
         readRaceRoute();
     }
 
-    private void doSetNextMark() {
+    private void resetActiveMark() {
+        List<RoutePoint> pts = raceRouteDao.getAll();
+        if ( ! pts.isEmpty() ){
+            // Set active mark to the next after pin or rcb
+            int activeIdx;
+            for (activeIdx=0; activeIdx < pts.size(); activeIdx++ ){
+                final RoutePoint.Type type = pts.get(activeIdx).type;
+                if (type != START)
+                    break;
+            }
+            if ( activeIdx < pts.size() ) {
+                doMakeActiveWpt(activeIdx);
+            }
+        }
+    }
+
+    private void doUpdateMarksLocation(List<RoutePoint> rpts) {
+        final RoutePoint pt = rpts.get(0);
+        Timber.d("Mark %s detected at %s, updating %d marks", pt.name, pt.loc, rpts.size());
+        for( RoutePoint p : rpts)
+            raceRouteDao.update(p);
+        readRaceRoute();
+
+        storeMarkToGpx(pt);
+    }
+
+    private void storeMarkToGpx(RoutePoint pt) {
+        if( this.detectedMarksGpxName == null)
+            makeMarksGpxFileName();
+        if( this.detectedMarksGpxName != null){
+            try {
+                OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(this.detectedMarksGpxName));
+                Timber.d("Store %s to %s", pt.name, detectedMarksGpxName);
+                gpxBuilder.addPoint(pt, os);
+                os.close();
+                readGpxCollection(null);
+            } catch (IOException e) {
+                Timber.e("Failed to write GPX %s (%s)", detectedMarksGpxName, e.getMessage());
+            }
+        }
+    }
+
+    private void storeCurrentMarksToGpx(){
+        makeMarksGpxFileName();
+        if( this.detectedMarksGpxName != null){
+            try {
+                OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(this.detectedMarksGpxName));
+                Timber.d("Store %s", detectedMarksGpxName);
+                gpxBuilder.storeCurrentMarks(os);
+                os.close();
+                readGpxCollection(null);
+            } catch (IOException e) {
+                Timber.e("Failed to write GPX %s (%s)", detectedMarksGpxName, e.getMessage());
+            }
+        }
+    }
+
+    private void doSetNextMarkAsActive() {
         List<RoutePoint> pts = raceRouteDao.getAll();
 
         int oldActiveIdx = getActiveIdx(pts);
@@ -620,7 +718,7 @@ public class MainController {
         readRaceRoute();
     }
 
-    private void doSetPrevMark() {
+    private void doSetPrevMarkAsActive() {
         List<RoutePoint> pts = raceRouteDao.getAll();
 
         int oldActiveIdx = getActiveIdx(pts);
@@ -661,7 +759,7 @@ public class MainController {
         // Get the existing start line
         List<RoutePoint> startLine = new LinkedList<>();
         for( RoutePoint rpt: oldRoute ){
-            if ( rpt.type == RoutePoint.Type.START_PORT || rpt.type == RoutePoint.Type.START_STBD ){
+            if ( rpt.type == START ){
                 startLine.add(rpt);
             }
         }
@@ -684,36 +782,79 @@ public class MainController {
 
     private void updateStartFinishRpt(@NonNull RoutePoint startPt) {
         // Delete current point with the same type
-        raceRouteDao.deleteByType(startPt.type);
+        raceRouteDao.deleteByType(startPt.type, startPt.leaveTo);
         // Insert the new one
         raceRouteDao.insert(startPt);
+        storeMarkToGpx(startPt);
 
         // Now update corresponding finish mark
-        RoutePoint.Type finishType = startPt.type == RoutePoint.Type.START_PORT ? RoutePoint.Type.FINISH_STBD : RoutePoint.Type.FINISH_PORT;
-        RoutePoint.LeaveTo finishLeaveTo = startPt.leaveTo == RoutePoint.LeaveTo.PORT ? RoutePoint.LeaveTo.STARBOARD : RoutePoint.LeaveTo.PORT;
-        RoutePoint finishPt = new RoutePoint(startPt.id, startPt.loc, startPt.name, finishType, finishLeaveTo,
-                startPt.location, startPt.isActive);
+        RoutePoint.LeaveTo finishLeaveTo = startPt.leaveTo == RoutePoint.LeaveTo.PORT
+                ? RoutePoint.LeaveTo.STARBOARD : RoutePoint.LeaveTo.PORT;
+        RoutePoint finishPt = new RoutePoint.Builder()
+                .copy(startPt).type(FINISH).leaveTo(finishLeaveTo)
+                .build();
 
         // Delete current point with the same type
-        raceRouteDao.deleteByType(finishPt.type);
+        raceRouteDao.deleteByType(finishPt.type, finishPt.leaveTo);
         // Insert the new one
         raceRouteDao.insert(finishPt);
 
         readRaceRoute();
     }
 
-    private void doSetStartLineEnd(RoutePoint.Type type){
-        if ( lastKnownLoc.isValid() ) {
-            String name = (type == RoutePoint.Type.START_PORT)
-                    ? "Pin" : "Rcb";
-            final RoutePoint.LeaveTo leaveTo = (type == RoutePoint.Type.START_PORT)
-                    ? RoutePoint.LeaveTo.PORT : RoutePoint.LeaveTo.STARBOARD;
-            RoutePoint rpt = new RoutePoint(lastKnownLoc, name, type, leaveTo, RoutePoint.Location.KNOWN);
-            updateStartFinishRpt(rpt);
+    private void addStartLineEnd(RoutePoint rpt) {
+        List<RoutePoint> pts = raceRouteDao.getAllActive();
+        // Determine if the pin or rcb is being added
+        // The first point added is always pin, the second one is rcb
+        boolean hasPin = false;
+        boolean hasRcb = false;
+        RoutePoint currentRcb = null;
+        for( RoutePoint p : pts){
+            if( p.type == START && p.leaveTo == RoutePoint.LeaveTo.PORT) {
+                hasPin = true;
+            }
+            if( p.type == START && p.leaveTo == RoutePoint.LeaveTo.STARBOARD) {
+                hasRcb = true;
+                currentRcb = p;
+            }
+        }
 
-            if ( type == RoutePoint.Type.START_PORT )
+        RoutePoint staterEnd;
+        if ( hasPin ){ // Make RCB
+            staterEnd = new RoutePoint.Builder().copy(rpt).type(START).leaveTo(RoutePoint.LeaveTo.STARBOARD).build();
+        }else{ // Make pin
+            staterEnd = new RoutePoint.Builder().copy(rpt).type(START).leaveTo(RoutePoint.LeaveTo.PORT).build();
+        }
+
+        if ( pts.isEmpty()){
+            staterEnd = staterEnd.changeActiveStatus(true);
+        }
+
+        if ( hasPin && hasRcb){
+            raceRouteDao.delete(currentRcb);
+            raceRouteDao.insert(staterEnd);
+        }else{
+            raceRouteDao.insert(staterEnd);
+        }
+        readRaceRoute();
+    }
+
+    private void doSetStartLineEnd(RoutePoint.LeaveTo leaveTo){
+        if ( lastKnownLoc.isValid() ) {
+            String name = (leaveTo == RoutePoint.LeaveTo.PORT) ? "Pin" : "Rcb";
+            RoutePoint rpt = new RoutePoint.Builder()
+                    .loc(lastKnownLoc)
+                    .name(name)
+                    .type(START)
+                    .leaveTo(leaveTo)
+                    .time(lastKnownUtc)
+                    .build();
+
+                    updateStartFinishRpt(rpt);
+
+            if ( leaveTo == RoutePoint.LeaveTo.PORT)
                 this.viewInterface.onPinMarkChange(true);
-            if ( type == RoutePoint.Type.START_STBD )
+            if ( leaveTo == RoutePoint.LeaveTo.STARBOARD)
                 this.viewInterface.onRcbMarkChange(true);
         }
     }
@@ -725,7 +866,7 @@ public class MainController {
 
     private void refreshPolarTable(String polarName) {
         try {
-            File polarFile = new File( ctx.getExternalFilesDir(null) , polarName);
+            File polarFile = new File( PathsConfig.getPolarDir(), polarName);
             PolarTable pt = new PolarTable(new FileInputStream( polarFile ));
             this.viewInterface.onPolarTable(pt);
         } catch (IOException e) {
@@ -768,6 +909,7 @@ public class MainController {
         if ( nout.ii.loc.isValid() ){
             lastKnownLoc = nout.ii.loc;
         }
+        lastKnownUtc = nout.ii.utc;
 
         StartLineInfo  startLineInfo = startLineComputer.updateStartLineInfo(nout.ii.loc, nout.twd);
 
@@ -851,6 +993,7 @@ public class MainController {
                     this.viewInterface.onTimeToStart((int)secondsToStart);
                     if (secondsToStart <= 0 ){
                         sailingState = SailingState.RACING;
+                        onRaceStart();
                         this.viewInterface.onSailingStateChange(sailingState);
                     }
                     break;
@@ -894,11 +1037,10 @@ public class MainController {
 
     private void onStopButtonPress() {
         setStartTime(0);
-
         this.viewInterface.onTimeToStart(DEFAULT_PREP_SEC);
-
         sailingState = SailingState.CRUISING;
         this.viewInterface.onSailingStateChange(sailingState);
+        onRaceStop();
     }
 
     private void setUseInternalGps(boolean use) {
@@ -949,9 +1091,11 @@ public class MainController {
     }
 
     private void readGpxCollection(File gpxFile) {
-        File [] files = this.ctx.getExternalFilesDir(null).listFiles((file, name) -> name.toLowerCase().endsWith(".gpx"));
-        if ( files != null) {
-            gpxCollection = new GpxCollection(Arrays.asList(files));
+
+        File [] gpxFiles = PathsConfig.getGpxDir().listFiles((file, name) -> name.toLowerCase().endsWith(".gpx"));
+
+        if ( gpxFiles != null) {
+            gpxCollection = new GpxCollection(Arrays.asList(gpxFiles));
 
             if ( gpxFile != null ) { // Set newly added file as current
                 for( int i = 0; i < gpxCollection.getFiles().size(); i++) {
@@ -964,5 +1108,16 @@ public class MainController {
         this.viewInterface.onGpxCollection(gpxCollection);
     }
 
+    private void onRaceStart() {
+        OttopiLogger.reOpenLogFile();
+        resetActiveMark();
+        storeCurrentMarksToGpx();
+        routeManager.startMarkDetection();
+    }
+
+    private void onRaceStop() {
+        routeManager.stopMarkDetection();
+        OttopiLogger.reOpenLogFile();
+    }
 }
 

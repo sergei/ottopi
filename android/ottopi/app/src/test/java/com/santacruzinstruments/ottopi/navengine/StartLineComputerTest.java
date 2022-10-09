@@ -29,10 +29,10 @@ public class StartLineComputerTest extends TestCase {
         assertFalse(si.pinFavoredBy.isValid());
 
         // Create start line
-        RoutePoint pin = new RoutePoint(new GeoLoc( 37.858000, -122.382092), "PIN",
-                RoutePoint.Type.START_PORT, RoutePoint.LeaveTo.PORT, RoutePoint.Location.KNOWN);
-        RoutePoint rcb = new RoutePoint(new GeoLoc(  37.861112, -122.377744), "RCB",
-                RoutePoint.Type.START_STBD, RoutePoint.LeaveTo.STARBOARD, RoutePoint.Location.KNOWN);
+        RoutePoint pin = new RoutePoint.Builder().loc(new GeoLoc( 37.858000, -122.382092)).name("PIN")
+            .type(RoutePoint.Type.START).leaveTo(RoutePoint.LeaveTo.PORT).build();
+        RoutePoint rcb = new RoutePoint.Builder().loc(new GeoLoc( 37.861112, -122.377744)).name("RCB")
+                .type(RoutePoint.Type.START).leaveTo(RoutePoint.LeaveTo.STARBOARD).build();
         route.addRpt(pin);
         route.addRpt(rcb);
 

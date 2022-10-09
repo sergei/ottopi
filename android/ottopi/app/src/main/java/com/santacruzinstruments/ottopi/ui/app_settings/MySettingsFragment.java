@@ -41,7 +41,7 @@ public class MySettingsFragment extends PreferenceFragmentCompat implements Shar
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.key_log_enabled))) {
             final boolean logsEnabled = sharedPreferences.getBoolean(key, true);
-            OttopiLogger.toggleLogging(requireContext(), logsEnabled);
+            OttopiLogger.toggleLogging(logsEnabled);
         }
         if (key.equals(getString(R.string.key_use_internal_gps))) {
             final boolean useInternalGps = sharedPreferences.getBoolean(key, true);

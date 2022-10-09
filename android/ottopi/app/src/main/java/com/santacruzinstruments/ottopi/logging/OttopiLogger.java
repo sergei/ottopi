@@ -24,13 +24,13 @@ public class OttopiLogger {
     public static void init(Context context){
 
         if (BuildConfig.DEBUG) {
-            toggleLogging(context, true);
+            toggleLogging(true);
         } else {
             // Read settings
             SharedPreferences sharedPreferences =
                     PreferenceManager.getDefaultSharedPreferences(context);
             final boolean logsEnabled = sharedPreferences.getBoolean(context.getString(R.string.key_log_enabled), false);
-            toggleLogging(context, logsEnabled);
+            toggleLogging(logsEnabled);
             Timber.plant(new CrashReportingTree());
         }
     }
@@ -39,15 +39,21 @@ public class OttopiLogger {
      * Toggle logging based on settings
      */
     @SuppressLint("LogNotTimber")
-    public static void toggleLogging(Context context, boolean logsEnabled) {
+    public static void toggleLogging(boolean logsEnabled) {
         if (logsEnabled && mFileLoggingTree == null) {
             Log.d(TAG, "Enabling timber logging");
-            mFileLoggingTree = new FileLoggingTree(context);
+            mFileLoggingTree = new FileLoggingTree();
             Timber.plant(mFileLoggingTree);
         } else if (mFileLoggingTree != null) {
             Log.d(TAG, "Disabling timber logging");
             Timber.uproot(mFileLoggingTree);
             mFileLoggingTree = null;
+        }
+    }
+
+    public static void reOpenLogFile(){
+        if (mFileLoggingTree != null) {
+            mFileLoggingTree.reOpenLogFile();
         }
     }
 

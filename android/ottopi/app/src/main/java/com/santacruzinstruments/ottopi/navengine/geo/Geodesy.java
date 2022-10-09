@@ -10,37 +10,27 @@ import nsidc.mapx.Mapx;
 
 
 public class Geodesy {
-	final static String TAG="Geodesy";
-	final static boolean D = false;
-	public static final double METERS_IN_NM = 1852;
-
 	private static Geodesy instance = null;
 	
-	private Mapx map;
-	private GeometryFactory mGeomFactory;
-	private MagDecl magDecl;
+	private final Mapx map;
+	private final GeometryFactory mGeomFactory;
+	private final MagDecl magDecl;
 	
-	float u1[]={0};
-	float v1[]={0};
-	float u2[]={0};
-	float v2[]={0};
-	float u3[]={0};
-	float v3[]={0};
-	
-	public  static Geodesy geodesyFactory(GeoLoc refloc)
+	float[] u1 ={0};
+	float[] v1 ={0};
+	float[] u2 ={0};
+	float[] v2 ={0};
+
+	static Geodesy geodesyFactory(GeoLoc refloc)
 	{
 		if ( instance == null )
 		{
+			assert ( refloc.isValid() );
 			instance = new Geodesy(refloc);
-		}
-		else 
-		{
-			//TODO check if the reference location is significantly different now
 		}
 		return instance;
 	}
 	// Prevent anyone to use the default constructor 
-	private Geodesy(){}
 	private Geodesy(GeoLoc refloc)
 	{
 		MapMaker maker = new MapMaker();
@@ -60,12 +50,7 @@ public class Geodesy {
 		magDecl = MagDecl.getInstance();
 	}
 	
-	public MagDecl getMagDecl()
-	{
-		return magDecl;
-	}
-
-	public final Distance dist(GeoLoc from, GeoLoc to)
+	final Distance dist(GeoLoc from, GeoLoc to)
 	{
 		map.geo_to_map((float)from.lat, (float)from.lon, u1, v1);
 		map.geo_to_map((float)to.lat,   (float)to.lon,   u2, v2);
@@ -81,7 +66,7 @@ public class Geodesy {
 		return new Distance(distMeters / 1852.0); 
 	} 
 	
-	public final Direction bearing(GeoLoc from, GeoLoc to)
+	final Direction bearing(GeoLoc from, GeoLoc to)
 	{
 		map.geo_to_map((float)from.lat, (float)from.lon, u1, v1);
 		map.geo_to_map((float)to.lat,   (float)to.lon,   u2, v2);
@@ -96,15 +81,11 @@ public class Geodesy {
 		return new Direction(phi);
 	}
 	
-	public final Coordinate toCoordinate(GeoLoc loc)
+	final Coordinate toCoordinate(GeoLoc loc)
 	{
 		map.geo_to_map((float)loc.lat, (float)loc.lon, u1, v1);
 		
 		return new Coordinate(u1[0], v1[0]);
 	}
 	
-	public Mapx getMap()
-	{ 
-		return map;
-	}
 }

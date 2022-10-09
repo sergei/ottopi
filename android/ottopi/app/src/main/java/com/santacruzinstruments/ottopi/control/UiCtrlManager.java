@@ -94,6 +94,11 @@ public class UiCtrlManager implements CtrlInterface {
         mainController.offer(MainController.MessageId.addRaceRouteWpt, rpt);
     }
 
+    @Override
+    public void addStartLineEnd(RoutePoint rpt) {
+        mainController.offer(MainController.MessageId.addStartLineEnd, rpt);
+    }
+
     @UiThread
     @Override
     public void removeRaceRouteWpt(int idx) {
@@ -116,13 +121,13 @@ public class UiCtrlManager implements CtrlInterface {
     @UiThread
     @Override
     public void onPinButtonPress() {
-        mainController.offer(MainController.MessageId.onStartLineEnd, RoutePoint.Type.START_PORT);
+        mainController.offer(MainController.MessageId.onStartLineEnd, RoutePoint.LeaveTo.PORT);
     }
 
     @UiThread
     @Override
     public void onRcbButtonPress() {
-        mainController.offer(MainController.MessageId.onStartLineEnd, RoutePoint.Type.START_STBD);
+        mainController.offer(MainController.MessageId.onStartLineEnd, RoutePoint.LeaveTo.STARBOARD);
     }
 
     @UiThread

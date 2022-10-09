@@ -3,7 +3,6 @@ package com.santacruzinstruments.ottopi.navengine;
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
-import com.santacruzinstruments.ottopi.navengine.geo.Geodesy;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaEpochAssembler;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
 import com.santacruzinstruments.ottopi.navengine.nmea.NmeaReader;
@@ -40,6 +39,7 @@ public class MarkDetectorTest extends TestCase {
         double wptLat = 0;
         double wptLon = 0;
         boolean pointDetected = false;
+        int markId = 0;
         LinkedList<RoutePoint> marks = new LinkedList<>();
 
         KmzFile(String name) throws IOException {
@@ -91,21 +91,18 @@ public class MarkDetectorTest extends TestCase {
                 RoutePoint.Type type = RoutePoint.Type.ROUNDING;
                 RoutePoint.LeaveTo leaveTo = RoutePoint.LeaveTo.STARBOARD;
 
-                if ( wptName.startsWith("WM")) {
-                    type = RoutePoint.Type.WINDWARD;
-                }else if ( wptName.startsWith("PIN")) {
-                    type = RoutePoint.Type.START_PORT;
+                if ( wptName.startsWith("PIN")) {
+                    type = RoutePoint.Type.START;
                     leaveTo = RoutePoint.LeaveTo.PORT;
                 }else if ( wptName.startsWith("RCB")){
-                    type = RoutePoint.Type.START_STBD;
-                }else if ( wptName.startsWith("LGS")  ){
-                    type = RoutePoint.Type.LEEWARD_GATE;
+                    type = RoutePoint.Type.START;
                 }else if ( wptName.startsWith("LGP")  ){
-                    type = RoutePoint.Type.LEEWARD_GATE;
                     leaveTo = RoutePoint.LeaveTo.PORT;
                 }
-                RoutePoint rtpt = new RoutePoint(new GeoLoc(wptLat, wptLon),
-                        wptName,type, leaveTo, RoutePoint.Location.KNOWN);
+                boolean isActive = markId == 2;
+                RoutePoint rtpt = new RoutePoint.Builder()
+                        .id(++markId).loc(new GeoLoc(wptLat, wptLon))
+                .name(wptName).type(type).leaveTo(leaveTo).isActive(isActive).build();
                 marks.add(rtpt);
                 pointDetected = false;
             }
@@ -192,23 +189,21 @@ public class MarkDetectorTest extends TestCase {
         Route route = readRoute(kmzFile);
 
         markDetectionCount = 0;
-        MarkDetector markDetector = new MarkDetector((markIdx, loc) -> {
+        MarkDetector markDetector = new MarkDetector((loc) -> {
+            int markIdx = markDetectionCount + 2;
             markDetectionCount ++;
-            System.out.printf("%s Detected %d, %s at %s\n",
-                    setName, markDetectionCount, markIdx, loc);
-            Geodesy geodesy = Geodesy.geodesyFactory(loc);
+            System.out.printf("%s Detected %s at %s\n",
+                    setName, markDetectionCount,  loc);
             GeoLoc expectedLoc = kmzFile.marks.get(markIdx).loc;
-            double dist = geodesy.dist(expectedLoc, loc).toMeters();
+            double dist = expectedLoc.distTo(loc).toMeters();
             assertTrue(
                     String.format(Locale.getDefault(),"Failed detection #%d: distance to mark %s is %f",
                             markDetectionCount, route.getRpt(markIdx).name, dist),
                     dist < 80 );
 
-            // Advance route to the next mark
-            route.advanceActivePoint();
         });
 
-        markDetector.setRoute(route);
+        markDetector.setStartLine(route);
         markDetector.start();
 
         feedNmea(markDetector, nmeaFile);
@@ -217,14 +212,14 @@ public class MarkDetectorTest extends TestCase {
     }
 
     @NonNull
-    private Route readRoute(KmzFile kmz) {
+    static Route readRoute(KmzFile kmz) {
         Route route = new Route();
         for( RoutePoint pt : kmz.marks){
-            if( pt.type == RoutePoint.Type.START_PORT || pt.type == RoutePoint.Type.START_STBD){
+            if( pt.type == RoutePoint.Type.START){
                 route.addRpt(pt);  // Ad as it is with known location
             }else{
                 // Make location unknown
-                RoutePoint upt = new RoutePoint(GeoLoc.INVALID, pt.name, pt.type, pt.leaveTo, RoutePoint.Location.UNKNOWN);
+                RoutePoint upt = new RoutePoint.Builder().copy(pt).loc(GeoLoc.INVALID).build();
                 route.addRpt(upt);
             }
         }

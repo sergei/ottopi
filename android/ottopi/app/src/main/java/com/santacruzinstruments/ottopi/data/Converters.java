@@ -5,6 +5,7 @@ import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.RO
 import androidx.room.TypeConverter;
 
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
+import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Date;
 
 public class Converters {
     @TypeConverter
@@ -41,6 +43,16 @@ public class Converters {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @TypeConverter
+    public static UtcTime fromUtcTime(long time) {
+        return new UtcTime(new Date(time));
+    }
+
+    @TypeConverter
+    public static long toUtcTime(UtcTime utc) {
+        return utc.getDate().getTime();
     }
 
     // Convert RoutePoint.Type to integer in order to e able to sort in the order defined in enum

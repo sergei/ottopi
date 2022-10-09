@@ -1,0 +1,4 @@
+--nmea-file=/Users/sergei/github/ottopi/android/ottopi/app/src/test/resources/mark-detection/set1/race.nmea.gz
+--tcp-port=10110
+--http-port=8080
+--epoch-ms=200
