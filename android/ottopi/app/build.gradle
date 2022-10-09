@@ -40,8 +40,8 @@ android {
         applicationId "com.santacruzinstruments.ottopi"
         minSdk 28
         targetSdk 31
-        versionCode 5
-        versionName "1.4"
+        versionCode 6
+        versionName "1.5"
 
         buildConfigField "String", "GIT_HASH", getGitHash()
         buildConfigField "String", "GIT_BRANCH", getGitBranch()
