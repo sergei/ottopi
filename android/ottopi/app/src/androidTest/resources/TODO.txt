@@ -1,6 +1,5 @@
-TODO Implement auto mark detection
+TODO Implement storing race data in format convenient to use by GoPro
 TODO Add native logs playback
 FIXME Don't toggle WiFi when uploading log files
 TODO Add the IQR display for the wind direction
-FIXME The polar is not visible on boat setup page
 TODO Implement the wind map

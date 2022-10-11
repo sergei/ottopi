@@ -224,6 +224,8 @@ public class PolarDrawableView extends View {
         for (float speed = (float) maxSpeed; speed > 3; speed -= speedScaleStep)
             canvas.drawCircle(x0, y0, pixInKtsScale *  speed, axisPaint);
 
+        plotPoints(canvas, polarCurvePts, polarCurvePaint);
+
         if( !hasValidInput )
             return;
 
@@ -236,8 +238,6 @@ public class PolarDrawableView extends View {
             alpha += alphaStep;
             canvas.drawCircle(toScreenX(h.x), toScreenY(h.y), historyEntryRadius, historyPaint);
         }
-
-        plotPoints(canvas, polarCurvePts, polarCurvePaint);
 
         // Target lines
         plotPointsAsPath(canvas, upwindTargetAnglePts, targetAnglePaint);
