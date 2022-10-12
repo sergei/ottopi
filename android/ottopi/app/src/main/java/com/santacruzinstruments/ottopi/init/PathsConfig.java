@@ -9,6 +9,7 @@ public class PathsConfig {
     private static File logsDir;
     private static File gpxdDir;
     private static File polarDir;
+    private static File raceDir;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init(Context context) {
@@ -18,6 +19,8 @@ public class PathsConfig {
         gpxdDir.mkdirs();
         polarDir = new File(context.getExternalCacheDir(), "polars");
         polarDir.mkdirs();
+        raceDir = new File(context.getExternalCacheDir(), "races");
+        raceDir.mkdirs();
     }
     public static File getLogsDir() {
         return logsDir;
@@ -27,5 +30,8 @@ public class PathsConfig {
     }
     public static File getPolarDir() {
         return polarDir;
+    }
+    public static File getRaceDir() {
+        return raceDir;
     }
 }

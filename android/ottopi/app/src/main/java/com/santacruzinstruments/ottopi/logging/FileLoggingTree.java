@@ -14,6 +14,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -329,6 +331,21 @@ public class FileLoggingTree extends Timber.DebugTree {
                     }
                 }
 
+                // Add race files to the ZIP
+                final Path racesPath = PathsConfig.getRaceDir().toPath();
+                Files.walk(racesPath)
+                        .forEach(path -> {
+                            final File fileEntry = path.toFile();
+                            if ( fileEntry.isFile() ){
+                                String relativeName = racesPath.relativize(path).toString();
+                                ZipEntry zipEntry = new ZipEntry("races/" + relativeName);
+                                try {
+                                    createEntry(zipOut, buffer, fileEntry, zipEntry);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
                 zipOut.close();
                 return zipFile;
             } catch (IOException e) {

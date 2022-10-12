@@ -32,6 +32,7 @@ import com.santacruzinstruments.ottopi.data.db.BoatDataRepository;
 import com.santacruzinstruments.ottopi.data.db.HostPortEntry;
 import com.santacruzinstruments.ottopi.init.PathsConfig;
 import com.santacruzinstruments.ottopi.logging.OttopiLogger;
+import com.santacruzinstruments.ottopi.logging.RaceLogger;
 import com.santacruzinstruments.ottopi.navengine.InstrumentInput;
 import com.santacruzinstruments.ottopi.navengine.NavComputer;
 import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
@@ -228,6 +229,7 @@ public class MainController {
     private final BoatDataRepository boatDataRepository;
     private final GpxBuilder gpxBuilder = new GpxBuilder();
     private File detectedMarksGpxName;
+    private RaceLogger raceLogger;
 
     @UiThread
     public MainController(Context ctx, ViewInterface viewInterface) {
@@ -251,6 +253,7 @@ public class MainController {
 
     boolean bKeepRunning = true;
     private void managerThread(){
+        raceLogger = new RaceLogger(PathsConfig.getRaceDir());
 
         routeManager.addRouteManagerListener(new RouteManager.RouteManagerListener() {
             @Override
@@ -607,6 +610,7 @@ public class MainController {
 
         this.viewInterface.onRaceRouteChange(raceRoute);
         this.viewInterface.onStartLineInfo(startLineInfo);
+        raceLogger.onRouteUpdate(raceRoute);
     }
 
     private void doAddRaceRouteWpt(RoutePoint rpt) {
@@ -927,10 +931,12 @@ public class MainController {
 
     private void processNetworkNmeaMessage(String msg) {
         networkNmeaParser.onValidMessage(msg);
+        raceLogger.onNmea(lastKnownUtc, msg);
     }
 
     private void processInternalNmeaMessage(String msg) {
         internalNmeaParser.onValidMessage(msg);
+        raceLogger.onNmea(lastKnownUtc, msg);
     }
 
     private boolean checkLocationPermission()
@@ -1008,6 +1014,7 @@ public class MainController {
                     ,startType.toString()
             );
         }
+        raceLogger.onHeartBeat(sailingState, startTime);
     }
 
     private void onStartButtonPress() {
@@ -1109,7 +1116,6 @@ public class MainController {
     }
 
     private void onRaceStart() {
-        OttopiLogger.reOpenLogFile();
         resetActiveMark();
         storeCurrentMarksToGpx();
         routeManager.startMarkDetection();
@@ -1117,7 +1123,6 @@ public class MainController {
 
     private void onRaceStop() {
         routeManager.stopMarkDetection();
-        OttopiLogger.reOpenLogFile();
     }
 }
 

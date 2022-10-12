@@ -51,12 +51,6 @@ public class OttopiLogger {
         }
     }
 
-    public static void reOpenLogFile(){
-        if (mFileLoggingTree != null) {
-            mFileLoggingTree.reOpenLogFile();
-        }
-    }
-
     public static void flush(){
         if (mFileLoggingTree != null) {
             mFileLoggingTree.flush();
