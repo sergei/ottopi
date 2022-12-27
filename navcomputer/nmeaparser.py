@@ -115,10 +115,17 @@ class NmeaParser:
                 self.tws_t = time.time()
 
     def parse_vwr(self, t):
-        awa = float(t[1])
-        self.awa = awa if t[2] == 'R' else -awa
+        if t[1] == '':
+            self.awa = None
+        else:
+            awa = float(t[1])
+            self.awa = awa if t[2] == 'R' else -awa
         self.awa_t = time.time()
-        self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
+
+        if t[3] == '':
+            self.aws = None
+        else:
+            self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
         self.aws_t = time.time()
 
     def parse_vhw(self, t):

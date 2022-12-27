@@ -117,7 +117,8 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
             if ( connected == Connected.True){
                 if ( ! this.gatewayInitialized){
-                    byte [] init = "YDNU MODE RAW\r\n".getBytes();
+                    // Set gateway to 0183 mode, so it would translate from NMEA 2000 to NMEA 0183
+                    byte [] init = "YDNU MODE 0183\r\n".getBytes();
                     try {
                         write(init);
                         this.gatewayInitialized = true;
@@ -221,8 +222,7 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
     @Override
     public void onNewData(byte[] data) {
-        Timber.d("Got %d bytes:", data.length);
-        Timber.d("[%s]", new String(data));
+        usbConnectionListener.onDataReceived(data, data.length);
     }
 
     @Override

@@ -222,6 +222,12 @@ def create_events(args, config, movie_name, navigator, start_time_utc, finish_ti
                             t = sk_line.decode('utf-8').split(';')
                             if len(t) > 2 and t[1] == 'N' and t[0].isnumeric():
                                 nmea_parser.set_nmea_sentence(t[2])
+    elif args.otto_dir:
+        nmea_cache_name = args.otto_dir + os.sep + 'race.nmea'
+        print(f'Using otto race NMEA from {nmea_cache_name}')
+        with open(nmea_cache_name, 'r') as f:
+            for nmea in f:
+                nmea_parser.set_nmea_sentence(nmea)
     else:
         with open(nmea_cache_name, 'w') as f:
             print(f'Will cache NMEA to {nmea_cache_name}')
@@ -266,5 +272,6 @@ if __name__ == '__main__':
     parser.add_argument("--gopro-dir", help="GoPro SD card directory", default='/Volumes/GOPRO')
     parser.add_argument("--sk-file", help="SignalK file", required=False)
     parser.add_argument("--sk-zip", help="Zip file containing SignalK logs", required=False)
+    parser.add_argument("--otto-dir", help="Directory with Android otto race information", required=False)
 
     main(parser.parse_args())
