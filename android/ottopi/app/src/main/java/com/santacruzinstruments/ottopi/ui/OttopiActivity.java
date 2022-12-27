@@ -24,6 +24,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -184,6 +185,13 @@ public class OttopiActivity extends AppCompatActivity {
         if ( UsbManager.ACTION_USB_ACCESSORY_ATTACHED.equals(action) ){
             UsbAccessory accessory = getIntent().getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
             navViewModel.ctrl().setupUsbAccessory(accessory);
+        }
+
+        if ( UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ){
+            UsbDevice device = getIntent().getParcelableExtra(UsbManager.EXTRA_DEVICE);
+            if (device != null){
+                navViewModel.ctrl().setupUsbDevice(device);
+            }
         }
     }
 

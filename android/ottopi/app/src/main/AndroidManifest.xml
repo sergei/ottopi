@@ -36,6 +36,7 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
 
+            <!-- Intent filters to start when USB accessory is attached (USB Master) -->
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"/>
             </intent-filter>
@@ -44,6 +45,14 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter">
             </meta-data>
+
+            <!-- Intent filters to start when USB OTG device   -->
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/usb_otg_filter" />
 
         </activity>
 

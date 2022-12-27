@@ -2,6 +2,7 @@ package com.santacruzinstruments.ottopi.control;
 
 import android.content.Context;
 import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
 
 import androidx.annotation.UiThread;
 
@@ -212,6 +213,11 @@ public class UiCtrlManager implements CtrlInterface {
     @Override
     public void setupUsbAccessory(UsbAccessory accessory){
         mainController.offer(MainController.MessageId.setupUsbAccessory, accessory);
+    }
+
+    @Override
+    public void setupUsbDevice(UsbDevice device) {
+        mainController.offer(MainController.MessageId.setupUsbDevice, device);
     }
 
 }

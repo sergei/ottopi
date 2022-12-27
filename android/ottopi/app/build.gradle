@@ -132,4 +132,7 @@ dependencies {
 
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
+
+    // USB Serial for Android
+    implementation 'com.github.mik3y:usb-serial-for-android:3.4.6'
 }

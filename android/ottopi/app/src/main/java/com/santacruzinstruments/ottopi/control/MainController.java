@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
@@ -103,6 +104,7 @@ public class MainController {
         ,setNextMark
         ,setPrevMark
         ,setupUsbAccessory
+        ,setupUsbDevice
     }
 
     public static class Message {
@@ -224,6 +226,7 @@ public class MainController {
     private long lastNavEngOutRcvdAtMs = 0;
     private NetworkManager networkManager;
     private UsbReader usbReader;
+    private UsbSerialManager usbSerialManager;
 
     private final Handler handler = new Handler(Looper.myLooper());
     private final BoatDataRepository boatDataRepository;
@@ -347,15 +350,20 @@ public class MainController {
         // Finally start heartbeat
         startHeartbeat();
 
-        // Now start network thread
+        // Start network thread
         Thread networkThread = new Thread(this::networkThread);
         networkThread.setName("NMEA Network thread");
         networkThread.start();
 
-        // Now start usb thread
+        // Start usb thread for accessory
         Thread usbThread = new Thread(this::usbThread);
         usbThread.setName("USB thread");
         usbThread.start();
+
+        // Start usb thread for Serial USB device
+        Thread serialUsbThread = new Thread(this::serialUsbThread);
+        serialUsbThread.setName("Serial USB thread");
+        serialUsbThread.start();
 
         // NMEA looper
         Looper.prepare();
@@ -509,6 +517,9 @@ public class MainController {
                         case setupUsbAccessory:
                             usbReader.setAccessory((UsbAccessory)msg.arg);
                             break;
+                        case setupUsbDevice:
+                            usbSerialManager.setUsbDevice((UsbDevice)msg.arg);
+                            break;
                     }
                 }
             } catch (InterruptedException e) {
@@ -539,6 +550,22 @@ public class MainController {
             }
         });
         usbReader.run();
+    }
+
+    private void serialUsbThread() {
+        usbSerialManager =  new UsbSerialManager(this.ctx, new UsbReader.UsbConnectionListener() {
+            @Override
+            public void OnConnectionStatus(boolean connected) {
+                Timber.d("USB device %s", connected ? "Connected" : "Not connected");
+                viewInterface.onUsbConnect(connected);
+            }
+
+            @Override
+            public void onDataReceived(byte[] buff, int size) {
+                externalNmeaReader.read(buff, size);
+            }
+        });
+        usbSerialManager.run();
     }
 
     private void networkThread() {

@@ -1,6 +1,7 @@
 package com.santacruzinstruments.ottopi.utils;
 
 import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
 import com.santacruzinstruments.ottopi.data.SailingState;
@@ -159,6 +160,11 @@ public class FakeCtrlManager implements CtrlInterface {
 
     @Override
     public void setupUsbAccessory(UsbAccessory accessory) {
+
+    }
+
+    @Override
+    public void setupUsbDevice(UsbDevice device) {
 
     }
 

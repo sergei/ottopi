@@ -1,6 +1,7 @@
 package com.santacruzinstruments.ottopi.control;
 
 import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.data.StartType;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
@@ -41,5 +42,5 @@ public interface CtrlInterface {
     void setNextMark();
     void setPrevMark();
     void setupUsbAccessory(UsbAccessory accessory);
-
+    void setupUsbDevice(UsbDevice device);
 }
