@@ -27,6 +27,8 @@ import timber.log.Timber;
 public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
     private UsbDeviceConnection usbConnection;
+    private final UsbSerialProber usbDefaultProber = UsbSerialProber.getDefaultProber();
+    private final UsbSerialProber usbCustomProber = CustomSerialUsbProber.getCustomProber();
 
     private enum Connected { False, Pending, True }
     private static final int WRITE_WAIT_MILLIS = 2000; // 0 blocked infinitely on unprogrammed arduino
@@ -76,9 +78,25 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
         };
     }
 
+    // Called by activity when USB attachment caused us to start
+    // Or when polling by checkConnectedDevices()
     public synchronized void setUsbDevice(UsbDevice device) {
         this.usbDevice = device;
         connectionEvent = true;
+    }
+
+
+    // Called periodically to see if the device was connected while we are running
+    private void checkConnectedDevices() {
+        for (UsbDevice device : usbManager.getDeviceList().values()) {
+            UsbSerialDriver driver = usbDefaultProber.probeDevice(device);
+            if(driver == null) {
+                driver = usbCustomProber.probeDevice(device);
+            }
+            if(driver != null) {
+                setUsbDevice(device);
+            }
+        }
     }
 
     public synchronized void stop(){
@@ -93,6 +111,8 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
             if (connectionEvent){
                 connectionEvent = false;
                 connect(null);
+            }else if ( connected == Connected.False ){
+                checkConnectedDevices();
             }
 
             if ( connected == Connected.True){
