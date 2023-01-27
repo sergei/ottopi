@@ -9,6 +9,8 @@ import boto3 as boto3
 import botocore
 import pytz
 import yaml
+
+from clipper import Clipper
 from kml_maker import make_kml
 from race_events_recorder import RaceEventsRecorder
 from video_maker import make_video
@@ -112,6 +114,12 @@ def read_nmea_file(bucket, client, file_name):
 
 
 def main(args):
+
+    clipper = Clipper(args.work_dir)
+    clipper.start()
+
+    return
+
     # Read configuration
     with open(args.cfg_file, 'r') as stream:
         try:
