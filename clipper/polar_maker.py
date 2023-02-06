@@ -1,5 +1,7 @@
 import math
 import os
+
+import numpy as np
 from PIL import ImageDraw
 from PIL.Image import new
 
@@ -135,10 +137,13 @@ class PolarMaker:
         for epoch in epochs:
             twa = epoch['twa']
             sow = epoch['sow']
-            self.max_speed = int(max(sow, self.max_speed) + 0.5)
-            self.min_speed = int(min(sow, self.min_speed))
-            tws_sum += epoch['tws']
-            self.history.append(self.pol_to_cart(sow, twa))
+            if sow is not None:
+                self.max_speed = int(max(sow, self.max_speed) + 0.5)
+                self.min_speed = int(min(sow, self.min_speed))
+                tws_sum += epoch['tws']
+                self.history.append(self.pol_to_cart(sow, twa))
+            else:
+                self.history.append((np.nan, np.nan))
 
         mean_tws = tws_sum / len(epochs)
         if self.polars is not None:

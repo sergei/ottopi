@@ -58,20 +58,22 @@ class SummaryMaker:
         plt.ylim(0, max_angle)
 
         plt.subplot(3, 1, 2)
-        plt.axhline(y=self.target_spd, linestyle='--')
-        plt.plot(self.t, self.spd, color='darkred')
-        plt.grid(visible=True, which='both')
-        # make these tick labels invisible
-        plt.tick_params('x', labelbottom=False)
-        plt.ylim(0, np.round(np.max(np.abs(self.spd) + 1)))
-        plt.ylabel('SPD', fontdict=label_font)
+        if not np.isnan(self.spd).any():
+            plt.axhline(y=self.target_spd, linestyle='--')
+            plt.plot(self.t, self.spd, color='darkred')
+            plt.grid(visible=True, which='both')
+            # make these tick labels invisible
+            plt.tick_params('x', labelbottom=False)
+            plt.ylim(0, np.round(np.max(np.abs(self.spd) + 1)))
+            plt.ylabel('SPD', fontdict=label_font)
 
         plt.subplot(3, 1, 3)
-        plt.axhline(y=self.target_vmg, linestyle='--')
-        plt.plot(self.t, self.vmg, color='darkred')
-        plt.grid(visible=True, which='both')
-        plt.ylim(0, np.round(np.max(np.abs(self.vmg) + 1)))
-        plt.ylabel('VMG', fontdict=label_font)
+        if not np.isnan(self.vmg).any():
+            plt.axhline(y=self.target_vmg, linestyle='--')
+            plt.plot(self.t, self.vmg, color='darkred')
+            plt.grid(visible=True, which='both')
+            plt.ylim(0, np.round(np.max(np.abs(self.vmg) + 1)))
+            plt.ylabel('VMG', fontdict=label_font)
 
         plt.savefig(png_name, dpi=dpi)
         print(f'Created {png_name}')
@@ -90,21 +92,22 @@ class SummaryMaker:
         t = (datetime.fromisoformat(epoch['utc']) - self.t0).total_seconds()
 
         plt.subplot(1, 1, 1)
-        plt.axvline(x=t)
-        plt.axhline(y=self.target_vmg, linestyle=':', color='cyan')
-        plt.plot(self.t, self.vmg, color='darkred')
+        if not np.isnan(self.vmg).any():
+            plt.axvline(x=t)
+            plt.axhline(y=self.target_vmg, linestyle=':', color='cyan')
+            plt.plot(self.t, self.vmg, color='darkred')
 
-        plt.axis('off')
-        maxy = np.round(np.max(np.abs(self.vmg) + 1))
-        plt.ylim(0, maxy)
+            plt.axis('off')
+            maxy = np.round(np.max(np.abs(self.vmg) + 1))
+            plt.ylim(0, maxy)
 
-        if t <= 0:
-            horizontalalignment = 'left'
-        else:
-            horizontalalignment = 'right'
+            if t <= 0:
+                horizontalalignment = 'left'
+            else:
+                horizontalalignment = 'right'
 
-        plt.text(t, maxy / 2, f'{self.vmg[epoch_idx]:.1f}', color='white', horizontalalignment=horizontalalignment)
-        plt.text(t, 0, f'{int(abs(t))}', color='black', horizontalalignment=horizontalalignment)
+            plt.text(t, maxy / 2, f'{self.vmg[epoch_idx]:.1f}', color='white', horizontalalignment=horizontalalignment)
+            plt.text(t, 0, f'{int(abs(t))}', color='black', horizontalalignment=horizontalalignment)
 
         plt.savefig(png_name, dpi=dpi, transparent=True, bbox_inches='tight', pad_inches=0)
         print(f'Created {png_name}')
@@ -126,7 +129,9 @@ class SummaryMaker:
         mean_tws = np.mean(tws)
         self.target_spd, self.target_twa = self.polars.get_targets(mean_tws, self.twa[0])
         self.target_vmg = abs(self.target_spd * math.radians(self.target_twa))
-        self.vmg = np.abs(np.array(self.spd) * np.cos(np.array(self.twa) * np.pi / 180))
+        self.spd = np.array(self.spd, dtype=float)
+        self.twa = np.array(self.twa, dtype=float)
+        self.vmg = np.abs(self.spd * np.cos(self.twa * np.pi / 180))
 
 
 

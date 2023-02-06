@@ -107,7 +107,8 @@ class OverlayMaker:
         draw.rectangle([(0, 0), (self.rect_width, self.rect_height)], fill=SEMI_TRANSPARENT_BOX_COLOR_2)
 
         x = self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "SPD", f"{epoch['sow']:.1f}")
+        if epoch['sow'] is not None:
+            self.info_cell.draw(draw, x, self.rect_y_offset, "SPD", f"{epoch['sow']:.1f}")
 
         x += self.cell_step
         self.info_cell.draw(draw, x, self.rect_y_offset, "SOG", f"{epoch['sog']:.1f}")
