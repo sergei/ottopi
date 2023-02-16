@@ -9,12 +9,14 @@ class ClipEvent:
     name: string
     utc_from: datetime
     utc_to: datetime
+    utc_gun: datetime
 
-    def __init__(self, name: string, utc_from: datetime, utc_to: datetime):
+    def __init__(self, name: string, utc_from: datetime, utc_to: datetime, utc_gun: datetime = None):
         self.uuid = str(uuid4())
         self.name = name
         self.utc_from = utc_from
         self.utc_to = utc_to
+        self.utc_gun = utc_gun
 
     def to_dict(self):
         return {
@@ -22,18 +24,19 @@ class ClipEvent:
             'name': self.name,
             'utc_from': self.utc_from.isoformat(),
             'utc_to': self.utc_to.isoformat(),
+            'utc_gun': None if self.utc_gun is None else self.utc_to.isoformat()
         }
 
     @classmethod
     def from_dict(cls, d):
-        evt = ClipEvent(d['name'], d['utc_from'], d['utc_to'])
+        evt = ClipEvent(d['name'], d['utc_from'], d['utc_to'],  d['utc_gun'] if 'utc_gun' in d else None)
         evt.uuid = d['uuid']
         return evt
 
     @staticmethod
     def decode_obj(d):
         for k in d:
-            if 'utc_from' in k or 'utc_to' in k:
+            if 'utc_from' in k or 'utc_to' in k or 'utc_gun' in k:
                 if d[k] is None:
                     d[k] = None
                 else:

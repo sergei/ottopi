@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from tkinter import Button, Canvas
+from tkinter import Canvas
 
 from tkVideoPlayer import TkinterVideo
 
@@ -17,6 +17,7 @@ EVENT_CLIP_ENDED = 'event_clip_ended'
 
 class VideoPlayer:
     def __init__(self, top, width=848, height=480, on_clip_utc_change=None):
+        self.paused = True
         self.state = STATE_INIT
         self.on_clip_utc_change = on_clip_utc_change
         c = Canvas(top, bg="blue", height=height, width=width)
@@ -29,9 +30,8 @@ class VideoPlayer:
         self.videoplayer.bind("<<Loaded>>", self.on_loaded)
         self.videoplayer.bind("<<SecondChanged>>", self.on_second_changed)
         self.videoplayer.bind("<<Ended>>", self.on_ended)
+        self.videoplayer.bind("<<FrameGenerated>>", self.on_frame_generated, add=True)
 
-        self.play_pause_btn = Button(top, text="Pause", command=self.play_pause)
-        self.play_pause_btn.grid(column=0, row=1, sticky='we')
         self.pending_clip_name = None
         self.pending_clip_offset = 0
 
@@ -82,11 +82,20 @@ class VideoPlayer:
 
     def play_pause(self):
         if self.videoplayer.is_paused():
+            self.paused = False
             self.videoplayer.play()
-            self.play_pause_btn["text"] = "Pause"
         else:
+            self.paused = True
+
+    def pause(self):
+        self.paused = True
+        if not self.videoplayer.is_paused():
             self.videoplayer.pause()
-            self.play_pause_btn["text"] = "Play"
+
+    # noinspection PyUnusedLocal
+    def on_frame_generated(self, event):
+        if self.paused:
+            self.videoplayer.pause()
 
     # noinspection PyUnusedLocal
     def on_second_changed(self, event):

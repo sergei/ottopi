@@ -9,7 +9,8 @@ UTC_TZ = pytz.UTC
 
 
 class MainTimeSlider:
-    def __init__(self, top, on_change, on_save_race, on_split_race, on_join_race_to_prev, on_delete_race):
+    def __init__(self, top, on_change, on_save_race, on_split_race, on_join_race_to_prev,
+                 on_delete_race, on_play_pause):
 
         # Callbacks
         self.on_change = on_change
@@ -17,6 +18,7 @@ class MainTimeSlider:
         self.on_split_race = on_split_race
         self.on_join_race_to_prev = on_join_race_to_prev
         self.on_delete_race = on_delete_race
+        self.on_play_pause = on_play_pause
 
         self.sv_race_name = StringVar()
         self.to_timestamp = None
@@ -34,7 +36,10 @@ class MainTimeSlider:
         buttons_frame.grid(column=0, row=1, sticky='nwes')
         ttk.Button(buttons_frame, text="<<", command=lambda: self.on_button_click(-60)).grid(column=0, row=0, sticky=W)
         ttk.Button(buttons_frame, text="<", command=lambda: self.on_button_click(-1)).grid(column=1, row=0, sticky=W)
-        ttk.Label(buttons_frame, textvariable=self.sv_utc_time).grid(column=2, row=0, sticky=W)
+
+        ttk.Button(buttons_frame, textvariable=self.sv_utc_time,
+                   command=lambda: self.on_play_pause()).grid(column=2, row=0, sticky=W)
+
         ttk.Button(buttons_frame, text=">", command=lambda: self.on_button_click(1)).grid(column=3, row=0, sticky=W)
         ttk.Button(buttons_frame, text=">>", command=lambda: self.on_button_click(60)).grid(column=4, row=0, sticky=W)
 
@@ -65,6 +70,7 @@ class MainTimeSlider:
         self.current_value.set(ts)
         self.on_time_change(None)
 
+    # noinspection PyUnusedLocal
     def on_time_change(self, event):
         utc = UTC_TZ.localize(datetime.utcfromtimestamp(self.current_value.get()))
         self.sv_utc_time.set(utc.strftime("%m/%d/%Y %H:%M:%S"))

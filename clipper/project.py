@@ -23,8 +23,7 @@ class ProjectEncoder(JSONEncoder):
             else:
                 return {'lat': obj.latitude, 'lon': obj.longitude, 'alt': obj.elevation}
         elif isinstance(obj, RawInstrData):
-            return {'utc': obj.utc.isoformat(), 'lat': obj.lat, 'lon': obj.lon, 'sog': obj.sog, 'cog': obj.cog,
-                    'awa': obj.awa, 'aws': obj.aws, 'twa': obj.twa, 'tws': obj.tws, 'sow': obj.sow, 'hdg': obj.hdg, }
+            return obj.to_dict()
         elif isinstance(obj, ClipEvent):
             return obj.to_dict()
         elif isinstance(obj, RaceInfo):

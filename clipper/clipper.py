@@ -1,8 +1,12 @@
 import datetime
 import os
+import re
 import string
 from tkinter import *
 from tkinter import ttk, filedialog
+
+import caffeine as caffeine
+from simplekml import Location
 
 from gopro import GoPro
 from gui.clip_editor import ClipEditor
@@ -18,9 +22,16 @@ from nmeaparser import NmeaParser
 from project import Project, COMMON, GOPRO, NMEA
 from race_events_recorder import RaceEventsRecorder
 from raw_instr_data import RawInstrData
+from video_maker import make_video
 
 SAVE_AS_ENTRY = 'Save As ...'
 SAVE_ENTRY = 'Save'
+PRODUCE_ENTRY = 'Produce ...'
+
+
+def get_valid_filename(s):
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 
 class Clipper(NavigationListener):
@@ -51,6 +62,7 @@ class Clipper(NavigationListener):
         self.main_time_slider = None
         self.clip_editor = None
         self.video_player = None
+        self.clip_is_being_edited = False
 
     def read_project(self):
         self.sv_go_pro_dir.set(self.project.get(GOPRO, 'dir'))
@@ -58,7 +70,6 @@ class Clipper(NavigationListener):
         self.sv_nmea_file_name.set(self.project.get(NMEA, 'dir'))
 
         self.instr_data = self.project.get(COMMON, 'instr_data')
-        # self.events = self.project.get(COMMON, 'events')
         self.races = self.project.get(COMMON, 'races')
         self.current_race = self.races[0]
 
@@ -141,16 +152,18 @@ class Clipper(NavigationListener):
             self.menu_file.entryconfigure(SAVE_ENTRY, state=DISABLED)
             self.menu_file.entryconfigure(SAVE_AS_ENTRY, state=DISABLED)
 
+        self.menu_file.entryconfigure(PRODUCE_ENTRY, state=NORMAL)
+
         self.root.title(title)
         if self.sv_go_pro_dir.get() != "" and self.sv_nmea_file_name.get() != "" and self.polar_file_sv != "":
             self.gen_evt_button['state'] = NORMAL
 
     def start(self):
-        map_width = 800
-        map_height = 640
-
-        video_width = 848
         video_height = 480
+        video_width = 848
+
+        map_height = video_height
+        map_width = 800
 
         # Menu
         self.root.option_add('*tearOff', FALSE)
@@ -164,6 +177,7 @@ class Clipper(NavigationListener):
         self.menu_file.add_command(label='Open...', command=self.open_project)
         self.menu_file.add_command(label=SAVE_ENTRY, command=self.save_project, state=DISABLED)
         self.menu_file.add_command(label=SAVE_AS_ENTRY, command=self.save_project_as, state=DISABLED)
+        self.menu_file.add_command(label=PRODUCE_ENTRY, command=self.produce_video, state=DISABLED)
 
         windowmenu = Menu(menubar, name='window')
         menubar.add_cascade(menu=windowmenu, label='Window')
@@ -241,7 +255,8 @@ class Clipper(NavigationListener):
                                                on_save_race=self.on_save_race,
                                                on_split_race=self.on_split_race,
                                                on_join_race_to_prev=self.on_join_race_to_prev,
-                                               on_delete_race=self.on_delete_race
+                                               on_delete_race=self.on_delete_race,
+                                               on_play_pause=self.on_play_pause
                                                )
 
         # Clip editor
@@ -255,10 +270,24 @@ class Clipper(NavigationListener):
 
         self.root.mainloop()
 
-    def on_in_out_change(self, utc_in, utc_out):
+    def on_play_pause(self):
+        self.video_player.play_pause()
+
+    def on_in_out_change(self, utc_in, utc_out, in_changed):
+        self.clip_is_being_edited = True
         self.map_view.show_clip_in_out(utc_in, utc_out)
+        utc = utc_in if in_changed else utc_out
+
+        ii = self.find_track_point(utc)
+        if ii is not None:
+            self.map_view.show_boat(ii)
+
+        self.video_player.play_video_at_utc(utc)
+
+        pass
 
     def on_save_clip(self, event):
+        self.clip_is_being_edited = False
         self.map_view.update_clip(event)
         self.events_table.update_event(event)
         for e in self.current_race.events:
@@ -266,7 +295,7 @@ class Clipper(NavigationListener):
                 self.current_race.events.remove(e)
                 self.current_race.events.append(event)
         self.current_race.events.sort(key=lambda x: x.utc_from)
-        self.project.set(COMMON, 'events', self.current_race.events)
+        self.project.set(COMMON, 'races', self.races)
         self.on_project_change()
 
     def on_remove_clip(self, event: ClipEvent):
@@ -275,7 +304,7 @@ class Clipper(NavigationListener):
         for e in self.current_race.events:
             if e.uuid == event.uuid:
                 self.current_race.events.remove(e)
-        self.project.set(COMMON, 'events', self.current_race.events)
+        self.project.set(COMMON, 'races', self.races)
         self.on_project_change()
 
     def on_create_clip(self):
@@ -286,7 +315,7 @@ class Clipper(NavigationListener):
                               )
             self.current_race.events.append(event)
             self.current_race.events.sort(key=lambda x: x.utc_from)
-            self.project.set(COMMON, 'events', self.current_race.events)
+            self.project.set(COMMON, 'races', self.races)
             self.update_views()
 
     def on_video_utc_change(self, utc):
@@ -295,11 +324,6 @@ class Clipper(NavigationListener):
         ii = self.find_track_point(utc)
         if ii is not None:
             self.map_view.show_boat(ii)
-        event = self.locate_event_with_utc(utc)
-        if event is not None:
-            self.clip_editor.show(event)
-        else:
-            self.clip_editor.hide()
 
     def on_main_time_slider_change(self, utc):
         self.slider_utc = utc
@@ -307,12 +331,7 @@ class Clipper(NavigationListener):
         if ii is not None:
             self.map_view.show_boat(ii)
 
-        event = self.locate_event_with_utc(utc)
-        if event is not None:
-            self.clip_editor.show(event)
-        else:
-            self.clip_editor.hide()
-
+        self.clip_editor.set_utc(utc)
         self.video_player.play_video_at_utc(utc)
 
     def find_race_by_uuid(self, race_uuid):
@@ -346,6 +365,7 @@ class Clipper(NavigationListener):
 
         self.main_time_slider.move_to(event.utc_from)
         self.clip_editor.show(event)
+        self.map_view.show_clip_in_out(event.utc_from, event.utc_to)
 
     def on_instr_data(self, instr_data: RawInstrData):
         self.instr_data.append(instr_data)
@@ -397,6 +417,7 @@ class Clipper(NavigationListener):
         self.map_view.show_events(self.current_race.events)
 
         self.main_time_slider.show(self.current_race)
+        self.video_player.play_video_at_utc(self.current_race.utc_from)
 
     def find_track_point(self, utc: datetime):
         result = None
@@ -467,7 +488,7 @@ class Clipper(NavigationListener):
             race = self.find_race_by_uuid(race_uuid)
             race_idx = self.races.index(race)
             self.races.pop(race_idx)
-            if race_idx >= len(self.races) -1:
+            if race_idx >= len(self.races) - 1:
                 race_idx -= 1
             self.current_race = self.races[race_idx]
 
@@ -475,3 +496,42 @@ class Clipper(NavigationListener):
             self.project.set(COMMON, 'races', self.races)
             self.on_project_change()
 
+    def produce_video(self):
+        dir_name = filedialog.askdirectory(initialdir='/tmp')
+        if len(dir_name) == 0:
+            return
+
+        navigator = Navigator.get_instance()
+        navigator.read_polars(self.project.get(COMMON, 'polar_file'))
+        for race in self.races:
+            # Create event's JSON file in old format
+            race_events = []
+            for event in race.events:
+
+                history = []
+                hist_idx = None
+                for idx, ii in enumerate(self.instr_data):
+                    if event.utc_from <= ii.utc <= event.utc_to:
+                        if hist_idx is None:
+                            hist_idx = idx
+                        history.append(ii.to_dict())
+
+                duration = int((event.utc_to - event.utc_from).total_seconds())
+                half_span = duration // 2
+                utc = event.utc_from + datetime.timedelta(seconds=half_span)
+
+                race_event = {
+                    'name': event.name,
+                    'gun': event.utc_gun.isoformat() if event.utc_gun is not None else None,
+                    'in': event.utc_from.isoformat(),
+                    'out': event.utc_to.isoformat(),
+                    'utc': utc.isoformat(),
+                    'history': history,
+                    'hist_idx': hist_idx,
+                    'location': Location(self.instr_data[hist_idx].lat, self.instr_data[hist_idx].lon),
+                }
+                race_events.append(race_event)
+
+            caffeine.on(display=False)
+            make_video(dir_name, get_valid_filename(race.name), race_events, self.gopro, navigator.polars, False)
+            caffeine.off()

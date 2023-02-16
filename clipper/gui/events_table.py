@@ -6,7 +6,6 @@ from gui.race_info import RaceInfo
 
 TYPE_RACE = 'race'
 TYPE_EVENT = 'event'
-EVENT_TIME_FMT = "%m/%d/%Y %H:%M:%S"
 
 
 class EventsTable:
@@ -20,8 +19,6 @@ class EventsTable:
         columns = ['name']
         self.events_tree = Treeview(table_frame, columns=columns, show='headings')
         self.events_tree = Treeview(table_frame)
-        # define headings
-        # self.events_tree.heading(columns[0], text='Name')
 
         self.events_tree.bind('<<TreeviewSelect>>', self.item_selected)
         self.events_tree.grid(row=0, column=0, sticky='nsew')
@@ -44,26 +41,22 @@ class EventsTable:
                 self.events_tree.insert(race_node, END, text=event.name, tags=(event.to_json(), TYPE_EVENT))
 
     def remove_event(self, event_to_remove: ClipEvent):
-        for row in self.events_tree.get_children():
-            item = self.events_tree.item(row)
-            item_type = item['tags'][1]
-            if item_type == TYPE_EVENT:
+        for race_iid in self.events_tree.get_children():
+            for event_iid in self.events_tree.get_children(race_iid):
+                item = self.events_tree.item(event_iid)
                 event = ClipEvent.from_json(item['tags'][0])
                 if event.uuid == event_to_remove.uuid:
-                    self.events_tree.delete(row)
+                    self.events_tree.delete(event_iid)
+                    return
 
     def update_event(self, event_to_update: ClipEvent):
-        for row in self.events_tree.get_children():
-            item = self.events_tree.item(row)
-            item_type = item['tags'][1]
-            if item_type == TYPE_EVENT:
+        for race_iid in self.events_tree.get_children():
+            for event_iid in self.events_tree.get_children(race_iid):
+                item = self.events_tree.item(event_iid)
                 old_event = ClipEvent.from_json(item['tags'][0])
                 if old_event.uuid == event_to_update.uuid:
-                    from_utc_str = event_to_update.utc_from.strftime(EVENT_TIME_FMT)
-                    to_utc_str = event_to_update.utc_to.strftime(EVENT_TIME_FMT)
-                    values = [event_to_update.name]
-                    self.events_tree.item(row, values=values, tags=(event_to_update.to_json()))
-                    break
+                    self.events_tree.item(event_iid, text=event_to_update.name, tags=(event_to_update.to_json(), TYPE_EVENT))
+                    return
 
     def item_selected(self, e):
         for selected_item in self.events_tree.selection():

@@ -15,3 +15,7 @@ class RawInstrData:
         self.tws = tws  # True wind speed KTS
         self.sow = sow  # Speed over water KTS
         self.hdg = hdg  # Boat heading (magnetic degrees)
+
+    def to_dict(self):
+        return {'utc': self.utc.isoformat(), 'lat': self.lat, 'lon': self.lon, 'sog': self.sog, 'cog': self.cog,
+                'awa': self.awa, 'aws': self.aws, 'twa': self.twa, 'tws': self.tws, 'sow': self.sow, 'hdg': self.hdg, }
