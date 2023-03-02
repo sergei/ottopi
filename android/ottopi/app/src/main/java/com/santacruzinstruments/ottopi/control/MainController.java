@@ -1,5 +1,6 @@
 package com.santacruzinstruments.ottopi.control;
 
+
 import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.FINISH;
 import static com.santacruzinstruments.ottopi.navengine.route.RoutePoint.Type.START;
 
@@ -20,7 +21,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 import androidx.room.Room;
 
+import com.santacruzinstruments.N2KLib.N2KLib.N2KLib;
+import com.santacruzinstruments.N2KLib.N2KLib.N2KPacket;
+import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 import com.santacruzinstruments.ottopi.R;
+import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransportTask;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
 import com.santacruzinstruments.ottopi.data.DataReceptionStatus;
 import com.santacruzinstruments.ottopi.data.RaceRouteDao;
@@ -41,10 +46,12 @@ import com.santacruzinstruments.ottopi.navengine.StartLineComputer;
 import com.santacruzinstruments.ottopi.navengine.calibration.Calibrator;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
 import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaEpochAssembler;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaFormatter;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaReader;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaEpochAssembler;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaFormatter;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaParser;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaReader;
+import com.santacruzinstruments.ottopi.navengine.nmea2000.CanFrameAssembler;
+import com.santacruzinstruments.ottopi.navengine.nmea2000.InstrumentDataAssembler;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 import com.santacruzinstruments.ottopi.navengine.route.GpxBuilder;
 import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
@@ -57,6 +64,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -66,6 +74,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -226,7 +235,11 @@ public class MainController {
     private long lastNavEngOutRcvdAtMs = 0;
     private NetworkManager networkManager;
     private UsbReader usbReader;
-    private UsbSerialManager usbSerialManager;
+
+    // NMEA 2000 support
+    private SerialUsbTransportTask serialUsbTransportTask;
+    private CanFrameAssembler canFrameAssembler;
+    private InstrumentDataAssembler instrumentDataAssembler;
 
     private final Handler handler = new Handler(Looper.myLooper());
     private final BoatDataRepository boatDataRepository;
@@ -275,6 +288,7 @@ public class MainController {
         externalNmeaReader.addListener(msg
                 ->  offer(MainController.MessageId.onNetworkNmeaMessage, msg));
 
+        // NMEA0183 routing
         NmeaEpochAssembler nmeaEpochAssembler = new NmeaEpochAssembler();
         nmeaEpochAssembler.addInstrumentInputListener(navComputer);
 
@@ -284,6 +298,10 @@ public class MainController {
 
         // Only network NMEA contains special commands
         networkNmeaParser.addListener(networkNmeaCmdListener);
+
+        // NMEA2000 routing
+        instrumentDataAssembler = new InstrumentDataAssembler();
+        instrumentDataAssembler.addInstrumentInputListener(navComputer);
 
         // Read and distribute start time
         final SharedPreferences prefs = ctx.getSharedPreferences(ctx.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -350,19 +368,19 @@ public class MainController {
         // Finally start heartbeat
         startHeartbeat();
 
-        // Start network thread
+        // Now start network thread
         Thread networkThread = new Thread(this::networkThread);
-        networkThread.setName("NMEA Network thread");
+        networkThread.setName("NMEA Network");
         networkThread.start();
 
-        // Start usb thread for accessory
-        Thread usbThread = new Thread(this::usbThread);
-        usbThread.setName("USB thread");
+        // Now start usb accessory thread to read NME0183 from FTDI chip
+        Thread usbThread = new Thread(this::usbAccessoryThread);
+        usbThread.setName("USB Accessory");
         usbThread.start();
 
-        // Start usb thread for Serial USB device
+        // Now start USB serial thread to read from NMEA200 Gateway
         Thread serialUsbThread = new Thread(this::serialUsbThread);
-        serialUsbThread.setName("Serial USB thread");
+        serialUsbThread.setName("Serial USB");
         serialUsbThread.start();
 
         // NMEA looper
@@ -385,6 +403,12 @@ public class MainController {
         usbThread.interrupt();
         try {
             usbThread.join(1000);
+        } catch (InterruptedException ignore) {}
+
+        serialUsbTransportTask.stop();
+        serialUsbThread.interrupt();
+        try {
+            serialUsbThread.join(1000);
         } catch (InterruptedException ignore) {}
 
     }
@@ -518,7 +542,7 @@ public class MainController {
                             usbReader.setAccessory((UsbAccessory)msg.arg);
                             break;
                         case setupUsbDevice:
-                            usbSerialManager.setUsbDevice((UsbDevice)msg.arg);
+                            serialUsbTransportTask.setUsbDevice((UsbDevice)msg.arg);
                             break;
                     }
                 }
@@ -536,7 +560,7 @@ public class MainController {
         messageQueue.offer(new MainController.Message(id));
     }
 
-    private void usbThread() {
+    private void usbAccessoryThread() {
         usbReader =  new UsbReader(this.ctx, new UsbReader.UsbConnectionListener() {
             @Override
             public void OnConnectionStatus(boolean connected) {
@@ -551,21 +575,41 @@ public class MainController {
         });
         usbReader.run();
     }
-
     private void serialUsbThread() {
-        usbSerialManager =  new UsbSerialManager(this.ctx, new UsbReader.UsbConnectionListener() {
+
+        InputStream is = Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json");
+        new N2KLib(null, is);
+
+        canFrameAssembler = new CanFrameAssembler((pgn, priority, dest, src, time, rawBytes, len, hdrlen) -> {
+            N2KPacket packet = new N2KPacket(pgn, priority, dest, src, time, rawBytes, len, hdrlen);
+            if ( packet.isValid() ){
+                try {
+                    instrumentDataAssembler.onN2kPacket(packet);
+                } catch (N2KTypeException e) {
+                    Timber.e(e,"Failed to parse packet");
+                }
+            }
+        });
+        
+        serialUsbTransportTask =  new SerialUsbTransportTask(this.ctx, new SerialUsbTransportTask.UsbConnectionListener() {
             @Override
             public void OnConnectionStatus(boolean connected) {
-                Timber.d("USB device %s", connected ? "Connected" : "Not connected");
+                Timber.d("Serial USB %s", connected ? "Connected" : "Not connected");
                 viewInterface.onUsbConnect(connected);
             }
 
             @Override
-            public void onDataReceived(byte[] buff, int size) {
-                externalNmeaReader.read(buff, size);
+            public void onFrameReceived(int addrPri, byte[] data) {
+                canFrameAssembler.setFrame(addrPri, data);
             }
+
+            @Override
+            public void onTick() {
+
+            }
+
         });
-        usbSerialManager.run();
+        serialUsbTransportTask.run();
     }
 
     private void networkThread() {

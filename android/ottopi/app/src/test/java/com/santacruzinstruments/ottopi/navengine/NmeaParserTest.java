@@ -1,6 +1,6 @@
 package com.santacruzinstruments.ottopi.navengine;
 
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaParser;
 
 import java.util.Calendar;
 import java.util.Date;

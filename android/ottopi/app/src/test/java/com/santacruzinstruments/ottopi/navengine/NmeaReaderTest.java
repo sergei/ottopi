@@ -1,8 +1,8 @@
 package com.santacruzinstruments.ottopi.navengine;
 
 
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaReader;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaParser;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaReader;
 
 import junit.framework.TestCase;
 

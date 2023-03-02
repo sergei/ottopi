@@ -1,10 +1,9 @@
-package com.santacruzinstruments.ottopi.navengine.nmea;
+package com.santacruzinstruments.ottopi.navengine.nmea0183;
 
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;

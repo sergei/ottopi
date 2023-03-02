@@ -202,33 +202,35 @@ public class FileLoggingTree extends Timber.DebugTree {
     @Override
     protected void log(int priority, String tag, @NotNull String message, Throwable t) {
 
-        if ( mLogWriter != null ) {
-            if ( mLinesCount >= MAX_LINES_IN_LOG ){
-                reOpenLogFile();
+        synchronized(this){
+            if ( mLogWriter != null ) {
+                if ( mLinesCount >= MAX_LINES_IN_LOG ){
+                    reOpenLogFile();
+                }
             }
-        }
 
-        if ( mLogWriter != null ) {
-            String logTimeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS",
-                    Locale.getDefault()).format(new Date());
-            try {
-                mLogWriter
-                        .append(logTimeStamp)
-                        .append(' ')
-                        .append(tag)
-                        .append(' ')
-                        .append(message)
-                        .append('\n');
-                mLinesCount ++;
-            } catch (IOException e) {
-                super.log(Log.ERROR, TAG,"Error while logging into file : " + e);
-                super.log(Log.ERROR, TAG,"No more logs will go to the files");
-                mLinesCount = 0;
-                mLogWriter = null;
+            if ( mLogWriter != null ) {
+                String logTimeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS",
+                        Locale.getDefault()).format(new Date());
+                try {
+                    mLogWriter
+                            .append(logTimeStamp)
+                            .append(' ')
+                            .append(tag)
+                            .append(' ')
+                            .append(message)
+                            .append('\n');
+                    mLinesCount ++;
+                } catch (IOException e) {
+                    super.log(Log.ERROR, TAG,"Error while logging into file : " + e);
+                    super.log(Log.ERROR, TAG,"No more logs will go to the files");
+                    mLinesCount = 0;
+                    mLogWriter = null;
+                }
             }
+            // Also print to logcat
+            super.log(priority, tag, message, t);
         }
-        // Also print to logcat
-        super.log(priority, tag, message, t);
     }
 
     @SuppressWarnings("SameParameterValue")

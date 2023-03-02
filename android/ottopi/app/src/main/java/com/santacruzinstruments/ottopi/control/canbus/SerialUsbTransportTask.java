@@ -1,7 +1,6 @@
-package com.santacruzinstruments.ottopi.control;
+package com.santacruzinstruments.ottopi.control.canbus;
 
 import static com.santacruzinstruments.ottopi.BuildConfig.APPLICATION_ID;
-
 import static java.lang.Thread.sleep;
 
 import android.annotation.SuppressLint;
@@ -21,11 +20,19 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import timber.log.Timber;
 
-public class UsbSerialManager implements SerialInputOutputManager.Listener {
+public class SerialUsbTransportTask implements SerialInputOutputManager.Listener {
 
+    public interface UsbConnectionListener {
+        void OnConnectionStatus(boolean connected);
+        void onFrameReceived(int addrPri, byte[]  data);
+        void onTick();
+    }
+
+    private boolean bKeepRunning = true;
     private UsbDeviceConnection usbConnection;
     private final UsbSerialProber usbDefaultProber = UsbSerialProber.getDefaultProber();
     private final UsbSerialProber usbCustomProber = CustomSerialUsbProber.getCustomProber();
@@ -35,8 +42,7 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
     private static final String INTENT_ACTION_GRANT_USB = APPLICATION_ID + "INTENT_ACTION_GRANT_USB";
     private static final String INTENT_ACTION_DISCONNECT = APPLICATION_ID + "INTENT_ACTION_DISCONNECT";
-    private boolean bKeepRunning = true;
-    private final UsbReader.UsbConnectionListener usbConnectionListener;
+    private final UsbConnectionListener usbConnectionListener;
     private final UsbManager usbManager;
     private UsbSerialPort usbSerialPort;
     private final PendingIntent usbPermissionIntent;
@@ -51,7 +57,9 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
     private final Context context;
 
-    public UsbSerialManager(Context context, UsbReader.UsbConnectionListener usbConnectionListener) {
+    private String rawString = "";
+
+    public SerialUsbTransportTask(Context context, UsbConnectionListener usbConnectionListener) {
         this.context = context;
         this.usbConnectionListener = usbConnectionListener;
         usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -104,7 +112,7 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
     }
 
     @SuppressWarnings("BusyWait")
-    void run() {
+    public void run() {
         Timber.d("Starting Serial USB Manager thread");
         while (bKeepRunning) {
 
@@ -118,7 +126,7 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
             if ( connected == Connected.True){
                 if ( ! this.gatewayInitialized){
                     // Set gateway to 0183 mode, so it would translate from NMEA 2000 to NMEA 0183
-                    byte [] init = "YDNU MODE 0183\r\n".getBytes();
+                    byte [] init = "YDNU MODE RAW\r\n".getBytes();
                     try {
                         write(init);
                         this.gatewayInitialized = true;
@@ -127,7 +135,7 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
                     }
                 }
             }
-
+            usbConnectionListener.onTick();
             try {sleep(1000);} catch (InterruptedException ignore) {}
         }
     }
@@ -222,7 +230,55 @@ public class UsbSerialManager implements SerialInputOutputManager.Listener {
 
     @Override
     public void onNewData(byte[] data) {
-        usbConnectionListener.onDataReceived(data, data.length);
+        for( byte b: data){
+            if ( b == '\n' || b == '\r'){
+                if ( rawString.length() > 0) {
+                    processRawString(rawString);
+                    rawString = "";
+                }
+            }else{
+                rawString += (char)(b);
+            }
+        }
+
+    }
+
+    private void processRawString(String s) {
+        String [] t = s.split(" ");
+        Timber.v("Got RAW string [%s] (%d)", s, t.length);
+        if( t.length > 2 && t.length <= 11) {
+            if(Objects.equals(t[1], "R")){
+                try {
+                    int canAddr = Integer.parseInt(t[2], 16);
+                    byte [] data = new byte[t.length - 3];
+                    for( int i=0; i < data.length; i++){
+                        data[i] = (byte)Integer.parseInt(t[i + 3], 16);
+                    }
+                    usbConnectionListener.onFrameReceived(canAddr, data);
+                }catch (NumberFormatException e){
+                    Timber.w("Malformed raw string");
+                }
+            }
+        }
+    }
+
+    static public String formatYdnuRawString(int canAddr, byte[] data){
+        String msg = String.format("%08X", canAddr);
+        for( byte b : data){
+            msg += String.format(" %02X", b);
+        }
+        msg += "\r\n";
+        return msg;
+    }
+
+    public void sendCanFrame(int canAddr, byte[] data){
+        String msg = formatYdnuRawString(canAddr, data);
+        try {
+            write(msg.getBytes());
+        } catch (IOException e) {
+            Timber.e(e, "Failed to write");
+            usbConnectionListener.OnConnectionStatus(false);
+        }
     }
 
     @Override

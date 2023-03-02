@@ -3,9 +3,9 @@ package com.santacruzinstruments.ottopi.navengine;
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaEpochAssembler;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaParser;
-import com.santacruzinstruments.ottopi.navengine.nmea.NmeaReader;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaEpochAssembler;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaParser;
+import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaReader;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 

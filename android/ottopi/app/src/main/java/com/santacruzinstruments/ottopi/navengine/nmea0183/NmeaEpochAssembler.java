@@ -1,4 +1,4 @@
-package com.santacruzinstruments.ottopi.navengine.nmea;
+package com.santacruzinstruments.ottopi.navengine.nmea0183;
 
 import java.util.ArrayList;
 import java.util.Calendar;

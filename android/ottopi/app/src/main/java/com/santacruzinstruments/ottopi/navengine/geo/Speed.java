@@ -8,6 +8,9 @@ public class Speed extends Quantity{
 	private final static String INVALID_VALUE = "--.-";
 	public static final Speed INVALID = new Speed();
 
+	public static double Ms2Kts(double meterPerSec){
+		return meterPerSec / 1852. * 3600.;
+	}
 	public Speed()
 	{
 		super(false);
