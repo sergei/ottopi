@@ -93,6 +93,7 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
 
     # Create separate event clips
     max_evt = 999
+    video_only = False
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
         if not os.path.isfile(evt_clip_name) or ignore_cache:
@@ -107,7 +108,20 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
                 camera_clip = VideoFileClip(name).subclip(in_time, out_time)
                 camera_clips.append(camera_clip)
 
-            if len(camera_clips) > 0:
+            if video_only:
+                background_clip = concatenate_videoclips(camera_clips)
+                clips = [background_clip]
+                composite_clip = CompositeVideoClip(clips)
+                composite_clip.write_videofile(evt_clip_name)
+                # Close unused clips
+                composite_clip.close()
+                background_clip.close()
+                for c in camera_clips:
+                    c.close()
+                print(f'{evt_clip_name} created')
+                evt['composite_clip'] = evt_clip_name
+
+            elif len(camera_clips) > 0:
                 title_duration = 4
                 event_title_clip = ImageClip(evt['event_title_png'], duration=title_duration)
 
