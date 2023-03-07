@@ -36,6 +36,7 @@ import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -115,6 +116,7 @@ public class OttopiActivity extends AppCompatActivity {
 
         Timber.d("Git branch: %s", BuildConfig.GIT_BRANCH);
         Timber.d("Git commit: %s", BuildConfig.GIT_HASH);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         navViewModel = new ViewModelProvider(this).get(NavViewModel.class);
 
         ActivityOttopiBinding binding = ActivityOttopiBinding.inflate(getLayoutInflater());
