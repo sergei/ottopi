@@ -71,10 +71,13 @@ class Clipper(NavigationListener):
 
         self.instr_data = self.project.get(COMMON, 'instr_data')
         self.races = self.project.get(COMMON, 'races')
-        self.current_race = self.races[0]
+        if self.races is None:
+            self.races = []
+            self.current_race = None
+        else:
+            self.current_race = self.races[0]
 
         self.update_views()
-
         self.on_project_change()
 
     def new_project(self):
@@ -397,27 +400,29 @@ class Clipper(NavigationListener):
             event = ClipEvent(e['name'], e['history'][0].utc, e['history'][-1].utc)
             events.append(event)
 
-        print('Events generated')
-        race = RaceInfo(f'Race {events[0].utc_from.strftime("%Y/%m/%d/ %H:%M:%S")}',
-                        self.instr_data[0].utc, self.instr_data[-1].utc, events)
-        self.races.append(race)
-        self.current_race = self.races[0]
+        print(f' {len(events)} events generated')
+        if len(events) > 0:
+            race = RaceInfo(f'Race {events[0].utc_from.strftime("%Y/%m/%d/ %H:%M:%S")}',
+                            self.instr_data[0].utc, self.instr_data[-1].utc, events)
+            self.races.append(race)
+            self.current_race = self.races[0]
 
-        self.project.set(COMMON, 'races', self.races)
-        self.project.set(COMMON, 'instr_data', self.instr_data)
+            self.project.set(COMMON, 'races', self.races)
+            self.project.set(COMMON, 'instr_data', self.instr_data)
 
-        self.update_views()
-        self.on_project_change()
+            self.update_views()
+            self.on_project_change()
 
     def update_views(self):
         self.events_table.show_races(self.races)
 
-        self.map_view.show_track(self.current_race.utc_from, self.current_race.utc_to, self.instr_data)
-        self.map_view.clear_events()
-        self.map_view.show_events(self.current_race.events)
+        if self.current_race is not None:
+            self.map_view.show_track(self.current_race.utc_from, self.current_race.utc_to, self.instr_data)
+            self.map_view.clear_events()
+            self.map_view.show_events(self.current_race.events)
 
-        self.main_time_slider.show(self.current_race)
-        self.video_player.play_video_at_utc(self.current_race.utc_from)
+            self.main_time_slider.show(self.current_race)
+            self.video_player.play_video_at_utc(self.current_race.utc_from)
 
     def find_track_point(self, utc: datetime):
         result = None

@@ -87,7 +87,7 @@ class Project:
         self._is_dirty = True
 
     def get(self, section, key):
-        return self.params[section][key]
+        return self.params[section].get(key)
 
     def open(self, json_file):
         try:
