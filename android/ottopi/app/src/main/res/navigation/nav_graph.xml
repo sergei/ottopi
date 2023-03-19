@@ -59,6 +59,12 @@
             app:nullable="true" />
     </fragment>
 
+    <fragment
+        android:id="@+id/calibrationFragment"
+        android:name="com.santacruzinstruments.ottopi.ui.calibration.CalibrationFragment"
+        android:label="@string/instrument_calibration"
+        tools:layout="@layout/fragment_calibration" />
+
     <!--  Global actions   -->
 
     <action

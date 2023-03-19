@@ -9,6 +9,21 @@
               <option name="preferredColumnWidths">
                 <map>
                   <entry key="Duration" value="90" />
+                  <entry key="R52T5040F9K" value="120" />
+                  <entry key="RaceQs_API_28" value="120" />
+                  <entry key="Tests" value="360" />
+                  <entry key="samsung&#10; SM-T570" value="120" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="247742867">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
                   <entry key="RaceQs_API_28" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
@@ -16,7 +31,7 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
-        <entry key="247742867">
+        <entry key="313682734">
           <value>
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">
@@ -56,6 +71,19 @@
           </value>
         </entry>
         <entry key="1587435835">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="RaceQs_API_28" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1710222736">
           <value>
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">

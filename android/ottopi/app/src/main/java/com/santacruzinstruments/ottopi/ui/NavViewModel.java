@@ -1,5 +1,7 @@
 package com.santacruzinstruments.ottopi.ui;
 
+import static java.lang.Math.abs;
+
 import android.content.Context;
 
 import androidx.lifecycle.LiveData;
@@ -11,6 +13,7 @@ import com.santacruzinstruments.ottopi.data.CalibrationData;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
 import com.santacruzinstruments.ottopi.data.DataReceptionStatus;
+import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.db.HostNameEntry;
 import com.santacruzinstruments.ottopi.data.db.BoatDataRepository;
 import com.santacruzinstruments.ottopi.data.SailingState;
@@ -23,7 +26,13 @@ import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RouteCollection;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -31,6 +40,25 @@ import dagger.hilt.android.qualifiers.ApplicationContext;
 
 @HiltViewModel
 public class NavViewModel extends ViewModel implements ViewInterface {
+
+    private static final String INVALID_VALUE = "...";
+
+    public static class Calibratable{
+        public final String name;
+        public final boolean isDegree;
+        MutableLiveData<Integer> cal = new MutableLiveData<>(0);
+        MutableLiveData<String> value = new MutableLiveData<>(INVALID_VALUE);
+        boolean gotCal = false;
+        double currCal = 0;
+        double suggestedCal = 0;
+
+        Calibratable(String name, boolean isDegree) {
+            this.name = name;
+            this.isDegree = isDegree;
+        }
+    }
+
+    private final HashMap<MeasuredDataType, Calibratable> calibratableDataMap = new HashMap<>();
 
     // Use this class to observe SailingState and StartType simultaneously
     public static class RaceTypeStateMediatorLiveData extends MediatorLiveData<RaceTypeStateMediatorLiveData.RaceTypeState>{
@@ -88,12 +116,21 @@ public class NavViewModel extends ViewModel implements ViewInterface {
     private final MutableLiveData<String> loggingTag = new MutableLiveData<>();
     private final MutableLiveData<Boolean> usbConnected = new MutableLiveData<>(false);
 
+    private final  MutableLiveData<Boolean> isN2kConnected = new MutableLiveData<>();
+
     @Inject
     NavViewModel(@ApplicationContext Context ctx, CtrlInterface ctrlInterface){
         this.ctrlInterface = ctrlInterface;
         BoatDataRepository boatDataRepository = new BoatDataRepository(ctx);
         hostNamesLiveData = boatDataRepository.getHostNamesLiveData();
         hostPortsLiveData = boatDataRepository.getHostPortsLiveData();
+
+        calibratableDataMap.put(MeasuredDataType.AWA, new Calibratable("AWA", true));
+        calibratableDataMap.put(MeasuredDataType.AWS, new Calibratable("AWS", false));
+        calibratableDataMap.put(MeasuredDataType.SPD, new Calibratable("SPD", false));
+        calibratableDataMap.put(MeasuredDataType.HDG, new Calibratable("HDG", true));
+        calibratableDataMap.put(MeasuredDataType.PITCH, new Calibratable("Pitch", true));
+        calibratableDataMap.put(MeasuredDataType.ROLL, new Calibratable("Roll", true));
 
         ctrlInterface.init(this);
     }
@@ -254,7 +291,9 @@ public class NavViewModel extends ViewModel implements ViewInterface {
     @Override
     public void setCalibrationData(CalibrationData calibrationData) {
         this.calibrationData.postValue(calibrationData);
+        setSuggestedCalValues(calibrationData);
     }
+
     public MutableLiveData<CalibrationData> getCalibrationData() {
         return calibrationData;
     }
@@ -307,6 +346,97 @@ public class NavViewModel extends ViewModel implements ViewInterface {
 
     public LiveData<Boolean> getUsbConnected() {
         return usbConnected;
+    }
+    public List<MeasuredDataType> getValibratableItemsList() {
+        final LinkedList<MeasuredDataType> itemsList = new LinkedList<>(calibratableDataMap.keySet());
+        Collections.sort(itemsList);
+        return itemsList;
+    }
+
+    public Map<MeasuredDataType, Calibratable> getCalibratableDataMap() {
+        return calibratableDataMap;
+    }
+
+    public void setCal(MeasuredDataType item, int calValue) {
+        Calibratable c = calibratableDataMap.get(item);
+        assert c != null;
+        c.cal.postValue(calValue);
+    }
+    public LiveData<Integer> getCal(MeasuredDataType item){
+        Calibratable c = calibratableDataMap.get(item);
+        assert c != null;
+        return c.cal;
+    }
+
+    public LiveData<String> getValue(MeasuredDataType item){
+        Calibratable c = calibratableDataMap.get(item);
+        assert c != null;
+        return c.value;
+    }
+
+    @Override
+    public void onRcvdInstrValue(MeasuredDataType item, double value) {
+        Calibratable c = calibratableDataMap.get(item);
+        assert c != null;
+        String sign = c.currCal > 0 ? "+" : "-";
+        if ( c.isDegree ){
+            double nonCalVal = value - c.currCal;
+            if ( c.gotCal ){
+                c.value.postValue(String.format(Locale.getDefault(), "%.1f° = %.1f° %s %.1f°", value, nonCalVal, sign, abs(c.currCal)));
+            }else{
+                c.value.postValue(INVALID_VALUE);
+            }
+        }else{
+            double ratio = 1 + c.currCal / 100.;
+            double nonCalVal = value / ratio;
+            if ( c.gotCal ){
+                c.value.postValue(String.format(Locale.getDefault(), "%.1f = %.1f %s %.1f %%", value, nonCalVal, sign, abs(c.currCal)));
+            }else{
+                c.value.postValue(INVALID_VALUE);
+            }
+        }
+    }
+
+    private void setSuggestedCalValues(CalibrationData calibrationData) {
+        if( calibrationData.isSpeedValid){
+            Calibratable c = calibratableDataMap.get(MeasuredDataType.SPD);
+            assert c != null;
+            c.suggestedCal = calibrationData.sowRatio * 100;
+        }
+        if ( calibrationData.isAwaValid ){
+            Calibratable c = calibratableDataMap.get(MeasuredDataType.AWA);
+            assert c != null;
+            c.suggestedCal = calibrationData.awaBias;
+        }
+    }
+
+
+    @Override
+    public void onRcvdInstrCalibr(MeasuredDataType item, double calValue) {
+        Calibratable c = calibratableDataMap.get(item);
+        assert c != null;
+        c.gotCal = true;
+        c.currCal = calValue;
+        c.cal.postValue((int) calValue);
+    }
+
+    public void submitCal(MeasuredDataType item) {
+        Calibratable c = calibratableDataMap.get(item);
+
+        assert c != null;
+        if( c.cal.getValue() != null) {
+            this.ctrlInterface.sendCal(item, c.cal.getValue());
+            c.gotCal = false;
+        }
+    }
+
+    @Override
+    public void onN2KConnect(boolean connected) {
+        isN2kConnected.postValue(connected);
+    }
+
+    public LiveData<Boolean> getIsN2kConnected() {
+        return isN2kConnected;
     }
 
 }

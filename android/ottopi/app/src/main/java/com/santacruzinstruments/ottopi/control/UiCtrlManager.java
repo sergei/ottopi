@@ -6,7 +6,9 @@ import android.hardware.usb.UsbDevice;
 
 import androidx.annotation.UiThread;
 
+import com.santacruzinstruments.ottopi.data.CalItem;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
+import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.StartType;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RouteCollection;
@@ -218,6 +220,12 @@ public class UiCtrlManager implements CtrlInterface {
     @Override
     public void setupUsbDevice(UsbDevice device) {
         mainController.offer(MainController.MessageId.setupUsbDevice, device);
+    }
+
+    @Override
+    public void sendCal(MeasuredDataType item, float calValue) {
+        CalItem calItem = new CalItem(item, calValue);
+        mainController.offer(MainController.MessageId.sendCal, calItem);
     }
 
 }

@@ -4,15 +4,19 @@ import com.santacruzinstruments.N2KLib.N2KDefs.PGNInfo;
 import com.santacruzinstruments.N2KLib.N2KLib.N2KLib;
 import com.santacruzinstruments.N2KLib.N2KLib.N2KPacket;
 import com.santacruzinstruments.N2KLib.N2KLib.N2KPacketDef;
+import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import timber.log.Timber;
 
 public class CanFrameAssembler {
+
+    private final LinkedList<N2kListener> listeners = new LinkedList<>();
 
     private int  n2k_to_can_id(byte priority, int pgn, byte src, byte dst) {
         int can = (pgn >> 8) & 0x00FF;
@@ -65,13 +69,6 @@ public class CanFrameAssembler {
         return canAddr;
     }
 
-    public interface N2kListener {
-        void onN2kPacket(int pgn, byte priority, byte dest, byte src, int time,  byte[] rawBytes, int len, int hdrlen);
-    }
-    private final N2kListener listener;
-    public CanFrameAssembler(N2kListener listener){
-        this.listener = listener;
-    }
 
     private static class FastFrames {
         int frameCount = 0 ;
@@ -116,7 +113,7 @@ public class CanFrameAssembler {
         PGNInfo.PGNType pgnType = pd.pgnInfo.Type;
 
         if ( pgnType == PGNInfo.PGNType.Single ){
-            this.listener.onN2kPacket(pgn, priority, dst, src, 0, data, data.length,0);
+            onN2kPacket(pgn, priority, dst, src, 0, data, data.length,0);
         }if ( pgnType == PGNInfo.PGNType.Fast ){
             int seqId = data[0] & 0xE0;
             int seqNum = data[0] & 0x1F;
@@ -145,8 +142,25 @@ public class CanFrameAssembler {
 
             final FastFrames f = fastFramesMap.get(src);
             if( f != null && f.frameCount ==  f.totalFramesNum){
-                this.listener.onN2kPacket(pgn, priority, dst, src, 0, f.data, f.size,0);
+                onN2kPacket(pgn, priority, dst, src, 0, f.data, f.size,0);
             }
         }
+    }
+
+    private void onN2kPacket(int pgn, byte priority, byte dest, byte src, int time,  byte[] rawBytes, int len, int hdrlen) {
+        N2KPacket packet = new N2KPacket(pgn, priority, dest, src, time, rawBytes, len, hdrlen);
+        if (  packet.isValid() ){
+            for (N2kListener l : listeners){
+                try {
+                    l.onN2kPacket(packet);
+                } catch (N2KTypeException e) {
+                    Timber.e(e, "N2K error");
+                }
+            }
+        }
+    }
+
+    public void addN2kListener(N2kListener l){
+        listeners.add(l);
     }
 }

@@ -24,7 +24,7 @@ import java.util.Objects;
 
 import timber.log.Timber;
 
-public class SerialUsbTransportTask implements SerialInputOutputManager.Listener {
+public class SerialUsbTransportTask implements SerialInputOutputManager.Listener, CanBusWriter {
 
     public interface UsbConnectionListener {
         void OnConnectionStatus(boolean connected);
@@ -271,6 +271,7 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
         return msg;
     }
 
+    @Override
     public void sendCanFrame(int canAddr, byte[] data){
         String msg = formatYdnuRawString(canAddr, data);
         try {

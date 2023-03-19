@@ -19,4 +19,10 @@
         android:title="@string/app_settings"
         />
 
+    <item
+        android:id="@+id/calibrationFragment"
+        android:icon="@drawable/ic_settings_black_24dp"
+        android:title="@string/instrument_calibration"
+        />
+
 </menu>

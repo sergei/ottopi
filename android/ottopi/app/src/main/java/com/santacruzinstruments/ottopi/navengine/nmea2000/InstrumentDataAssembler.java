@@ -185,4 +185,12 @@ public class InstrumentDataAssembler implements N2kListener{
         }
         return utc;
     }
+    @Override
+    public void OnConnectionStatus(boolean connected) {
+
+    }
+    @Override
+    public void onTick() {
+
+    }
 }

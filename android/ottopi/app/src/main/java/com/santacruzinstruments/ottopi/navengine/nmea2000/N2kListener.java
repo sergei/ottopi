@@ -5,4 +5,7 @@ import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 
 public interface N2kListener {
     void onN2kPacket(N2KPacket packet) throws N2KTypeException;
+    void OnConnectionStatus(boolean connected);
+    void onTick();
+
 }

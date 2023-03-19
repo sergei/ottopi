@@ -22,10 +22,9 @@ import androidx.annotation.UiThread;
 import androidx.room.Room;
 
 import com.santacruzinstruments.N2KLib.N2KLib.N2KLib;
-import com.santacruzinstruments.N2KLib.N2KLib.N2KPacket;
-import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 import com.santacruzinstruments.ottopi.R;
 import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransportTask;
+import com.santacruzinstruments.ottopi.data.CalItem;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
 import com.santacruzinstruments.ottopi.data.DataReceptionStatus;
 import com.santacruzinstruments.ottopi.data.RaceRouteDao;
@@ -52,6 +51,7 @@ import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaParser;
 import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaReader;
 import com.santacruzinstruments.ottopi.navengine.nmea2000.CanFrameAssembler;
 import com.santacruzinstruments.ottopi.navengine.nmea2000.InstrumentDataAssembler;
+import com.santacruzinstruments.ottopi.navengine.nmea2000.N2KCalibrator;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 import com.santacruzinstruments.ottopi.navengine.route.GpxBuilder;
 import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
@@ -61,11 +61,10 @@ import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 import com.santacruzinstruments.ottopi.ui.ViewInterface;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -114,6 +113,7 @@ public class MainController {
         ,setPrevMark
         ,setupUsbAccessory
         ,setupUsbDevice
+        ,sendCal
     }
 
     public static class Message {
@@ -246,6 +246,8 @@ public class MainController {
     private final GpxBuilder gpxBuilder = new GpxBuilder();
     private File detectedMarksGpxName;
     private RaceLogger raceLogger;
+
+    private N2KCalibrator n2KCalibrator;
 
     @UiThread
     public MainController(Context ctx, ViewInterface viewInterface) {
@@ -544,6 +546,11 @@ public class MainController {
                         case setupUsbDevice:
                             serialUsbTransportTask.setUsbDevice((UsbDevice)msg.arg);
                             break;
+                        case sendCal:
+                            assert msg.arg != null;
+                            CalItem calItem = (CalItem)msg.arg;
+                            n2KCalibrator.sendCal(calItem.type, calItem.value);
+                            break;
                     }
                 }
             } catch (InterruptedException e) {
@@ -580,22 +587,15 @@ public class MainController {
         InputStream is = Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json");
         new N2KLib(null, is);
 
-        canFrameAssembler = new CanFrameAssembler((pgn, priority, dest, src, time, rawBytes, len, hdrlen) -> {
-            N2KPacket packet = new N2KPacket(pgn, priority, dest, src, time, rawBytes, len, hdrlen);
-            if ( packet.isValid() ){
-                try {
-                    instrumentDataAssembler.onN2kPacket(packet);
-                } catch (N2KTypeException e) {
-                    Timber.e(e,"Failed to parse packet");
-                }
-            }
-        });
-        
+        canFrameAssembler = new CanFrameAssembler();
+        n2KCalibrator = new N2KCalibrator(viewInterface, canFrameAssembler, serialUsbTransportTask);
+
         serialUsbTransportTask =  new SerialUsbTransportTask(this.ctx, new SerialUsbTransportTask.UsbConnectionListener() {
             @Override
             public void OnConnectionStatus(boolean connected) {
                 Timber.d("Serial USB %s", connected ? "Connected" : "Not connected");
-                viewInterface.onUsbConnect(connected);
+                viewInterface.onN2KConnect(connected);
+                n2KCalibrator.OnConnectionStatus(connected);
             }
 
             @Override
@@ -605,10 +605,13 @@ public class MainController {
 
             @Override
             public void onTick() {
-
+                n2KCalibrator.onTick();
             }
-
         });
+
+        canFrameAssembler.addN2kListener(instrumentDataAssembler);
+        canFrameAssembler.addN2kListener(n2KCalibrator);
+
         serialUsbTransportTask.run();
     }
 
@@ -753,7 +756,7 @@ public class MainController {
             makeMarksGpxFileName();
         if( this.detectedMarksGpxName != null){
             try {
-                OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(this.detectedMarksGpxName));
+                OutputStreamWriter os = new OutputStreamWriter(Files.newOutputStream(this.detectedMarksGpxName.toPath()));
                 Timber.d("Store %s to %s", pt.name, detectedMarksGpxName);
                 gpxBuilder.addPoint(pt, os);
                 os.close();
@@ -768,7 +771,7 @@ public class MainController {
         makeMarksGpxFileName();
         if( this.detectedMarksGpxName != null){
             try {
-                OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(this.detectedMarksGpxName));
+                OutputStreamWriter os = new OutputStreamWriter(Files.newOutputStream(this.detectedMarksGpxName.toPath()));
                 Timber.d("Store %s", detectedMarksGpxName);
                 gpxBuilder.storeCurrentMarks(os);
                 os.close();
@@ -942,7 +945,7 @@ public class MainController {
     private void refreshPolarTable(String polarName) {
         try {
             File polarFile = new File( PathsConfig.getPolarDir(), polarName);
-            PolarTable pt = new PolarTable(new FileInputStream( polarFile ));
+            PolarTable pt = new PolarTable(Files.newInputStream(polarFile.toPath()));
             this.viewInterface.onPolarTable(pt);
         } catch (IOException e) {
             Timber.e("Failed to read polar table %s", e.getMessage());

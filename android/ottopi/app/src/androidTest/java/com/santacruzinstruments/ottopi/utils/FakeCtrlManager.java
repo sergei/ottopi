@@ -4,6 +4,7 @@ import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
+import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.SailingState;
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
 import com.santacruzinstruments.ottopi.data.StartType;
@@ -169,6 +170,11 @@ public class FakeCtrlManager implements CtrlInterface {
     }
 
     @Override
+    public void sendCal(MeasuredDataType item, float calValue) {
+
+    }
+
+    @Override
     public void removeRaceRouteWpt(int idx) {
         Route newRoute = new Route();
         for( int i=0; i < raceRoute.getRptsNum(); i++){
@@ -222,6 +228,10 @@ public class FakeCtrlManager implements CtrlInterface {
 
     private void updateStartLine() {
         this.viewInterface.onStartLineInfo(startLineInfo);
+    }
+
+    public void setN2KConnect(boolean connected) {
+        this.viewInterface.onN2KConnect(connected);
     }
 
 }

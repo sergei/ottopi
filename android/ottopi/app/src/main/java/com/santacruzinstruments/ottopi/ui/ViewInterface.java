@@ -3,6 +3,7 @@ package com.santacruzinstruments.ottopi.ui;
 import com.santacruzinstruments.ottopi.data.CalibrationData;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
 import com.santacruzinstruments.ottopi.data.DataReceptionStatus;
+import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.SailingState;
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
 import com.santacruzinstruments.ottopi.data.StartType;
@@ -45,4 +46,8 @@ public interface ViewInterface {
 
     void setLoggingTag(String loggingTag);
     void onUsbConnect(boolean connected);
+    void onN2KConnect(boolean connected);
+    void onRcvdInstrValue(MeasuredDataType item, double value);
+    void onRcvdInstrCalibr(MeasuredDataType item, double cal);
+
 }

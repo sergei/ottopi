@@ -78,4 +78,17 @@
     <string name="dont_use_wifi">[Don\'t use WiFi]</string>
     <string name="wifi_is_disabled">WiFi is disabled</string>
     <string name="unknown_location">Unknown Location</string>
+    <string name="not_connected_to_n2k_usb_gateway">Not connected to N2K USB gateway</string>
+    <string name="instrument_calibration">Instrument Calibration</string>
+    <string name="calibrate">Calibrate</string>
+    <string name="twa">TWA</string>
+    <string name="tws">TWS</string>
+    <string name="spd">SPD</string>
+    <string name="hdg">HDG</string>
+    <string name="pitch">Pitch</string>
+    <string name="roll">ROLL</string>
+    <string name="submit">Submit</string>
+    <string name="cancel">Cancel</string>
+    <string name="cal_angle">%d</string>
+
 </resources>
