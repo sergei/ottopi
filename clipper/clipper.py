@@ -397,8 +397,9 @@ class Clipper(NavigationListener):
         events_recorder.finalize()
         events = []
         for e in events_recorder.events:
-            event = ClipEvent(e['name'], e['history'][0].utc, e['history'][-1].utc)
-            events.append(event)
+            if len(e['history']) > 0:
+                event = ClipEvent(e['name'], e['history'][0].utc, e['history'][-1].utc)
+                events.append(event)
 
         print(f' {len(events)} events generated')
         if len(events) > 0:

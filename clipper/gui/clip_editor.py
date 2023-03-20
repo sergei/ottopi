@@ -69,6 +69,7 @@ class ClipEditor:
         else:
             self.gun_label.grid_forget()
             self.set_gun_button.grid_forget()
+            self.utc_gun = None
 
     def show(self, event: ClipEvent):
         self.event = event
