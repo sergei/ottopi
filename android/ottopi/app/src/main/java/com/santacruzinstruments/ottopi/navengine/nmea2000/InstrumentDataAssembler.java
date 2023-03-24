@@ -49,6 +49,7 @@ public class InstrumentDataAssembler implements N2kListener{
 
     @Override
     public void onN2kPacket(N2KPacket packet) throws N2KTypeException {
+        boolean bGotLocation = false;
         switch(packet.pgn){
             case windData_pgn:
             {
@@ -92,10 +93,12 @@ public class InstrumentDataAssembler implements N2kListener{
                 }else{
                     this.loc = GeoLoc.INVALID;
                 }
+                bGotLocation = true;
             }
             break;
             case positionRapidUpdate_pgn:
                 this.loc = getGeoLoc(packet, N2K.positionRapidUpdate.latitude, N2K.positionRapidUpdate.longitude);
+                bGotLocation = true;
                 break;
             case cogSogRapidUpdate_pgn:
             {
@@ -110,10 +113,12 @@ public class InstrumentDataAssembler implements N2kListener{
             break;
         }
 
-        InstrumentInput ii = new InstrumentInput(this.utc, this.loc, this.cog, this.sog,
-                this.aws, this.awa, this.tws, this.twa, this.mag, this.sow);
-        for( InstrumentInputListener l: mInstrumentInputListeners){
-            l.onInstrumentInput(ii);
+        if ( bGotLocation ){
+            InstrumentInput ii = new InstrumentInput(this.utc, this.loc, this.cog, this.sog,
+                    this.aws, this.awa, this.tws, this.twa, this.mag, this.sow);
+            for( InstrumentInputListener l: mInstrumentInputListeners){
+                l.onInstrumentInput(ii);
+            }
         }
     }
 

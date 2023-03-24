@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 public class Calibrator implements InstrCalibratorListener {
     private static final double MIN_SPEED = 3.;
-    private final static int MAX_SIZE = 600;
+    private final static int MAX_SIZE = 600*5;
     private final LinkedList<Double> deltaSpeeds = new LinkedList<>();
     private final LinkedList<Double> portAwas = new LinkedList<>();
     private final LinkedList<Double> stbdAwas = new LinkedList<>();
@@ -65,8 +65,6 @@ public class Calibrator implements InstrCalibratorListener {
                     insertSorted(this.stbdAwas, angle);
                 }
             }
-
-            // FIXME we can't assume the measurements are coming once a second anymore
 
             if ( this.deltaSpeeds.size() >= MAX_SIZE
                     || this.stbdAwas.size() >= MAX_SIZE
@@ -160,10 +158,10 @@ public class Calibrator implements InstrCalibratorListener {
         if ( ! isAwaBiaValid() )
             return 0;
 
-        double meanPortAwa = portAwas.get(portAwas.size() / 2);
-        double meanStbdAwa = stbdAwas.get(stbdAwas.size() / 2);
+        double medianPortAwa = portAwas.get(portAwas.size() / 2);
+        double medianStbdAwa = stbdAwas.get(stbdAwas.size() / 2);
 
-        return (meanPortAwa - meanStbdAwa) / 2.;
+        return (medianPortAwa - medianStbdAwa) / 2.;
     }
 
     private void insertSorted(LinkedList<Double> list, double value) {
