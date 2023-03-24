@@ -72,6 +72,8 @@ public class CalibrationFragment  extends Fragment {
             final NavViewModel.Calibratable calibratable = this.viewModel.getCalibratableDataMap().get(it);
             assert calibratable != null;
             holder.itemLabel.setText(calibratable.name);
+            holder.buttonCalibrate.setTag("calibrate"+calibratable.name); // For espresso testing
+            holder.buttonCancel.setTag("cancel"+calibratable.name); // For espresso testing
 
             holder.buttonCalibrate.setOnClickListener(view -> {
                 if( holder.seekBar.getVisibility() == View.VISIBLE){

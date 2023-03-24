@@ -21,6 +21,7 @@ import com.santacruzinstruments.ottopi.data.StartLineInfo;
 import com.santacruzinstruments.ottopi.data.StartType;
 import com.santacruzinstruments.ottopi.data.db.HostPortEntry;
 import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
+import com.santacruzinstruments.ottopi.navengine.calibration.Calibrator;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
@@ -50,6 +51,7 @@ public class NavViewModel extends ViewModel implements ViewInterface {
         MutableLiveData<String> value = new MutableLiveData<>(INVALID_VALUE);
         boolean gotCal = false;
         double currCal = 0;
+        boolean gotSuggestedCal = false;
         double suggestedCal = 0;
 
         Calibratable(String name, boolean isDegree) {
@@ -378,22 +380,42 @@ public class NavViewModel extends ViewModel implements ViewInterface {
     public void onRcvdInstrValue(MeasuredDataType item, double value) {
         Calibratable c = calibratableDataMap.get(item);
         assert c != null;
-        String sign = c.currCal > 0 ? "+" : "-";
-        if ( c.isDegree ){
-            double nonCalVal = value - c.currCal;
-            if ( c.gotCal ){
-                c.value.postValue(String.format(Locale.getDefault(), "%.1f° = %.1f° %s %.1f°", value, nonCalVal, sign, abs(c.currCal)));
-            }else{
-                c.value.postValue(INVALID_VALUE);
+
+        if ( c.gotCal ) {
+            double nonCalVal = 0;
+
+            switch (item) {
+                case AWA:
+                    nonCalVal = Calibrator.getUncalAwa(value, c.currCal);
+                break;
+                case SPD:
+                    nonCalVal = Calibrator.getUncalSow(value , c.currCal);
+                break;
             }
-        }else{
-            double ratio = 1 + c.currCal / 100.;
-            double nonCalVal = value / ratio;
-            if ( c.gotCal ){
-                c.value.postValue(String.format(Locale.getDefault(), "%.1f = %.1f %s %.1f %%", value, nonCalVal, sign, abs(c.currCal)));
-            }else{
-                c.value.postValue(INVALID_VALUE);
+
+            String sign = c.currCal > 0 ? "+" : "-";
+            String suggestedSign = c.suggestedCal > 0 ? "+" : "-";
+            String units = c.isDegree ? "°" : "";
+            String calUnits = c.isDegree ? "°" : "%%";
+            String currentValAndCal = String.format(Locale.getDefault(), "%.1f%s = %.1f%s %s %.1f%s",
+                    value, units, nonCalVal, units, sign, abs(c.currCal), calUnits);
+            if ( c.gotSuggestedCal) {
+                double trueVal = 0;
+                switch (item) {
+                    case AWA:
+                        trueVal = Calibrator.getCalAwa(value, c.currCal, c.suggestedCal);
+                        break;
+                    case SPD:
+                        trueVal = Calibrator.getCalSow(value , c.currCal, c.suggestedCal);
+                        break;
+                }
+                String suggested = String.format(Locale.getDefault(), " (suggested: %.1f%s = %.1f%s %s %.1f%s)",
+                        trueVal, units, nonCalVal, units, suggestedSign, abs(c.suggestedCal), calUnits);
+                currentValAndCal += suggested;
             }
+            c.value.postValue(currentValAndCal);
+        } else {
+            c.value.postValue(INVALID_VALUE);
         }
     }
 
@@ -401,12 +423,14 @@ public class NavViewModel extends ViewModel implements ViewInterface {
         if( calibrationData.isSpeedValid){
             Calibratable c = calibratableDataMap.get(MeasuredDataType.SPD);
             assert c != null;
-            c.suggestedCal = calibrationData.sowRatio * 100;
+            c.gotSuggestedCal = true;
+            c.suggestedCal = calibrationData.sowCalPerc;
         }
         if ( calibrationData.isAwaValid ){
             Calibratable c = calibratableDataMap.get(MeasuredDataType.AWA);
             assert c != null;
-            c.suggestedCal = calibrationData.awaBias;
+            c.gotSuggestedCal = true;
+            c.suggestedCal = calibrationData.awaCalDeg;
         }
     }
 

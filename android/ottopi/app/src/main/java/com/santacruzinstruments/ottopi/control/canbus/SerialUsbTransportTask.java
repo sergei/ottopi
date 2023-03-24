@@ -245,7 +245,7 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
 
     private void processRawString(String s) {
         String [] t = s.split(" ");
-        Timber.v("Got RAW string [%s] (%d)", s, t.length);
+//        Timber.v("Got RAW string [%s] (%d)", s, t.length);
         if( t.length > 2 && t.length <= 11) {
             if(Objects.equals(t[1], "R")){
                 try {

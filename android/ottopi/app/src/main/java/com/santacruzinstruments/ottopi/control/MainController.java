@@ -213,7 +213,7 @@ public class MainController {
     private final ViewInterface viewInterface;
     private final NavComputer navComputer = new NavComputer();
     private final StartLineComputer startLineComputer = new StartLineComputer();
-    private final Calibrator speedCalibrator = new Calibrator();
+    private final Calibrator instrumentsCalibrator = new Calibrator();
     private final NmeaParser networkNmeaParser = new NmeaParser();
     private final NmeaParser internalNmeaParser = new NmeaParser();
     private final NmeaReader externalNmeaReader = new NmeaReader();
@@ -335,15 +335,15 @@ public class MainController {
         this.viewInterface.onSailingStateChange(sailingState);
 
         // Read calibration data
-        double currentLogCal = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) speedCalibrator.getCurrentLogCal());
-        speedCalibrator.setCurrentLogCal(currentLogCal);
-        double currentMisaligned = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) speedCalibrator.getCurrentMisaligned());
-        speedCalibrator.setCurrentMisaligned(currentMisaligned);
+        double currentLogCal = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) instrumentsCalibrator.getCurrentLogCal());
+        instrumentsCalibrator.setCurrentLogCal(currentLogCal);
+        double currentMisaligned = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) instrumentsCalibrator.getCurrentMisaligned());
+        instrumentsCalibrator.setCurrentMisaligned(currentMisaligned);
 
         // Update view interface
         this.viewInterface.setCurrentLogCal(currentLogCal);
         this.viewInterface.setCurrentMisaligned(currentMisaligned);
-        this.viewInterface.setCalibrationData(speedCalibrator.getCalibrationData());
+        this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
 
         // Read polar table
         refreshPolarTable(POLAR_FILE_NAME);
@@ -522,20 +522,20 @@ public class MainController {
                             refreshPolarTable((String) msg.arg);
                             break;
                         case toggleCalibration:
-                            speedCalibrator.toggle();
-                            this.viewInterface.setCalibrationData(speedCalibrator.getCalibrationData());
+                            instrumentsCalibrator.toggle();
+                            this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
                             break;
                         case setCurrentLogCalValue:
                             assert msg.arg != null;
-                            speedCalibrator.setCurrentLogCal((double) msg.arg);
+                            instrumentsCalibrator.setCurrentLogCal((double) msg.arg);
                             this.viewInterface.setCurrentLogCal((double) msg.arg);
-                            this.viewInterface.setCalibrationData(speedCalibrator.getCalibrationData());
+                            this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
                             break;
                         case setCurrentAwaBiasValue:
                             assert msg.arg != null;
-                            speedCalibrator.setCurrentMisaligned((double) msg.arg);
+                            instrumentsCalibrator.setCurrentMisaligned((double) msg.arg);
                             this.viewInterface.setCurrentMisaligned((double) msg.arg);
-                            this.viewInterface.setCalibrationData(speedCalibrator.getCalibrationData());
+                            this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
                             break;
                         case stopAll:
                             bKeepRunning = false;
@@ -588,7 +588,6 @@ public class MainController {
         new N2KLib(null, is);
 
         canFrameAssembler = new CanFrameAssembler();
-        n2KCalibrator = new N2KCalibrator(viewInterface, canFrameAssembler, serialUsbTransportTask);
 
         serialUsbTransportTask =  new SerialUsbTransportTask(this.ctx, new SerialUsbTransportTask.UsbConnectionListener() {
             @Override
@@ -609,8 +608,11 @@ public class MainController {
             }
         });
 
+        n2KCalibrator = new N2KCalibrator(viewInterface, canFrameAssembler, serialUsbTransportTask, instrumentsCalibrator);
+
         canFrameAssembler.addN2kListener(instrumentDataAssembler);
         canFrameAssembler.addN2kListener(n2KCalibrator);
+
 
         serialUsbTransportTask.run();
     }
@@ -998,8 +1000,8 @@ public class MainController {
         this.viewInterface.onStartLineInfo(startLineInfo);
 
 
-        speedCalibrator.onInstrumentInput(nout.ii);
-        this.viewInterface.setCalibrationData(speedCalibrator.getCalibrationData());
+        instrumentsCalibrator.onInstrumentInput(nout.ii);
+        this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
     }
 
 

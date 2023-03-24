@@ -5,11 +5,9 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.contrib.DrawerMatchers.isClosed;
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
-import static androidx.test.espresso.matcher.ViewMatchers.hasSibling;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withTagValue;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static com.santacruzinstruments.ottopi.utils.ShowDropDownKt.showDropDown;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -21,18 +19,14 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.test.espresso.contrib.DrawerActions;
 import androidx.test.espresso.contrib.NavigationViewActions;
-import androidx.test.espresso.matcher.RootMatchers;
-import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.filters.LargeTest;
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
 
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
+import com.santacruzinstruments.ottopi.data.CalibrationData;
+import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.init.HiltModule;
-import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
-import com.santacruzinstruments.ottopi.navengine.route.GpxCollection;
-import com.santacruzinstruments.ottopi.navengine.route.Route;
-import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 import com.santacruzinstruments.ottopi.ui.OttopiActivity;
 import com.santacruzinstruments.ottopi.utils.FakeCtrlManager;
 import com.santacruzinstruments.ottopi.utils.ScreenShotRecorder;
@@ -46,8 +40,6 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
-import java.io.File;
-import java.util.LinkedList;
 import java.util.Objects;
 
 import javax.inject.Singleton;
@@ -129,7 +121,28 @@ public class CalibrationFragmentTest {
     @Test
     public void isConnected() {
         fakeNavManager.setN2KConnect(true);
+
+        // Let's say
+        // SOW reads 6.3 kts
+        // current calibration is -10% ( so uncalibrated value is 7.0 kts)
+        // The SOG is 7.7 kts, so the proper calibration should be +10%
+        //
+        CalibrationData calibrationData = new CalibrationData(false,
+                true,
+                true,
+                5,       // AWAp - AWAs
+                0.95,   // SOW / SOG
+                0,
+                0,
+                true, -10,
+                true, 8);
+        fakeNavManager.setCalibrationData(calibrationData);
+        fakeNavManager.setRcvdInstrCalibr(MeasuredDataType.SPD, -10);
+        fakeNavManager.setRcvdInstrValue(MeasuredDataType.SPD, 6.3);
         screenShotRecorder.captureScreen("Is connected" );
+        onView(withTagValue(is("calibrate"+"SPD")))
+                .perform(click());
+        screenShotRecorder.captureScreen("SPD CALIBRATE clicked" );
     }
 
 }

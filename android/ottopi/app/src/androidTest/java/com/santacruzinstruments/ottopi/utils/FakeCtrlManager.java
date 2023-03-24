@@ -4,6 +4,7 @@ import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
+import com.santacruzinstruments.ottopi.data.CalibrationData;
 import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.SailingState;
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
@@ -233,5 +234,13 @@ public class FakeCtrlManager implements CtrlInterface {
     public void setN2KConnect(boolean connected) {
         this.viewInterface.onN2KConnect(connected);
     }
-
+    public void setRcvdInstrValue(MeasuredDataType item, double value){
+        this.viewInterface.onRcvdInstrValue(item, value);
+    }
+    public void setRcvdInstrCalibr(MeasuredDataType item, double cal){
+        this.viewInterface.onRcvdInstrCalibr(item, cal);
+    }
+    public void setCalibrationData(CalibrationData calibrationData) {
+        this.viewInterface.setCalibrationData(calibrationData);
+    }
 }

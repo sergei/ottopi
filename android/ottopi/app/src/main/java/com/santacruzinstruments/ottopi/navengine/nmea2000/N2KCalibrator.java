@@ -16,6 +16,7 @@ import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 import com.santacruzinstruments.N2KLib.N2KMsgs.N2K;
 import com.santacruzinstruments.ottopi.control.canbus.CanBusWriter;
 import com.santacruzinstruments.ottopi.data.MeasuredDataType;
+import com.santacruzinstruments.ottopi.navengine.calibration.InstrCalibratorListener;
 import com.santacruzinstruments.ottopi.ui.ViewInterface;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class N2KCalibrator implements N2kListener {
     private final ViewInterface listener;
     private final CanBusWriter canBusWriter;
     private final CanFrameAssembler canFrameAssembler;
+    private final InstrCalibratorListener instrCalibratorListener;
     boolean mhuCalReceived = false;
     private byte mhuCalDest = 0;  // Address of device where send the MHU calibration
     boolean speedCalReceived = false;
@@ -36,10 +38,11 @@ public class N2KCalibrator implements N2kListener {
     private byte imuCalDest = 0;  // Address of device where to send IMU calibration
     private boolean isConnected = false;
     public N2KCalibrator(ViewInterface calListener,
-                         CanFrameAssembler canFrameAssembler, CanBusWriter canBusWriter) {
+                         CanFrameAssembler canFrameAssembler, CanBusWriter canBusWriter, InstrCalibratorListener instrCalibratorListener) {
         this.listener = calListener;
         this.canFrameAssembler = canFrameAssembler;
         this.canBusWriter = canBusWriter;
+        this.instrCalibratorListener = instrCalibratorListener;
     }
     @Override
     public void onN2kPacket(N2KPacket packet) throws N2KTypeException {
@@ -86,6 +89,7 @@ public class N2KCalibrator implements N2kListener {
                 if ( packet.fields[N2K.SciWindCalibration.AWAOffset].getAvailability() == N2KField.Availability.AVAILABLE ){
                     double awaCal = packet.fields[N2K.SciWindCalibration.AWAOffset].getDecimal();
                     this.listener.onRcvdInstrCalibr(MeasuredDataType.AWA, awaCal);
+                    this.instrCalibratorListener.setCurrentAwaCalDeg(awaCal);
                 }
                 break;
             case SciWaterCalibration_pgn:
@@ -94,6 +98,7 @@ public class N2KCalibrator implements N2kListener {
                 if ( packet.fields[N2K.SciWaterCalibration.SOWMultiplier].getAvailability() == N2KField.Availability.AVAILABLE ){
                     double speedCal = packet.fields[N2K.SciWaterCalibration.SOWMultiplier].getDecimal();
                     this.listener.onRcvdInstrCalibr(MeasuredDataType.SPD, speedCal);
+                    this.instrCalibratorListener.setCurrentSowCalPerc(speedCal);
                 }
                 break;
             case SciImuCalibration_pgn:
