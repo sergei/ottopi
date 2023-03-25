@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">OttoPi</string>
     <string name="title_activity_ottopi">OttoPi</string>
+    <string name="title_activity_ottopi_timer_button">OttoPi Timer</string>
+    <string name="title_activity_ottopi_next_mark_button">OttoPi Next Mark</string>
     <string name="logs_enabled">Enable Logging</string>
 
     <string name="countdown">Countdown</string>

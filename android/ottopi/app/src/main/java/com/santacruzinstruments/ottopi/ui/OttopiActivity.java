@@ -71,6 +71,10 @@ public class OttopiActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
+    public static final String INTENT_EXTRA_KEY = "key";
+    public static final String INTENT_EXTRA_NEXT_MARK = "next_mark";
+    public static final String INTENT_EXTRA_START_TIMER = "start_timer";
+
     private static final int UI_ANIMATION_DELAY = 300;
     private static final int FULL_SCREEN_INACTIVITY_TIMEOUT_MS = 5000;
     private final Handler mHideHandler = new Handler();
@@ -194,6 +198,18 @@ public class OttopiActivity extends AppCompatActivity {
             if (device != null){
                 navViewModel.ctrl().setupUsbDevice(device);
             }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Timber.d("Got intent %s", intent);
+        String cmd = intent.getStringExtra(INTENT_EXTRA_KEY);
+        if (Objects.equals(cmd, INTENT_EXTRA_START_TIMER)){
+            navViewModel.ctrl().onStartButtonPress();
+        }else if (Objects.equals(cmd, INTENT_EXTRA_NEXT_MARK)){
+            navViewModel.ctrl().setNextMark();
         }
     }
 
