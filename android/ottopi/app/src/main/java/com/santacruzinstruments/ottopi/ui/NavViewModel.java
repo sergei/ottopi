@@ -387,16 +387,27 @@ public class NavViewModel extends ViewModel implements ViewInterface {
             switch (item) {
                 case AWA:
                     nonCalVal = Calibrator.getUncalAwa(value, c.currCal);
+                    if ( nonCalVal > 180 )
+                        nonCalVal -= 360;
+                    if ( value > 180 )
+                        value -= 360;
                 break;
                 case SPD:
                     nonCalVal = Calibrator.getUncalSow(value , c.currCal);
                 break;
+                default:
+                    if ( c.isDegree ){
+                        nonCalVal = value - c.currCal;
+                    }else{
+                        double ratio = 1 + c.currCal / 100.;
+                        nonCalVal = value / ratio;
+                    }
             }
 
             String sign = c.currCal > 0 ? "+" : "-";
             String suggestedSign = c.suggestedCal > 0 ? "+" : "-";
             String units = c.isDegree ? "°" : "";
-            String calUnits = c.isDegree ? "°" : "%%";
+            String calUnits = c.isDegree ? "°" : "%";
             String currentValAndCal = String.format(Locale.getDefault(), "%.1f%s = %.1f%s %s %.1f%s",
                     value, units, nonCalVal, units, sign, abs(c.currCal), calUnits);
             if ( c.gotSuggestedCal) {
@@ -404,6 +415,8 @@ public class NavViewModel extends ViewModel implements ViewInterface {
                 switch (item) {
                     case AWA:
                         trueVal = Calibrator.getCalAwa(value, c.currCal, c.suggestedCal);
+                        if ( trueVal > 180 )
+                            trueVal -= 360;
                         break;
                     case SPD:
                         trueVal = Calibrator.getCalSow(value , c.currCal, c.suggestedCal);

@@ -65,17 +65,17 @@ public class N2KCalibrator implements N2kListener {
                 break;
             case vesselHeading_pgn:
                 if ( packet.fields[N2K.vesselHeading.heading].getAvailability() == N2KField.Availability.AVAILABLE ){
-                    double hdg = packet.fields[N2K.vesselHeading.heading].getDecimal();
+                    double hdg = radstodegs(packet.fields[N2K.vesselHeading.heading].getDecimal());
                     this.listener.onRcvdInstrValue(MeasuredDataType.HDG, hdg);
                 }
                 break;
             case attitude_pgn:
                 if ( packet.fields[N2K.attitude.pitch].getAvailability() == N2KField.Availability.AVAILABLE ){
-                    double pitch = packet.fields[N2K.attitude.pitch].getDecimal();
+                    double pitch = radstodegs(packet.fields[N2K.attitude.pitch].getDecimal());
                     this.listener.onRcvdInstrValue(MeasuredDataType.PITCH, pitch);
                 }
                 if ( packet.fields[N2K.attitude.roll].getAvailability() == N2KField.Availability.AVAILABLE ){
-                    double roll = packet.fields[N2K.attitude.roll].getDecimal();
+                    double roll = radstodegs(packet.fields[N2K.attitude.roll].getDecimal());
                     this.listener.onRcvdInstrValue(MeasuredDataType.ROLL, roll);
                 }
                 break;
