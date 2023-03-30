@@ -71,7 +71,7 @@ public class OttopiActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
-    public static final String INTENT_EXTRA_KEY = "key";
+    public static final String INTENT_EXTRA_KEY = "hot_button";
     public static final String INTENT_EXTRA_NEXT_MARK = "next_mark";
     public static final String INTENT_EXTRA_START_TIMER = "start_timer";
 
@@ -199,13 +199,19 @@ public class OttopiActivity extends AppCompatActivity {
                 navViewModel.ctrl().setupUsbDevice(device);
             }
         }
+
+        checkIntentForHotButtons(intent);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        Timber.d("Got intent %s", intent);
+        checkIntentForHotButtons(intent);
+    }
+
+    private void checkIntentForHotButtons(Intent intent) {
         String cmd = intent.getStringExtra(INTENT_EXTRA_KEY);
+        Timber.d("Got intent with cmd %s", cmd);
         if (Objects.equals(cmd, INTENT_EXTRA_START_TIMER)){
             navViewModel.ctrl().onStartButtonPress();
         }else if (Objects.equals(cmd, INTENT_EXTRA_NEXT_MARK)){

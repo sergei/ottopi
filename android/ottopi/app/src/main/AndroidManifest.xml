@@ -18,30 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OttoPi">
 
-        <!--        Activity to assign to button to go to the next mark-->
-        <activity
-            android:name=".ui.NextMarkActivity"
-            android:exported="true"
-            android:icon="@drawable/ic_launch_next_mark_foreground"
-            android:label="@string/title_activity_ottopi_next_mark_button">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!--        Activity to assign to button to start race-->
-        <activity
-            android:name=".ui.TimerButtonActivity"
-            android:exported="true"
-            android:icon="@drawable/ic_launch_timer_foreground"
-            android:label="@string/title_activity_ottopi_timer_button">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".ui.OttopiActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -69,7 +45,7 @@
 
             <meta-data
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
-                android:resource="@xml/accessory_filter"></meta-data>
+                android:resource="@xml/accessory_filter" />
 
             <!-- Intent filters to start when USB OTG device -->
             <intent-filter>
