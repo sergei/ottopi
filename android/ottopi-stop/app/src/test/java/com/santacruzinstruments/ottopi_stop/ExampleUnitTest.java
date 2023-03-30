@@ -1,4 +1,4 @@
-package com.santacruzinstruments.ottopi_start;
+package com.santacruzinstruments.ottopi_stop;
 
 import org.junit.Test;
 
