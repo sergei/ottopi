@@ -4,12 +4,13 @@
 PI=rpi
 
 # Build server app
-pushd web
-yarn build
-popd
+#pushd web
+#yarn build
+#popd
 
 # Copy navcomputer to RPI
 ssh pi@${PI} 'mkdir -p ottopi'
-ssh pi@${PI} 'mkdir -p ottopi/web'
+#ssh pi@${PI} 'mkdir -p ottopi/web'
 scp  -r navcomputer pi@${PI}:ottopi/
-scp  -r web/build   pi@${PI}:ottopi/web
+scp  -r sk_py_client pi@${PI}:ottopi/
+#scp  -r web/build   pi@${PI}:ottopi/web

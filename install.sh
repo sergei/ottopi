@@ -8,7 +8,7 @@ else
 fi
 
 # Host name or IP of RPI to the host
-PI=wrpi
+PI=rpi
 
 # Build the package
 ./make-pkg.sh

@@ -53,6 +53,11 @@ def add_serial_port(sel, inp, interfaces, nmea_parser):
             ifc_type = NmeaInterface.SERIAL_NMEA_GPS
         elif t[2] == 'instr':
             ifc_type = NmeaInterface.SERIAL_NMEA_INSTR
+        elif t[2] == 'b&g':
+            # Since GPS migh not be available we need to set UTC to open the log file
+            now = datetime.datetime.now()
+            Logger.set_utc(now)
+            ifc_type = NmeaInterface.SERIAL_BANG_NET
         else:
             print('Wrong serial port input type: {}'.format(inp))
             return

@@ -1,3 +1,6 @@
+from serial import SerialException
+
+from bang_logger import BangLogger
 from navigator_listener import NavigationListener
 from nmea_encoder import encode_apb, encode_bwr, encode_rmb
 from navigator import Navigator
@@ -8,12 +11,14 @@ class NmeaInterface(NavigationListener):
     SERIAL_NMEA_INSTR = 1      # Instruments input, output to autopilot
     TCP_INSTRUMENTS_INPUT = 2  # Input of GPS and instruments data
     TCP_APP_CLIENTS = 3        # Applications like Open CPN
+    SERIAL_BANG_NET = 4        # B&G NET input
 
     NMEA_STATE_WAIT_SOP = 1
     NMEA_STATE_WAIT_EOP = 2
 
     def __init__(self, file, interface_type, nmea_parser, instr_inputs):
         super().__init__()
+        self.bang_logger = BangLogger()
         self.file = file
         self.interface_type = interface_type
         self.nmea_parser = nmea_parser
@@ -24,7 +29,7 @@ class NmeaInterface(NavigationListener):
         if interface_type in [self.SERIAL_NMEA_INSTR, self.TCP_APP_CLIENTS]:
             Navigator.get_instance().add_listener(self)
 
-        # Subscribe to the feed of of NMEA instrument inputs
+        # Subscribe to the feed of NMEA instrument inputs
         for instr_input in self.instr_inputs:
             instr_input.add_nmea_listener(self)
 
@@ -75,18 +80,34 @@ class NmeaInterface(NavigationListener):
         if self.interface_type in [self.SERIAL_NMEA_GPS, self.SERIAL_NMEA_INSTR]:
             try:
                 data = self.file.read(1)  # Should be ready
+                if data:
+                    self.set_nmea_data(data)
+                    return data
             except TimeoutError as e:
                 print('Should never happen {}'.format(e))
                 return None
+            except SerialException as e:
+                print('Should never happen {}'.format(e))
+                return None
 
-            if data:
-                self.set_nmea_data(data)
-                return data
             else:
                 print('Lost connection to ', self.file)
                 Navigator.get_instance().remove_listener(self)
                 for instr_input in self.instr_inputs:
                     instr_input.remove_nmea_listener(self)
+                return None
+        elif self.interface_type in [self.SERIAL_BANG_NET]:
+            try:
+                data = self.file.read(1)  # Should be ready
+            except TimeoutError as e:
+                print('Should never happen {}'.format(e))
+                return None
+
+            if data:
+                self.bang_logger.log(data)
+                return data
+            else:
+                print('Lost connection to ', self.file)
                 return None
         else:
             try:
