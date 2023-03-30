@@ -72,7 +72,7 @@ public class OttopiActivity extends AppCompatActivity {
      * and a change of the status and navigation bar.
      */
     public static final String INTENT_EXTRA_KEY = "hot_button";
-    public static final String INTENT_EXTRA_NEXT_MARK = "next_mark";
+    public static final String INTENT_EXTRA_STOP_RACE = "stop_race";
     public static final String INTENT_EXTRA_START_TIMER = "start_timer";
 
     private static final int UI_ANIMATION_DELAY = 300;
@@ -214,8 +214,8 @@ public class OttopiActivity extends AppCompatActivity {
         Timber.d("Got intent with cmd %s", cmd);
         if (Objects.equals(cmd, INTENT_EXTRA_START_TIMER)){
             navViewModel.ctrl().onStartButtonPress();
-        }else if (Objects.equals(cmd, INTENT_EXTRA_NEXT_MARK)){
-            navViewModel.ctrl().setNextMark();
+        }else if (Objects.equals(cmd, INTENT_EXTRA_STOP_RACE)){
+            navViewModel.ctrl().onStopButtonPress();
         }
     }
 
