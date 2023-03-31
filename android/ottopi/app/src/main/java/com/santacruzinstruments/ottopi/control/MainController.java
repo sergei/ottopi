@@ -301,9 +301,21 @@ public class MainController {
         // Only network NMEA contains special commands
         networkNmeaParser.addListener(networkNmeaCmdListener);
 
-        // NMEA2000 routing
         instrumentDataAssembler = new InstrumentDataAssembler();
+
+        // NMEA2000 to nav computer
         instrumentDataAssembler.addInstrumentInputListener(navComputer);
+
+        // NMEA2000 to NMEA0183
+        final LinkedList<String> convertedNmeaStrings = new LinkedList<>();
+        instrumentDataAssembler.addInstrumentInputListener(ii -> {
+            convertedNmeaStrings.clear();
+            NmeaFormatter.formatInstrumentInput(ii, convertedNmeaStrings);
+            for(String nmea: convertedNmeaStrings){
+                Timber.i("N2K_NMEA0183,%s", nmea);
+                raceLogger.onNmea(ii.utc, nmea);
+            }
+        });
 
         // Read and distribute start time
         final SharedPreferences prefs = ctx.getSharedPreferences(ctx.getString(R.string.preference_file_key), Context.MODE_PRIVATE);

@@ -104,7 +104,7 @@ public class InstrumentDataAssembler implements N2kListener{
             {
                 final boolean isMagnetic = packet.fields[N2K.cogSogRapidUpdate.cogReference].getInt() == N2K.cogSogRapidUpdate.cogReference_values.Magnetic;
                 if ( !isMagnetic){
-                    this.cog = getDirection(packet, N2K.cogSogRapidUpdate.cogReference);
+                    this.cog = getDirection(packet, N2K.cogSogRapidUpdate.cog);
                 }else{
                     cog = Direction.INVALID;
                 }

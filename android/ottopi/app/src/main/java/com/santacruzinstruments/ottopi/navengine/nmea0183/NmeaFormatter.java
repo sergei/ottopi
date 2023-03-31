@@ -1,13 +1,22 @@
 package com.santacruzinstruments.ottopi.navengine.nmea0183;
 
+import static java.lang.Math.abs;
+
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
+import com.santacruzinstruments.ottopi.navengine.InstrumentInput;
+import com.santacruzinstruments.ottopi.navengine.geo.Angle;
+import com.santacruzinstruments.ottopi.navengine.geo.Direction;
+import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
+import com.santacruzinstruments.ottopi.navengine.geo.Speed;
+import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -76,13 +85,100 @@ public class NmeaFormatter {
 	}
 
 	private static String formatCoords(double coord, boolean isLat){
-		int deg = (int)Math.abs(coord);
-		double minutes = (Math.abs(coord) - deg) * 60;
+		int deg = (int) abs(coord);
+		double minutes = (abs(coord) - deg) * 60;
 		String sign;
-		if( isLat )
+		if( isLat ) {
 			sign = coord > 0 ? "N" : "S";
-		else
+			return String.format(Locale.US, "%02d%08.5f,%s", deg, minutes, sign);
+		}
+		else {
 			sign = coord > 0 ? "E" : "W";
-		return String.format(Locale.US, "%d.%.5f,%s", deg, minutes, sign);
+			return String.format(Locale.US, "%03d%08.5f,%s", deg, minutes, sign);
+		}
 	}
+
+	public static void formatInstrumentInput(final InstrumentInput ii, List<String> msgs){
+		String vwr = formatVwr(ii.awa, ii.aws);
+		msgs.add(vwr);
+		String vhw = formatVhw(ii.sow, ii.mag);
+		msgs.add(vhw);
+		String rmc = formatRmc(ii.utc, ii.loc, ii.sog, ii.cog );
+		msgs.add(rmc);
+	}
+
+	/*
+		Recommended minimum specific GPS/Transit data
+
+		eg4. $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,a*hh
+		1    = UTC of position fix
+		2    = Data status (V=navigation receiver warning)
+		3    = Latitude of fix
+		4    = N or S
+		5    = Longitude of fix
+		6    = E or W
+		7    = Speed over ground in knots
+		8    = Track made good in degrees True
+		9    = UT date
+		10   = Magnetic variation degrees (Easterly var. subtracts from true course)
+		11   = E or W
+		12   = Checksum
+	 */
+	private static String formatRmc(UtcTime utc, GeoLoc loc, Speed sog, Direction cog) {
+		sCal.setTime(utc.getDate());
+		String s = String.format(Locale.US,"GPRMC,%02d%02d%02d.%02d,%s,%s,%s,%s,%s,%02d%02d%02d,,"
+				,sCal.get(Calendar.HOUR_OF_DAY)
+				,sCal.get(Calendar.MINUTE)
+				,sCal.get(Calendar.SECOND)
+				,sCal.get(Calendar.MILLISECOND) / 10
+				,loc.isValid() ? "A": "V"
+				,loc.isValid() ? formatCoords(loc.lat, true) : ","
+				,loc.isValid() ? formatCoords(loc.lon, false) : ","
+				,sog.isValid() ? String.format(Locale.US, "%03.1f", sog.getKnots()) : ""
+				,cog.isValid() ? String.format(Locale.US, "%03.1f", cog.toDegrees()) : ""
+				,sCal.get(Calendar.DAY_OF_MONTH)
+				,sCal.get(Calendar.MONTH) + 1
+				,sCal.get(Calendar.YEAR) % 100
+		);
+		return makeNmea(s);
+	}
+
+	/* *************************************************************************************************
+	VHW - Water speed and heading.
+	The compass heading to which the vessel points and the speed of the vessel relative to the
+	water.
+
+	$--VHW, x.x, T, x.x, M, x.x, N, x.x, K*hh<CR><LF>
+	        +-+--+  +-+--+  +-+--+  +-+--+
+	          |       |       |       +---- Speed, km/h
+	          |       |       +------------ Speed, knots
+	          |       +-------------------- Heading, degrees magnetic
+	          +---------------------------- Heading, degrees true
+	***************************************************************************************************/
+
+	private static String formatVhw(Speed sow, Direction mag) {
+		String s = String.format(Locale.US,"SCVHW,,T,%s,M,%s,N,,K"
+			,mag.isValid() ? String.format(Locale.US, "%03.1f", mag.toDegrees()) : ""
+			,sow.isValid() ? String.format(Locale.US, "%03.1f", sow.getKnots()) : ""
+		);
+		return makeNmea(s);
+	}
+	/* *************************************************************************************************
+    VWR - Relative wind direction and speed
+    VWR,148.,L,02.4,N,01.2,M,04.4,K
+       148.,L       Wind from 148 deg Left of bow
+       02.4,N       Speed 2.4 Knots
+       01.2,M       1.2 Metres/Sec
+       04.4,K       Speed 4.4 Kilometers/Hr
+	$IIVWR,025,R,09.09,N,04.68,M,,
+	***************************************************************************************************/
+	private static String formatVwr(Angle awa, Speed aws) {
+		String s = String.format(Locale.US,"SCVWR,%s,%s,%s,N,,M,,K"
+				,awa.isValid() ? String.format(Locale.US, "%03.1f", abs(awa.toDegrees())) : ""
+				,awa.toDegrees() < 0 ? "L" : "R"
+				,aws.isValid() ? String.format(Locale.US, "%03.1f", aws.getKnots()) : ""
+		);
+		return makeNmea(s);
+	}
+
 }
