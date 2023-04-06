@@ -1,7 +1,6 @@
 package com.santacruzinstruments.ottopi.control;
 
 import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.data.StartType;
@@ -43,7 +42,6 @@ public interface CtrlInterface {
     void setNextMark();
     void setPrevMark();
     void setupUsbAccessory(UsbAccessory accessory);
-    void setupUsbDevice(UsbDevice device);
     void sendCal(MeasuredDataType item, float calValue);
 
 }

@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbDevice;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
@@ -112,7 +111,6 @@ public class MainController {
         ,setNextMark
         ,setPrevMark
         ,setupUsbAccessory
-        ,setupUsbDevice
         ,sendCal
     }
 
@@ -554,9 +552,6 @@ public class MainController {
                             break;
                         case setupUsbAccessory:
                             usbReader.setAccessory((UsbAccessory)msg.arg);
-                            break;
-                        case setupUsbDevice:
-                            serialUsbTransportTask.setUsbDevice((UsbDevice)msg.arg);
                             break;
                         case sendCal:
                             assert msg.arg != null;
