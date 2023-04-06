@@ -1,3 +1,4 @@
+FIXME Open race NMEA log if race was started in the previous session
 TODO Add native logs playback
 FIXME Don't toggle WiFi when uploading log files
 TODO Add the IQR display for the wind direction

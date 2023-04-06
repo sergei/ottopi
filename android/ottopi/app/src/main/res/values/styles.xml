@@ -10,7 +10,7 @@
     </style>
 
     <style name="StartLineText" parent="TextAppearance.AppCompat">
-        <item name="android:textSize">82sp</item>
+        <item name="android:textSize">64sp</item>
         <item name="android:textColor">@color/primaryTextColor</item>
     </style>
 
