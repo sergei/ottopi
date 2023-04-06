@@ -162,18 +162,23 @@ public class RaceLogger {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void onFinish(){
-        isLogging = false;
-        try {
-            nmeaWriter.close();
-        } catch (IOException e) {
-            Timber.e("Failed to close NMEA file (%s)", e.getMessage());
-        }
 
-        if ( lastKnownUtc.toMiliSec() - startTime.toMiliSec() < 5 * 60 * 1000){
-            Timber.d("Race was too short, deleting it");
-            nmeaFile.delete();
-            jsonFile.delete();
-            raceDir.delete();
+        if ( isLogging ){
+            isLogging = false;
+
+            try {
+                nmeaWriter.close();
+            } catch (IOException e) {
+                Timber.e("Failed to close NMEA file (%s)", e.getMessage());
+            }
+
+            if ( lastKnownUtc.toMiliSec() - startTime.toMiliSec() < 5 * 60 * 1000){
+                Timber.d("Race was too short, deleting it");
+                nmeaFile.delete();
+                jsonFile.delete();
+                raceDir.delete();
+            }
+
         }
     }
 
