@@ -1,3 +1,5 @@
+FIXME Polar zoom doesn't work correctly on reack and allover courses android tests
+TODO Show the TWS and Target speed on polars screen
 FIXME Open race NMEA log if race was started in the previous session
 TODO Add native logs playback
 FIXME Don't toggle WiFi when uploading log files

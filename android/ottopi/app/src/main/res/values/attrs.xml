@@ -6,7 +6,9 @@
 
     <declare-styleable name="PolarDrawableView">
         <attr name="axis_width" format="float"/>
+        <attr name="axis_minor_width" format="float"/>
         <attr name="axis_color" format="color" />
+        <attr name="axis_target_color" format="color" />
         <attr name="polar_curve_width" format="float"/>
         <attr name="polar_curve_color" format="color" />
         <attr name="target_angle_width" format="float"/>

@@ -162,17 +162,10 @@ public class FakeCtrlManager implements CtrlInterface {
 
     @Override
     public void setupUsbAccessory(UsbAccessory accessory) {
-
-    }
-
-    @Override
-    public void setupUsbDevice(UsbDevice device) {
-
     }
 
     @Override
     public void sendCal(MeasuredDataType item, float calValue) {
-
     }
 
     @Override

@@ -11,7 +11,9 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -24,12 +26,15 @@ import com.santacruzinstruments.ottopi.navengine.geo.Speed;
 import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 
 import java.util.LinkedList;
+import java.util.Locale;
 
 public class PolarDrawableView extends View {
 
     private final float historyEntryRadius;
     private final float currentPointRadius;
     private final float markWidth;
+    private final int axisColor;
+    private final int axisTargetColor;
 
     private static class HistoryEntry {
         final double speed;
@@ -49,7 +54,10 @@ public class PolarDrawableView extends View {
     private int viewWidth;
     private float x0=0, y0=0;
 
-    private final Paint axisPaint = new Paint(0);
+    private final Paint axisMajorPaint = new Paint(0);
+    private final Paint axisMinorPaint = new Paint(0);
+    private final Paint axisMajorLabelPaint = new Paint(0);
+    private final Paint axisLabelPaint = new Paint(0);
     private final Paint polarCurvePaint = new Paint(0);
     private final Paint targetAnglePaint = new Paint(0);
     private final Paint vmgPaint = new Paint(0);
@@ -82,6 +90,8 @@ public class PolarDrawableView extends View {
 
     private double maxSpeed = 10;
     private float pixInKtsScale = 1;
+    private float targetUpwindSpeed = 0;
+    private float targetDownwindSpeed = 0;
 
     private ZoomLevel zoomLevel = ZoomLevel.FULL;
 
@@ -97,9 +107,29 @@ public class PolarDrawableView extends View {
 
         final DashPathEffect dashPathEffect = new DashPathEffect(new float[]{20, 20}, 0);
 
-        axisPaint.setStyle(Paint.Style.STROKE);
-        axisPaint.setColor(a.getColor(R.styleable.PolarDrawableView_axis_color, Color.GRAY));
-        axisPaint.setStrokeWidth(a.getFloat(R.styleable.PolarDrawableView_axis_width, 6.f));
+        axisColor = a.getColor(R.styleable.PolarDrawableView_axis_color, Color.GRAY);
+        axisTargetColor = a.getColor(R.styleable.PolarDrawableView_axis_target_color, Color.WHITE);
+
+        axisMajorPaint.setStyle(Paint.Style.STROKE);
+        axisMajorPaint.setColor(axisColor);
+        axisMajorPaint.setStrokeWidth(a.getFloat(R.styleable.PolarDrawableView_axis_width, 6.f));
+
+        axisMinorPaint.setStyle(Paint.Style.STROKE);
+        axisMinorPaint.setColor(axisColor);
+        axisMinorPaint.setStrokeWidth(a.getFloat(R.styleable.PolarDrawableView_axis_minor_width, 3.f));
+        axisMinorPaint.setStrokeJoin(Paint.Join.BEVEL);
+        axisMinorPaint.setPathEffect(dashPathEffect);
+
+        axisLabelPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        axisLabelPaint.setColor(a.getColor(R.styleable.PolarDrawableView_axis_color, Color.GRAY));
+        axisLabelPaint.setTypeface(Typeface.DEFAULT);
+        axisLabelPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics()));
+
+        axisMajorLabelPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        axisMajorLabelPaint.setColor(axisTargetColor);
+        axisMajorLabelPaint.setTypeface(Typeface.DEFAULT);
+        axisMajorLabelPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32, getResources().getDisplayMetrics()));
+
 
         polarCurvePaint.setColor(a.getColor(R.styleable.PolarDrawableView_polar_curve_color, Color.GRAY));
         polarCurvePaint.setStrokeWidth(a.getFloat(R.styleable.PolarDrawableView_polar_curve_width, 6.f));
@@ -185,44 +215,80 @@ public class PolarDrawableView extends View {
         // Port tack shown with positive X
 
         float extraScale = 1.f;
+        Paint.Align align = Paint.Align.LEFT;
+
+        int targetSpeed = 0;
+        int textScaleSign = -1;
 
         switch (zoomLevel){
             case UPWIND_PORT:
                 x0 = 0;
                 y0 = viewHeight;
+                targetSpeed = Math.round(targetUpwindSpeed);
                 break;
             case UPWIND_STARBOARD:
                 x0 = viewWidth;
+                align = Paint.Align.RIGHT;
                 y0 = viewHeight;
+                targetSpeed = Math.round(targetUpwindSpeed);
                 break;
             case DOWNWIND_PORT:
                 x0 = 0;
                 y0 = 0;
+                targetSpeed = Math.round(targetDownwindSpeed);
+                textScaleSign = 1;
                 break;
             case DOWNWIND_STARBOARD:
                 x0 = viewWidth;
+                align = Paint.Align.RIGHT;
                 y0 = 0;
+                targetSpeed = Math.round(targetDownwindSpeed);
+                textScaleSign = 1;
                 break;
             case REACH_PORT:
                 x0 = 0;
                 y0 = viewHeight / 2.f;
+                targetSpeed = Math.round(targetDownwindSpeed);
+                textScaleSign = 1;
                 break;
             case REACH_STARBOARD:
                 x0 = viewWidth;
+                align = Paint.Align.RIGHT;
                 y0 = viewHeight / 2.f;
+                targetSpeed = Math.round(targetDownwindSpeed);
+                textScaleSign = 1;
                 break;
             default:
                 x0 = viewWidth / 2.f;
                 y0 = viewHeight / 2.f;
+                targetSpeed = Math.round(targetDownwindSpeed);
+                textScaleSign = 1;
                 extraScale = 0.5f;
                 break;
         }
 
         pixInKtsScale = (float) ( viewHeight / maxSpeed * extraScale );
 
-        float speedScaleStep = 2;
-        for (float speed = (float) maxSpeed; speed > 3; speed -= speedScaleStep)
-            canvas.drawCircle(x0, y0, pixInKtsScale *  speed, axisPaint);
+        int speedScaleStep = 1;
+        axisLabelPaint.setTextAlign(align);
+        axisMajorLabelPaint.setTextAlign(align);
+
+        final float textX = x0;
+
+        for (int speed = (int) maxSpeed; speed > 3; speed -= speedScaleStep) {
+            final boolean isTargetSpeed = speed == targetSpeed;
+            final boolean isMinorAxis = (speed % 2) != 0;
+
+            int color = isTargetSpeed ? axisTargetColor : axisColor;
+            Paint axisPaint = isMinorAxis ? axisMinorPaint : axisMajorPaint;
+            axisPaint.setColor(color);
+            canvas.drawCircle(x0, y0, pixInKtsScale * speed, axisPaint);
+            String text = String.format(Locale.getDefault(),"%d", speed);
+
+            Paint textPaint = isTargetSpeed ?  axisMajorLabelPaint : axisLabelPaint;
+            float textY = y0 + textScaleSign *  (pixInKtsScale * speed ) + textPaint.getTextSize();
+            canvas.drawText (text, textX, textY,  textPaint);
+        }
 
         plotPoints(canvas, polarCurvePts, polarCurvePaint);
 
@@ -382,8 +448,10 @@ public class PolarDrawableView extends View {
 
         Targets upwWindTargets = polarTable.getTargets(tws, PolarTable.PointOfSail.UPWIND);
         maxSpeed = Math.max(upwWindTargets.bsp.getKnots(), maxSpeed);
+        targetUpwindSpeed = (float) upwWindTargets.bsp.getKnots();
         Targets downWindTargets = polarTable.getTargets(tws, PolarTable.PointOfSail.DOWNWIND);
         maxSpeed = Math.max(downWindTargets.bsp.getKnots(), maxSpeed);
+        targetDownwindSpeed = (float) downWindTargets.bsp.getKnots();
         // Quantize max speed
         maxSpeed = Math.round(maxSpeed + 0.5);
 
