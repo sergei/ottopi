@@ -11,6 +11,8 @@
                   <entry key="Duration" value="90" />
                   <entry key="RaceQs_API_28" value="120" />
                   <entry key="Tests" value="360" />
+                  <entry key="adb-R52T5040F9K-ASBN2h._adb-tls-connect._tcp." value="120" />
+                  <entry key="samsung&#10; SM-T570" value="120" />
                 </map>
               </option>
             </AndroidTestResultsTableState>
