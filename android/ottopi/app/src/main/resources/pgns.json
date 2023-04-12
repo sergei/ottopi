@@ -16412,9 +16412,6 @@
         "Type":"Fast",
         "Complete":true,
         "Length":43,
-        "RepeatingFieldSet1Size":3,
-        "RepeatingFieldSet1StartField":16,
-        "RepeatingFieldSet1CountField":15,
         "Fields":[
           {
             "Order":1,

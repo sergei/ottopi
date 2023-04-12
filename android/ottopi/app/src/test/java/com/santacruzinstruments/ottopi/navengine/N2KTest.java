@@ -221,4 +221,65 @@ I (323450) mhu2nmea_ESP32N2kStream: 323121 : Pri:2 PGN:130900 Source:15 Dest:255
 
     }
 
+    @Test
+    public void invalidRepTestTest(){
+        String logSnippet =
+        "2023-04-10 08:46:43.074 SerialUsbTransportTask RAW_N2K,11,[15:46:44.850 R 09F1120F 7E 27 76 FF 7F FF 7F FD]\n" +
+        "2023-04-10 08:46:43.080 SerialUsbTransportTask RAW_N2K,11,[15:46:44.850 R 0DF1190F 7E FF 7F 2E 35 50 3B FF]\n" +
+        "2023-04-10 08:46:43.095 SerialUsbTransportTask RAW_N2K,11,[15:46:44.871 R 09F50310 71 FF FF FF FF 00 FF FF]\n" +
+        "2023-04-10 08:46:43.175 SerialUsbTransportTask RAW_N2K,11,[15:46:44.950 R 09F1120F 8B 27 76 FF 7F FF 7F FD]\n" +
+        "2023-04-10 08:46:43.196 SerialUsbTransportTask RAW_N2K,11,[15:46:44.972 R 09FD0211 72 FF FF 14 CB 02 FF FF]\n" +
+        "2023-04-10 08:46:43.225 SerialUsbTransportTask RAW_N2K,11,[15:46:45.000 R 0DF0100F 93 F0 01 4C 50 C1 DB 21]\n" +
+        "2023-04-10 08:46:43.232 SerialUsbTransportTask RAW_N2K,11,[15:46:45.001 R 09F8020F 93 FC C3 6B 84 06 FF FF]\n" +
+        "2023-04-10 08:46:43.238 SerialUsbTransportTask RAW_N2K,11,[15:46:44.996 R 0DF8050F A0 2B 93 01 4C 50 C1 DB]\n" +
+        "2023-04-10 08:46:43.245 SerialUsbTransportTask RAW_N2K,11,[15:46:44.997 R 0DF8050F A1 21 40 2D FC 03 14 51]\n" +
+        "2023-04-10 08:46:43.250 SerialUsbTransportTask RAW_N2K,11,[15:46:44.997 R 0DF8050F A2 24 05 00 74 21 4D 07]\n" +
+        "2023-04-10 08:46:43.256 SerialUsbTransportTask RAW_N2K,11,[15:46:44.998 R 0DF8050F A3 E2 13 EF 43 6A 8B 06]\n" +
+        "2023-04-10 08:46:43.261 SerialUsbTransportTask RAW_N2K,11,[15:46:44.999 R 0DF8050F A4 00 00 00 00 10 FD 05]\n" +
+        "2023-04-10 08:46:43.266 SerialUsbTransportTask RAW_N2K,11,[15:46:44.999 R 0DF8050F A5 77 00 00 00 00 00 00]\n" +
+        "2023-04-10 08:46:43.271 SerialUsbTransportTask RAW_N2K,11,[15:46:45.000 R 0DF8050F A6 00 00 FF FF FF FF FF]\n" +
+        "2023-04-10 08:46:43.275 Trace 01681141603274 !!! INVALID REP count 129029\n"
+;
+
+        Timber.d("Test");
+
+        // Need to create N2KLib() so some internal statics are initialized
+        new N2KLib(null, Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json"));
+        CanFrameAssembler canFrameAssembler = new CanFrameAssembler();
+        canFrameAssembler.addN2kListener(new N2kListener() {
+            @Override
+            public void onN2kPacket(N2KPacket packet) {
+                assertTrue(packet.isValid());
+                Timber.d("pkt %s\n", packet);
+
+                if (packet.pgn == SciWindCalibration_pgn) {
+                    if ( packet.fields[N2K.SciWindCalibration.AWSMultiplier].getAvailability() == N2KField.Availability.AVAILABLE ){
+                        try {
+                            double awsCal = packet.fields[N2K.SciWindCalibration.AWSMultiplier].getDecimal();
+                            assertEquals(10.81, awsCal, 0.001);
+                        } catch (N2KTypeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            @Override
+            public void OnConnectionStatus(boolean connected) {}
+            @Override
+            public void onTick() {}
+        });
+
+        String [] lines = logSnippet.split("\n");
+        for( String s : lines){
+            int start = s.indexOf(",[");
+            if ( start != -1 ){
+                int end = s.indexOf("]");
+                String msg = s.substring(start + 2, end);
+                parseString(canFrameAssembler, msg);
+            }
+        }
+
+    }
+
+
 }
