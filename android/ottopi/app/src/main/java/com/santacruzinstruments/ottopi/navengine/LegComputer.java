@@ -38,7 +38,7 @@ public class LegComputer {
         this.nextDest  = nextDest;
     }
 
-    void update(GeoLoc loc, Direction mag, Direction twd){
+    void update(GeoLoc loc, Direction hdg, Direction twd){
         atm = Angle.INVALID;
         dtm = Distance.INVALID;
         nextLegTwa = Angle.INVALID;
@@ -49,7 +49,7 @@ public class LegComputer {
 
                 destName = dest.name;
                 Direction btm = loc.bearingTo(dest.loc);
-                atm = Direction.angleBetween(mag, btm);
+                atm = Direction.angleBetween(hdg, btm);
                 dtm = loc.distTo(dest.loc);
 
                 if( nextDest.loc.isValid() && twd.isValid() ){

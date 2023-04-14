@@ -27,9 +27,9 @@ public class NavComputer implements InstrumentInputListener {
 		trueWindComputer.computeTrueWind(ii.sow, ii.aws, ii.awa, ii.mag);
 		
 		Direction twd = trueWindComputer.getFilteredTwd();
-		Direction mag = magSmoother.update(ii.mag);
+		Direction smoothHdg = magSmoother.update(ii.cog);
 
-		legComputer.update(ii.loc, mag, twd);
+		legComputer.update(ii.loc, smoothHdg, twd);
 		windStats.update(trueWindComputer.getTrueWindAngle());
 
 		NavComputerOutput nout = new NavComputerOutput.Builder(ii)
