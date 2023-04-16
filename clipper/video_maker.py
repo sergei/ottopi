@@ -65,15 +65,19 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
         evt['polar_images'] = []
         evt['timer_images'] = []
         file_name = f'chapter_{evt_idx:04d}.png'
-        summary_maker.prepare_data(evt)
-        event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
+        have_wind_data = summary_maker.prepare_data(evt)
+        event_title_png = summary_maker.make_chapter_png(have_wind_data, evt, file_name, width, height)
         evt['event_title_png'] = event_title_png
-        polar_maker.set_history(evt['name'], evt['history'])
 
+        if have_wind_data:
+            polar_maker.set_history(evt['name'], evt['history'])
         gun_utc = evt.get('gun', None)
         for epoch_idx, epoch in enumerate(evt['history']):
-            file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
-            thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
+            if have_wind_data:
+                file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
+                thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
+            else:
+                thumb_png_name = None
 
             file_name = f'polar_{evt_idx:04d}_{epoch_idx:04d}.png'
             if polar_maker.is_available():

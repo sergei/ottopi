@@ -403,16 +403,20 @@ class Clipper(NavigationListener):
 
         print(f' {len(events)} events generated')
         if len(events) > 0:
-            race = RaceInfo(f'Race {events[0].utc_from.strftime("%Y/%m/%d/ %H:%M:%S")}',
-                            self.instr_data[0].utc, self.instr_data[-1].utc, events)
-            self.races.append(race)
-            self.current_race = self.races[0]
+            race_name = f'Race {events[0].utc_from.strftime("%Y/%m/%d/ %H:%M:%S")}'
+        else:
+            race_name = f'Race {self.instr_data[0].utc.strftime("%Y/%m/%d/ %H:%M:%S")}'
 
-            self.project.set(COMMON, 'races', self.races)
-            self.project.set(COMMON, 'instr_data', self.instr_data)
+        race = RaceInfo(race_name,
+                        self.instr_data[0].utc, self.instr_data[-1].utc, events)
+        self.races.append(race)
+        self.current_race = self.races[0]
 
-            self.update_views()
-            self.on_project_change()
+        self.project.set(COMMON, 'races', self.races)
+        self.project.set(COMMON, 'instr_data', self.instr_data)
+
+        self.update_views()
+        self.on_project_change()
 
     def update_views(self):
         self.events_table.show_races(self.races)

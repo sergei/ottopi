@@ -107,24 +107,29 @@ class OverlayMaker:
         draw.rectangle([(0, 0), (self.rect_width, self.rect_height)], fill=SEMI_TRANSPARENT_BOX_COLOR_2)
 
         x = self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "SPD", f"{epoch['sow']:.1f}")
+        spd_txt = f"{epoch['sow']:.1f}" if epoch['sow'] is not None else "-.-"
+        self.info_cell.draw(draw, x, self.rect_y_offset, "SPD", spd_txt)
 
         x += self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "SOG", f"{epoch['sog']:.1f}")
+        sog_txt = f"{epoch['sog']:.1f}" if epoch['sog'] is not None else "-.-"
+        self.info_cell.draw(draw, x, self.rect_y_offset, "SOG", sog_txt)
 
         x += self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "TWS", f"{epoch['tws']:.1f}")
+        tws_txt = f"{epoch['tws']:.1f}" if epoch['tws'] is not None else "-.-"
+        self.info_cell.draw(draw, x, self.rect_y_offset, "TWS", tws_txt)
 
         x += self.cell_step
-        self.info_cell.draw(draw, x, self.rect_y_offset, "TWA", f"{abs(epoch['twa']):.1f}")
+        twa_txt = f"{epoch['twa']:.1f}" if epoch['twa'] is not None else "-.-"
+        self.info_cell.draw(draw, x, self.rect_y_offset, "TWA", twa_txt)
 
         x = 8
         x = self.info_cell.draw_vc_label(draw, x, self.rect_y_offset, "VMG")
         x += 16
 
         # Draw the performance chart
-        thumb_img = Image.open(thumb_png_name)
-        image.paste(thumb_img, (x, 16), thumb_img)
+        if thumb_png_name is not None:
+            thumb_img = Image.open(thumb_png_name)
+            image.paste(thumb_img, (x, 16), thumb_img)
 
         image.save(full_file_name)
         print(f'{full_file_name} created')

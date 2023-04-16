@@ -17,7 +17,7 @@ class ClipEditor:
         self.on_save_clip = on_save_clip
         self.on_remove_clip = on_remove_clip
         self.on_create_clip = on_create_clip
-        self.is_hidden = True
+        self.is_hidden = False
         self.utc_gun = None
         self.event = None
         self.utc_to = None
@@ -43,6 +43,7 @@ class ClipEditor:
         ttk.Entry(info_frame, textvariable=self.sv_clip_name).grid(column=3, row=0, sticky=W)
         ttk.Button(info_frame, text="Save", command=self.save_clip).grid(column=4, row=0, sticky=W)
         ttk.Button(info_frame, text="Delete clip", command=self.delete_clip).grid(column=5, row=0, sticky=W)
+        self.edit_frame.grid(column=0, row=0, sticky='nwes')
 
         self.event_type_combo = ttk.Combobox(info_frame, values=[EVT_TYPE_NAME_NORMAL, EVT_TYPE_NAME_RACE_START],
                                              state="readonly")
@@ -95,7 +96,6 @@ class ClipEditor:
         )
         self.slider.grid(column=0, row=0, sticky=W)
         self.slider.setValueChageCallback(lambda vals: self.on_time_change(vals))
-        self.edit_frame.grid(column=0, row=0, sticky='nwes')
         is_race_start = event.utc_gun is not None
         self.show_hide_start_info(is_race_start)
 

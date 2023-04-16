@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 import os
 import subprocess
+from functools import reduce
 
 import pytz
 
@@ -41,6 +42,8 @@ class GoPro:
         for clip in clips:
             clip_name = clip['name']
             clip_cache_name = cache_dir + os.sep + os.path.basename(clip_name) + '.json'
+            clip_nmea_name = cache_dir + os.sep + os.path.basename(clip_name) + '.nmea'
+            clip['clip_nmea_name'] = clip_nmea_name
             if os.path.isfile(clip_cache_name):
                 print(f'Reading GOPRO clip info from cache {clip_cache_name}')
                 with open(clip_cache_name, 'r') as f:
@@ -49,7 +52,7 @@ class GoPro:
                     stop_utc = from_timestamp(cache['stop_utc'])
             else:
                 print(f'Scanning {clip_name}')
-                [start_utc, stop_utc] = self.time_stamp_mp4(clip_name)
+                [start_utc, stop_utc] = self.extract_sensor_data(clip_name, clip_nmea_name)
                 cache = {
                     'start_utc': to_timestamp(start_utc),
                     'stop_utc': to_timestamp(stop_utc)
@@ -75,23 +78,64 @@ class GoPro:
             self.start_time_utc = self.clips[0]['start_utc']
             self.finish_time_utc = self.clips[-1]['stop_utc']
 
+        # Create one NMEA file once clips are sorted
+        gopro_nmea_file = cache_dir + os.sep + 'gopro.nmea'
+        print(f'Creating GOPRO NMEA file {gopro_nmea_file}')
+        with open(gopro_nmea_file, 'w') as nmea_file:
+            for clip in clips:
+                with open(clip['clip_nmea_name'],'r') as clip_nmea:
+                    for line in clip_nmea:
+                        nmea_file.write(line)
+
+        print(f'Done with GOPRO processing')
+
+
     @staticmethod
-    def time_stamp_mp4(mp4_name):
+    def extract_sensor_data(mp4_name, clip_nmea_name):
         cmd = [GOPRO_GPMF_BIN, mp4_name]
         result = subprocess.run(cmd, stdout=subprocess.PIPE)
         start_utc = None
         stop_utc = None
         timezone = pytz.timezone("UTC")
         if result.returncode == 0:
-            lines = result.stdout.decode('utf-8').split('\n')
-            reader = csv.DictReader(lines)
-            for row in reader:
-                if row['fix_valid'] == 'True':
+            print(f'Creating NMEA file {clip_nmea_name}')
+            with open(clip_nmea_name, 'w') as nmea_file:
+                lines = result.stdout.decode('utf-8').split('\n')
+                reader = csv.DictReader(lines)
+                for row in reader:
                     utc = timezone.localize(datetime.fromisoformat(row['utc']))
-                    if start_utc is None:
-                        t_ms = int(float(row['t']) * 1000)
-                        start_utc = utc - timedelta(milliseconds=t_ms)
-                    stop_utc = utc
+                    if row['fix_valid'] == 'True':
+                        lat = float(row['lat'])
+                        lat_sign = 'N' if lat > 0 else 'S'
+                        lat = abs(lat)
+                        lat_min = (lat - int(lat)) * 60
+                        lon = float(row['lon'])
+                        lon_sign = 'E' if lon > 0 else 'W'
+                        lon = abs(lon)
+                        lon_min = (lon - int(lon)) * 60
+                        sog = float(row['sog_ms']) * 3600. / 1852.
+                        if 0 <= lat <= 90 and 0 <= lon <= 180:
+                            rmc = f'$GPRMC,{utc.hour:02d}{utc.minute:02d}{utc.second:02d}.{int(utc.microsecond / 1000):03d},' \
+                                  f'A,{int(lat):02d}{lat_min:08.5f},{lat_sign},'\
+                                  f'{int(lon):03d}{lon_min:08.5f},{lon_sign},'\
+                                  f'{sog:.1f},,{utc.day:02d}{utc.month:02d}{utc.year % 100:02d},'
+                        else:
+                            print('GPRO GPMF bug')
+
+                        if start_utc is None:
+                            t_ms = int(float(row['t']) * 1000)
+                            start_utc = utc - timedelta(milliseconds=t_ms)
+                        stop_utc = utc
+                    else:
+                        rmc = f'$GPRMC,{utc.hour:02d}{utc.minute:02d}{utc.second:02d}.{int(utc.microsecond / 1000):03d},' \
+                              f'V,,,'\
+                              f',,'\
+                              f',,{utc.day:02d}{utc.month:02d}{utc.year % 100:02d},'
+
+                    body = rmc[1:]  # string between $ and *
+                    cc = reduce(lambda i, j: int(i) ^ int(j), [ord(x) for x in body])
+                    nmea = f'{rmc}*{cc:02X}\r\n'
+                    nmea_file.write(nmea)
 
         return start_utc, stop_utc
 
