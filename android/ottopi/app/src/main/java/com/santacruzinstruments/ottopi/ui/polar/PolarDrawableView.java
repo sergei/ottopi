@@ -220,7 +220,8 @@ public class PolarDrawableView extends View {
         Paint.Align align = Paint.Align.LEFT;
 
         int targetSpeed;
-        int textScaleSign = -1;
+        int textDirectionY = -1;
+        int textDirectionX = 0;
 
         switch (zoomLevel){
             case UPWIND_PORT:
@@ -238,33 +239,34 @@ public class PolarDrawableView extends View {
                 x0 = 0;
                 y0 = 0;
                 targetSpeed = Math.round(targetDownwindSpeed);
-                textScaleSign = 1;
+                textDirectionY = 1;
                 break;
             case DOWNWIND_STARBOARD:
                 x0 = viewWidth;
                 align = Paint.Align.RIGHT;
                 y0 = 0;
                 targetSpeed = Math.round(targetDownwindSpeed);
-                textScaleSign = 1;
+                textDirectionY = 1;
                 break;
             case REACH_PORT:
                 x0 = 0;
                 y0 = viewHeight / 2.f;
                 targetSpeed = Math.round(targetDownwindSpeed);
-                textScaleSign = 1;
+                textDirectionX = 1;
+                textDirectionY = 0;
                 break;
             case REACH_STARBOARD:
                 x0 = viewWidth;
                 align = Paint.Align.RIGHT;
                 y0 = viewHeight / 2.f;
                 targetSpeed = Math.round(targetDownwindSpeed);
-                textScaleSign = 1;
+                textDirectionX = -1;
+                textDirectionY = 0;
                 break;
             default:
                 x0 = viewWidth / 2.f;
                 y0 = viewHeight / 2.f;
                 targetSpeed = Math.round(targetDownwindSpeed);
-                textScaleSign = 1;
                 extraScale = 0.5f;
                 break;
         }
@@ -275,7 +277,6 @@ public class PolarDrawableView extends View {
         axisLabelPaint.setTextAlign(align);
         axisMajorLabelPaint.setTextAlign(align);
 
-        final float textX = x0;
 
         for (int speed = (int) maxSpeed; speed > 3; speed -= speedScaleStep) {
             final boolean isTargetSpeed = speed == targetSpeed;
@@ -288,7 +289,8 @@ public class PolarDrawableView extends View {
             String text = String.format(Locale.getDefault(),"%d", speed);
 
             Paint textPaint = isTargetSpeed ?  axisMajorLabelPaint : axisLabelPaint;
-            float textY = y0 + textScaleSign *  (pixInKtsScale * speed ) + textPaint.getTextSize();
+            final float textX = x0 + textDirectionX *  (pixInKtsScale * speed ) + textPaint.getTextSize();
+            final float textY = y0 + textDirectionY *  (pixInKtsScale * speed ) + textPaint.getTextSize();
             canvas.drawText (text, textX, textY,  textPaint);
         }
 

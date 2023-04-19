@@ -17,6 +17,7 @@ import com.santacruzinstruments.N2KLib.N2KMsgs.N2K;
 import com.santacruzinstruments.ottopi.control.canbus.CanBusWriter;
 import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.navengine.calibration.InstrCalibratorListener;
+import com.santacruzinstruments.ottopi.navengine.geo.Speed;
 import com.santacruzinstruments.ottopi.ui.ViewInterface;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class N2KCalibrator implements N2kListener {
         switch(packet.pgn){
             case windData_pgn:
                 if ( packet.fields[N2K.windData.windSpeed].getAvailability() == N2KField.Availability.AVAILABLE ){
-                    double aws = packet.fields[N2K.windData.windSpeed].getDecimal();
+                    double aws = Speed.Ms2Kts(packet.fields[N2K.windData.windSpeed].getDecimal());
                     this.listener.onRcvdInstrValue(MeasuredDataType.AWS, aws);
                 }
                 if ( packet.fields[N2K.windData.windAngle].getAvailability() == N2KField.Availability.AVAILABLE ){
@@ -59,7 +60,7 @@ public class N2KCalibrator implements N2kListener {
                 break;
             case speed_pgn:
                 if ( packet.fields[N2K.speed.speedWaterReferenced].getAvailability() == N2KField.Availability.AVAILABLE ){
-                    double spd = packet.fields[N2K.speed.speedWaterReferenced].getDecimal();
+                    double spd = Speed.Ms2Kts(packet.fields[N2K.speed.speedWaterReferenced].getDecimal());
                     this.listener.onRcvdInstrValue(MeasuredDataType.SPD, spd);
                 }
                 break;
