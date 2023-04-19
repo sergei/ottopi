@@ -28,6 +28,8 @@ import com.santacruzinstruments.ottopi.navengine.polars.PolarTable;
 import java.util.LinkedList;
 import java.util.Locale;
 
+import timber.log.Timber;
+
 public class PolarDrawableView extends View {
 
     private final float historyEntryRadius;
@@ -217,7 +219,7 @@ public class PolarDrawableView extends View {
         float extraScale = 1.f;
         Paint.Align align = Paint.Align.LEFT;
 
-        int targetSpeed = 0;
+        int targetSpeed;
         int textScaleSign = -1;
 
         switch (zoomLevel){
@@ -563,9 +565,9 @@ public class PolarDrawableView extends View {
             maxAbsTwa = Math.max(Math.abs(h.angle), maxAbsTwa);
         }
 
-        boolean upWind = minAbsTwa <= 90 && maxAbsTwa <= 90;
-        boolean downWind = minAbsTwa > 90 && maxAbsTwa > 90;
         boolean reach = minAbsTwa >= 60 && maxAbsTwa <= 120;
+        boolean upWind = !reach && (minAbsTwa <= 90 && maxAbsTwa <= 90);
+        boolean downWind = !reach &&  (minAbsTwa > 90 && maxAbsTwa > 90);
         boolean port = minTwa < 0 && maxTwa < 0;
         boolean starboard = minTwa > 0 && maxTwa > 0;
 
@@ -584,6 +586,8 @@ public class PolarDrawableView extends View {
             zoomLevel = ZoomLevel.REACH_PORT;
         else
             zoomLevel = ZoomLevel.FULL;
+
+        Timber.d("Zoom %s upwind %s reach %s", zoomLevel, upWind, reach);
 
         return zoomLevel;
     }

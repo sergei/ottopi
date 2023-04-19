@@ -41,6 +41,7 @@ import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
 import dagger.hilt.android.testing.UninstallModules;
 import dagger.hilt.components.SingletonComponent;
+import timber.log.Timber;
 
 @LargeTest
 @HiltAndroidTest
@@ -79,6 +80,8 @@ public class NavFragmentTest {
 
     @Before
     public void before() {
+        // Enable Timber logging
+        Timber.plant(new Timber.DebugTree());
         activityScenarioRule.getScenario().onActivity(activity -> screenShotRecorder = new ScreenShotRecorder(activity));
 
         // Make sure we are in the racing state to see the nav fragment
