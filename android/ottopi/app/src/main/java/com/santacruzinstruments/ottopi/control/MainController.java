@@ -82,6 +82,8 @@ import timber.log.Timber;
 
 public class MainController {
 
+    private boolean isUdpN2kConected;
+
     public enum MessageId{
         heartBeat
         ,onNavComputerOutput
@@ -236,7 +238,9 @@ public class MainController {
 
     // NMEA 2000 support
     private SerialUsbTransportTask serialUsbTransportTask;
-    private CanFrameAssembler canFrameAssembler;
+    private CanFrameAssembler serialUsbCanFrameAssembler;
+
+    private CanFrameAssembler networkUdpCanFrameAssembler;
     private InstrumentDataAssembler instrumentDataAssembler;
 
     private final Handler handler = new Handler(Looper.myLooper());
@@ -245,7 +249,9 @@ public class MainController {
     private File detectedMarksGpxName;
     private RaceLogger raceLogger;
 
-    private N2KCalibrator n2KCalibrator;
+    private N2KCalibrator n2KCalibratorForSerialUsb;
+
+    private N2KCalibrator n2KCalibratorForNetworkUdp;
 
     @UiThread
     public MainController(Context ctx, ViewInterface viewInterface) {
@@ -376,6 +382,10 @@ public class MainController {
         if( sailingState == SailingState.RACING){
             onRaceStart();
         }
+
+        // Initialize NMEA2000 library
+        InputStream is = Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json");
+        new N2KLib(null, is);
 
         // Finally start heartbeat
         startHeartbeat();
@@ -556,7 +566,8 @@ public class MainController {
                         case sendCal:
                             assert msg.arg != null;
                             CalItem calItem = (CalItem)msg.arg;
-                            n2KCalibrator.sendCal(calItem.type, calItem.value);
+                            n2KCalibratorForSerialUsb.sendCal(calItem.type, calItem.value);
+                            n2KCalibratorForNetworkUdp.sendCal(calItem.type, calItem.value);
                             break;
                     }
                 }
@@ -591,39 +602,36 @@ public class MainController {
     }
     private void serialUsbThread() {
 
-        InputStream is = Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json");
-        new N2KLib(null, is);
-
-        canFrameAssembler = new CanFrameAssembler();
+        serialUsbCanFrameAssembler = new CanFrameAssembler();
 
         serialUsbTransportTask =  new SerialUsbTransportTask(this.ctx, new SerialUsbTransportTask.UsbConnectionListener() {
             @Override
             public void OnConnectionStatus(boolean connected) {
                 Timber.d("Serial USB %s", connected ? "Connected" : "Not connected");
                 viewInterface.onN2KConnect(connected);
-                n2KCalibrator.OnConnectionStatus(connected);
+                n2KCalibratorForSerialUsb.OnConnectionStatus(connected);
             }
 
             @Override
             public void onFrameReceived(int addrPri, byte[] data) {
-                canFrameAssembler.setFrame(addrPri, data);
+                serialUsbCanFrameAssembler.setFrame(addrPri, data);
             }
 
             @Override
             public void onTick() {
-                n2KCalibrator.onTick();
+                n2KCalibratorForSerialUsb.onTick();
             }
         });
 
-        n2KCalibrator = new N2KCalibrator(viewInterface, canFrameAssembler, serialUsbTransportTask, instrumentsCalibrator);
+        n2KCalibratorForSerialUsb = new N2KCalibrator(viewInterface, serialUsbCanFrameAssembler, serialUsbTransportTask, instrumentsCalibrator);
 
-        canFrameAssembler.addN2kListener(instrumentDataAssembler);
-        canFrameAssembler.addN2kListener(n2KCalibrator);
-
+        serialUsbCanFrameAssembler.addN2kListener(instrumentDataAssembler);
+        serialUsbCanFrameAssembler.addN2kListener(n2KCalibratorForSerialUsb);
 
         serialUsbTransportTask.run();
     }
 
+    private long lastUdpNetTick = 0;
     private void networkThread() {
         WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
 
@@ -638,6 +646,8 @@ public class MainController {
 
         this.viewInterface.onInstrHost(hostname);
         this.viewInterface.onInstrPort(port);
+
+        networkUdpCanFrameAssembler = new CanFrameAssembler();
 
         networkManager = new NetworkManager(new NetworkManager.NetworkListener() {
             @Override
@@ -672,10 +682,32 @@ public class MainController {
             }
 
             @Override
+            public void onN2kDataReceived(int can_id, byte[] data, int len) {
+
+                if ( !isUdpN2kConected) { // No such thing as connected for UDP network
+                    isUdpN2kConected = true;
+                    n2KCalibratorForNetworkUdp.OnConnectionStatus(true);
+                    viewInterface.onN2KConnect(true);
+                }
+
+                long now = SystemClock.elapsedRealtime();
+                if ( now - lastUdpNetTick > 100 ) {
+                    lastUdpNetTick = now;
+                    n2KCalibratorForNetworkUdp.onTick();
+                }
+
+                networkUdpCanFrameAssembler.setFrame(can_id, data);
+            }
+
+            @Override
             public void onSsidScan(List<String> ssids) {
                 viewInterface.onSsidScan(ssids);
             }
         }, useWifi, hostname, port, ssid, wifiManager);
+
+        n2KCalibratorForNetworkUdp = new N2KCalibrator(viewInterface, networkUdpCanFrameAssembler, networkManager.getCanBusWriter(), instrumentsCalibrator);
+        networkUdpCanFrameAssembler.addN2kListener(instrumentDataAssembler);
+        networkUdpCanFrameAssembler.addN2kListener(n2KCalibratorForNetworkUdp);
 
         networkManager.run();
     }

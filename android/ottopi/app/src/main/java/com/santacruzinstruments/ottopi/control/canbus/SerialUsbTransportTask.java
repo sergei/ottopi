@@ -278,7 +278,7 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
             write(msg.getBytes());
         } catch (IOException e) {
             Timber.e(e, "Failed to write");
-            usbConnectionListener.OnConnectionStatus(false);
+//            usbConnectionListener.OnConnectionStatus(false);
         }
     }
 

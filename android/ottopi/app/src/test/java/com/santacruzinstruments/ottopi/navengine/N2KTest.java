@@ -37,6 +37,28 @@ import timber.log.Timber;
 
 public class N2KTest {
 
+    abstract static class TestN2kListener implements N2kListener {
+        @Override
+        public void OnConnectionStatus(boolean connected) {
+        }
+
+        @Override
+        public void onTick() {
+        }
+    }
+
+    private void parseLogSnippet(String logSnippet, CanFrameAssembler canFrameAssembler) {
+        String [] lines = logSnippet.split("\n");
+        for( String s : lines){
+            int start = s.indexOf(",[");
+            if ( start != -1 ){
+                int end = s.indexOf("]");
+                String msg = s.substring(start + 2, end);
+                parseString(canFrameAssembler, msg);
+            }
+        }
+    }
+
     @BeforeClass
     public static void SetupTimber(){
         Timber.plant(new Timber.Tree() {
@@ -174,8 +196,7 @@ public class N2KTest {
         Timber.d("Test");
 
         // Need to create N2KLib() so some internal statics are initialized
-        new N2KLib(null, Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json"));
-        CanFrameAssembler canFrameAssembler = new CanFrameAssembler();
+        CanFrameAssembler canFrameAssembler = makeCanFrameAssembler();
         canFrameAssembler.addN2kListener(new N2kListener() {
             @Override
             public void onN2kPacket(N2KPacket packet) {
@@ -243,10 +264,9 @@ I (323450) mhu2nmea_ESP32N2kStream: 323121 : Pri:2 PGN:130900 Source:15 Dest:255
 
         Timber.d("Test");
 
-        // Need to create N2KLib() so some internal statics are initialized
-        new N2KLib(null, Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json"));
-        CanFrameAssembler canFrameAssembler = new CanFrameAssembler();
-        canFrameAssembler.addN2kListener(new N2kListener() {
+        CanFrameAssembler canFrameAssembler = makeCanFrameAssembler();
+
+        canFrameAssembler.addN2kListener(new TestN2kListener() {
             @Override
             public void onN2kPacket(N2KPacket packet) {
                 assertTrue(packet.isValid());
@@ -263,23 +283,17 @@ I (323450) mhu2nmea_ESP32N2kStream: 323121 : Pri:2 PGN:130900 Source:15 Dest:255
                     }
                 }
             }
-            @Override
-            public void OnConnectionStatus(boolean connected) {}
-            @Override
-            public void onTick() {}
         });
 
-        String [] lines = logSnippet.split("\n");
-        for( String s : lines){
-            int start = s.indexOf(",[");
-            if ( start != -1 ){
-                int end = s.indexOf("]");
-                String msg = s.substring(start + 2, end);
-                parseString(canFrameAssembler, msg);
-            }
-        }
+        parseLogSnippet(logSnippet, canFrameAssembler);
 
     }
 
+    @NonNull
+    private CanFrameAssembler makeCanFrameAssembler() {
+        // Need to create N2KLib() so some internal statics are initialized
+        new N2KLib(null, Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json"));
+        return new CanFrameAssembler();
+    }
 
 }
