@@ -167,7 +167,7 @@ public class N2KTest {
             assertEquals(expectedReq[i], generated.get(i));
         }
 
-        p = makeGroupCommandPacket(SciWindCalibration_pgn, (byte)3, 4, 2);
+        p = makeGroupCommandPacket(SciWindCalibration_pgn, (byte)3, 4, 2.);
         String [] expectedCmd = {
                 "09ED0300 40 0E 01 54 FF 01 FF 03\r\n",
                 "09ED0300 41 01 E4 07 03 04 05 C8\r\n",

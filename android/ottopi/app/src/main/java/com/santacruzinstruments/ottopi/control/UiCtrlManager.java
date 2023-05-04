@@ -222,4 +222,14 @@ public class UiCtrlManager implements CtrlInterface {
         mainController.offer(MainController.MessageId.sendCal, calItem);
     }
 
+    @Override
+    public void storeImuCalibration() {
+        mainController.offer(MainController.MessageId.storeImuCal);
+    }
+
+    @Override
+    public void eraseImuCalibration() {
+        mainController.offer(MainController.MessageId.eraseImuCal);
+    }
+
 }

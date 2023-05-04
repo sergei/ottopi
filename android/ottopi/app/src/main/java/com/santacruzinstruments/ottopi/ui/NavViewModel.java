@@ -120,6 +120,8 @@ public class NavViewModel extends ViewModel implements ViewInterface {
 
     private final  MutableLiveData<Boolean> isN2kConnected = new MutableLiveData<>();
 
+    private final MutableLiveData<Integer> imuCalState = new MediatorLiveData<>();
+
     @Inject
     NavViewModel(@ApplicationContext Context ctx, CtrlInterface ctrlInterface){
         this.ctrlInterface = ctrlInterface;
@@ -382,7 +384,7 @@ public class NavViewModel extends ViewModel implements ViewInterface {
         assert c != null;
 
         if ( c.gotCal ) {
-            double nonCalVal = 0;
+            double nonCalVal;
 
             switch (item) {
                 case AWA:
@@ -474,6 +476,15 @@ public class NavViewModel extends ViewModel implements ViewInterface {
 
     public LiveData<Boolean> getIsN2kConnected() {
         return isN2kConnected;
+    }
+
+    @Override
+    public void onRcvdImuCalState(int calState) {
+        imuCalState.postValue(calState);
+    }
+
+    public LiveData<Integer> getImuCalState() {
+        return imuCalState;
     }
 
 }

@@ -117,6 +117,8 @@ public class N2KCalibrator implements N2kListener {
                     double cal = packet.fields[N2K.SciImuCalibration.RollOffset].getDecimal();
                     this.listener.onRcvdInstrCalibr(MeasuredDataType.ROLL, cal);
                 }
+                int calState = packet.fields[N2K.SciImuCalibration.CalibrState].getInt();
+                this.listener.onRcvdImuCalState( calState );
                 break;
         }
     }
@@ -180,7 +182,29 @@ public class N2KCalibrator implements N2kListener {
             return null;
         }
     }
+
+    static class CommandValue {
+        enum   Type {INT, DOUBLE}
+        Type type;
+        double doubleValue;
+        int intValue;
+    }
+
     static public N2KPacket makeGroupCommandPacket(int commandedPgn, byte dest, int fieldIdx, double value) {
+        CommandValue val = new CommandValue();
+        val.type = CommandValue.Type.DOUBLE;
+        val.doubleValue = value;
+        return makeGroupCommandPacket(commandedPgn,  dest, fieldIdx,  val);
+    }
+
+    static public N2KPacket makeGroupCommandPacket(int commandedPgn, byte dest, int fieldIdx, int value) {
+        CommandValue val = new CommandValue();
+        val.type = CommandValue.Type.INT;
+        val.intValue = value;
+        return makeGroupCommandPacket(commandedPgn,  dest, fieldIdx,  val);
+    }
+
+    static public N2KPacket makeGroupCommandPacket(int commandedPgn, byte dest, int fieldIdx, CommandValue value) {
         int[] functionCode = {1};  // Command
         N2KPacket p = new N2KPacket(nmeaRequestGroupFunction_pgn, functionCode);
         p.dest = dest;
@@ -213,7 +237,14 @@ public class N2KCalibrator implements N2kListener {
             if ( cmdPgn.fields != null && fieldIdx < cmdPgn.fields.length ){
                 final N2KField valueField = repset[N2K.nmeaRequestGroupFunction.rep.value];
                 valueField.fieldDef = cmdPgn.fields[fieldIdx].fieldDef;  // Replace field definition with one from the commanded PGN
-                valueField.setDecimal(value);
+                switch (value.type){
+                    case INT:
+                        valueField.setInt(value.intValue);
+                        break;
+                    case DOUBLE:
+                        valueField.setDecimal(value.doubleValue);
+                        break;
+                }
             }
 
             return p;
@@ -255,6 +286,24 @@ public class N2KCalibrator implements N2kListener {
 
         if ( p != null) {
             sendPacket(p);
+        }
+    }
+
+    public void storeImuCalibration() {
+        N2KPacket p = makeGroupCommandPacket(SciImuCalibration_pgn, this.imuCalDest,
+                N2K.SciImuCalibration.CalibrState, N2K.SciImuCalibration.CalibrState_values.Store);
+        if ( p != null) {
+            sendPacket(p);
+            imuCalReceived = false;
+        }
+    }
+
+    public void eraseImuCalibration() {
+        N2KPacket p = makeGroupCommandPacket(SciImuCalibration_pgn, this.imuCalDest,
+                N2K.SciImuCalibration.CalibrState, N2K.SciImuCalibration.CalibrState_values.Erase);
+        if ( p != null) {
+            sendPacket(p);
+            imuCalReceived = false;
         }
     }
 

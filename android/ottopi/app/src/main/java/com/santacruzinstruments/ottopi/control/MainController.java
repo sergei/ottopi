@@ -114,6 +114,8 @@ public class MainController {
         ,setPrevMark
         ,setupUsbAccessory
         ,sendCal
+        ,storeImuCal
+        ,eraseImuCal
     }
 
     public static class Message {
@@ -568,6 +570,14 @@ public class MainController {
                             CalItem calItem = (CalItem)msg.arg;
                             n2KCalibratorForSerialUsb.sendCal(calItem.type, calItem.value);
                             n2KCalibratorForNetworkUdp.sendCal(calItem.type, calItem.value);
+                            break;
+                        case storeImuCal:
+                            n2KCalibratorForSerialUsb.storeImuCalibration();
+                            n2KCalibratorForNetworkUdp.storeImuCalibration();
+                            break;
+                        case eraseImuCal:
+                            n2KCalibratorForSerialUsb.eraseImuCalibration();
+                            n2KCalibratorForNetworkUdp.eraseImuCalibration();
                             break;
                     }
                 }

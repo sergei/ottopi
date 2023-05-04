@@ -43,5 +43,6 @@ public interface CtrlInterface {
     void setPrevMark();
     void setupUsbAccessory(UsbAccessory accessory);
     void sendCal(MeasuredDataType item, float calValue);
-
+    void storeImuCalibration();
+    void eraseImuCalibration();
 }

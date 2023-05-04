@@ -169,6 +169,16 @@ public class FakeCtrlManager implements CtrlInterface {
     }
 
     @Override
+    public void storeImuCalibration() {
+
+    }
+
+    @Override
+    public void eraseImuCalibration() {
+
+    }
+
+    @Override
     public void removeRaceRouteWpt(int idx) {
         Route newRoute = new Route();
         for( int i=0; i < raceRoute.getRptsNum(); i++){

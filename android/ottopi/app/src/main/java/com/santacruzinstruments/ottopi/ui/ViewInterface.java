@@ -49,5 +49,5 @@ public interface ViewInterface {
     void onN2KConnect(boolean connected);
     void onRcvdInstrValue(MeasuredDataType item, double value);
     void onRcvdInstrCalibr(MeasuredDataType item, double cal);
-
+    void onRcvdImuCalState(int calState);
 }

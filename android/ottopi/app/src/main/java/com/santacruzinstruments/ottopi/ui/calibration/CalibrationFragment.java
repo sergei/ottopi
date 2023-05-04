@@ -10,18 +10,17 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.santacruzinstruments.ottopi.R;
-import com.santacruzinstruments.ottopi.data.CalibrationData;
 import com.santacruzinstruments.ottopi.data.MeasuredDataType;
 import com.santacruzinstruments.ottopi.databinding.FragmentCalibrationBinding;
 import com.santacruzinstruments.ottopi.ui.NavViewModel;
 
 import java.util.List;
+import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -172,6 +171,14 @@ public class CalibrationFragment  extends Fragment {
                 binding.recyclerView.setVisibility(View.GONE);
             }
         });
+
+        navViewModel.getImuCalState().observe(getViewLifecycleOwner(), imuCalState -> {
+            String calState = String.format(Locale.getDefault(), "CMPS12 Cal state: %02X", imuCalState);
+            binding.imuCalibrState.setText(calState);
+        });
+
+        binding.storeInternalCalibrationButton.setOnClickListener(view -> navViewModel.ctrl().storeImuCalibration());
+        binding.eraseInternalCalibrationButton.setOnClickListener(view -> navViewModel.ctrl().eraseImuCalibration());
 
         RecyclerView recyclerView = binding.recyclerView;
         mCalItemViewAdapter = new CalItemViewAdapter(navViewModel, mCalibratableItems);

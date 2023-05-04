@@ -19,9 +19,45 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:text="@string/not_connected_to_n2k_usb_gateway"
+            android:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="visible"/>
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/imuCalibrState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/storeInternalCalibrationButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/storeInternalCalibrationButton"
+            style="@style/RaceSetupText"
+            tools:text="Internal IMU calibration state: 0" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/storeInternalCalibrationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/store_imu_cal"
+            app:layout_constraintStart_toEndOf="@+id/imuCalibrState"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/eraseInternalCalibrationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/erase_imu_cal"
+            app:layout_constraintStart_toEndOf="@+id/storeInternalCalibrationButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
 
         <androidx.recyclerview.widget.RecyclerView
             android:nestedScrollingEnabled="false"
@@ -29,7 +65,7 @@
             android:layout_width="match_parent"
             android:overScrollMode="never"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/eraseInternalCalibrationButton"
             app:layout_constraintStart_toStartOf="parent"
             android:visibility="gone"/>
 
