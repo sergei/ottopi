@@ -273,12 +273,14 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
 
     @Override
     public void sendCanFrame(int canAddr, byte[] data){
-        String msg = formatYdnuRawString(canAddr, data);
-        try {
-            write(msg.getBytes());
-        } catch (IOException e) {
-            Timber.e(e, "Failed to write");
-            usbConnectionListener.OnConnectionStatus(false);
+        if ( connected == Connected.True){
+            String msg = formatYdnuRawString(canAddr, data);
+            try {
+                write(msg.getBytes());
+            } catch (IOException e) {
+                Timber.e(e, "Failed to write");
+                usbConnectionListener.OnConnectionStatus(false);
+            }
         }
     }
 

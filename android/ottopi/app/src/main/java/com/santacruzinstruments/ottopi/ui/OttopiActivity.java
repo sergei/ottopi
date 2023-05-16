@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -76,6 +77,12 @@ public class OttopiActivity extends AppCompatActivity {
 
     private static final int UI_ANIMATION_DELAY = 300;
     private static final int FULL_SCREEN_INACTIVITY_TIMEOUT_MS = 5000;
+
+    private static final int REQUEST_CODE_COARSE_LOCATION = 1;
+    private static final int REQUEST_CODE_FINE_LOCATION = 2;
+    private static final int REQUEST_CODE_BLUETOOTH_CONNECT = 3;
+
+    private static final int REQUEST_CODE_BLUETOOTH = 4;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     private final Runnable mHidePart2Runnable = new Runnable() {
@@ -119,6 +126,9 @@ public class OttopiActivity extends AppCompatActivity {
 
         Timber.d("Git branch: %s", BuildConfig.GIT_BRANCH);
         Timber.d("Git commit: %s", BuildConfig.GIT_HASH);
+
+        requestPermissions();
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         navViewModel = new ViewModelProvider(this).get(NavViewModel.class);
 
@@ -176,7 +186,6 @@ public class OttopiActivity extends AppCompatActivity {
             }
         }
 
-        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         navViewModel.getCurrentScreen().observe(this, screen
                 -> {
                         currentScreen =  screen;
@@ -193,6 +202,7 @@ public class OttopiActivity extends AppCompatActivity {
         }
 
         checkIntentForHotButtons(intent);
+
     }
 
     @Override
@@ -394,9 +404,72 @@ public class OttopiActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+    }
+    private void requestPermissions() {
+        // Request bluetooth connection permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        REQUEST_CODE_COARSE_LOCATION);
+            }
+        }
 
-        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE_FINE_LOCATION);
+        }
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.BLUETOOTH},
+                    REQUEST_CODE_BLUETOOTH);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{"android.permission.BLUETOOTH_CONNECT"},
+                        REQUEST_CODE_BLUETOOTH_CONNECT);
+            }
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_FINE_LOCATION) {
+            if (grantResults.length > 0 // If request is cancelled, the result arrays are empty.
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(this);
+                final boolean useInternalGps = sharedPreferences.getBoolean(getString(R.string.key_use_internal_gps), false);
+                if (useInternalGps && isGpsEnabled()) {
+                    navViewModel.ctrl().setUseInternalGps(true);
+                }
+            }
+        }else if( requestCode == REQUEST_CODE_BLUETOOTH_CONNECT){
+            if (grantResults.length > 0 // If request is cancelled, the result arrays are empty.
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Timber.i("Bluetooth connect permission granted");
+            }
+        }else if( requestCode == REQUEST_CODE_BLUETOOTH){
+            if (grantResults.length > 0 // If request is cancelled, the result arrays are empty.
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Timber.i("Bluetooth permission granted");
+            }
+        }else if( requestCode == REQUEST_CODE_COARSE_LOCATION){
+            if (grantResults.length > 0 // If request is cancelled, the result arrays are empty.
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Timber.i("Coarse location granted");
+            }
+        }
     }
 
     private boolean isGpsEnabled() {
@@ -413,22 +486,6 @@ public class OttopiActivity extends AppCompatActivity {
                     .show();
         }
         return gpsEnabled;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            if (grantResults.length > 0 // If request is cancelled, the result arrays are empty.
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                SharedPreferences sharedPreferences =
-                        PreferenceManager.getDefaultSharedPreferences(this);
-                final boolean useInternalGps = sharedPreferences.getBoolean(getString(R.string.key_use_internal_gps), false);
-                if (useInternalGps && isGpsEnabled()) {
-                    navViewModel.ctrl().setUseInternalGps(true);
-                }
-            }
-        }
     }
 
     private void enableLocationSettings() {

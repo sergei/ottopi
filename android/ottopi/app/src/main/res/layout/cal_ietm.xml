@@ -60,7 +60,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="@+id/seekBar"
         app:layout_constraintTop_toTopOf="@+id/seekBar"
-        android:textAppearance="?attr/textAppearanceSubtitle1"
+        style="@style/RaceSetupText"
         tools:text="10" />
 
     <SeekBar
