@@ -130,7 +130,7 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
                 event_title_clip = ImageClip(evt['event_title_png'], duration=title_duration)
 
                 background_clip = concatenate_videoclips(camera_clips)
-                overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
+                overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=evt['overlay_fps'])
                 overlay_x = 0
                 overlay_y = height - overlay_clip.size[1]
 
@@ -142,12 +142,12 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
 
                 # Polar for tacks and gybes
                 if evt['polar_images'][0] is not None:
-                    polar_clip = ImageSequenceClip(evt['polar_images'], fps=1)
+                    polar_clip = ImageSequenceClip(evt['polar_images'], fps=evt['overlay_fps'])
                     clips.append(polar_clip.set_position(('right', 'top')))
 
                 # Timer for the start
                 if len(evt['timer_images']) > 0:
-                    timer_clip = ImageSequenceClip(evt['timer_images'], fps=1)
+                    timer_clip = ImageSequenceClip(evt['timer_images'], fps=evt['overlay_fps'])
                     clips.append(timer_clip.set_position(('left', 'top')))
 
                 # Title goes the last on top of everything

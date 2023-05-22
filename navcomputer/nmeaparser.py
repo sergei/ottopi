@@ -115,11 +115,15 @@ class NmeaParser:
                 self.tws_t = time.time()
 
     def parse_vwr(self, t):
-        awa = float(t[1])
-        self.awa = awa if t[2] == 'R' else -awa
-        self.awa_t = time.time()
-        self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
+        if len(t[1]) == 0 or len(t[3]) == 0:
+            self.awa = None
+            self.aws = None
+        else:
+            awa = float(t[1])
+            self.awa = awa if t[2] == 'R' else -awa
+            self.aws = float(t[3]) * SPEED_FACTOR[t[4]]
         self.aws_t = time.time()
+        self.awa_t = time.time()
 
     def parse_vhw(self, t):
         """ https://gpsd.gitlab.io/gpsd/NMEA.html#_vhw_water_speed_and_heading """
@@ -159,11 +163,18 @@ class NmeaParser:
         if len(t[1]) > 0 and len(t[9]):
             hour = int(t[1][0:2])
             minute = int(t[1][2:4])
-            sec = int(t[1][4:6])
+            sec_str = t[1][4:]
+            if '.' in sec_str:
+                sec_f = float(sec_str)
+                sec = int(sec_f)
+                microsecond = (int((sec_f - sec) * 1.e6) // 1000) * 1000
+            else:
+                sec = int(sec_str)
+                microsecond = 0
             day = int(t[9][0:2])
             month = int(t[9][2:4])
             year = int(t[9][4:6]) + 2000
-            self.utc = datetime.datetime(year, month, day, hour, minute, sec, tzinfo=datetime.timezone.utc)
+            self.utc = datetime.datetime(year, month, day, hour, minute, sec, microsecond, tzinfo=datetime.timezone.utc)
             self.utc_t = time.time()
         if t[2] == 'A':
             self.lat = self.parse_coord(t[3], t[4])

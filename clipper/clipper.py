@@ -398,7 +398,10 @@ class Clipper(NavigationListener):
         events = []
         for e in events_recorder.events:
             if len(e['history']) > 0:
-                event = ClipEvent(e['name'], e['history'][0].utc, e['history'][-1].utc)
+                evt_utc = e['history'][0].utc + (e['history'][-1].utc - e['history'][0].utc) / 2
+                utc_from = evt_utc - datetime.timedelta(seconds=30)
+                utc_to = evt_utc + datetime.timedelta(seconds=30)
+                event = ClipEvent(e['name'], utc_from, utc_to)
                 events.append(event)
 
         print(f' {len(events)} events generated')
@@ -529,6 +532,7 @@ class Clipper(NavigationListener):
                 duration = int((event.utc_to - event.utc_from).total_seconds())
                 half_span = duration // 2
                 utc = event.utc_from + datetime.timedelta(seconds=half_span)
+                overlay_fps = len(history) // duration
 
                 race_event = {
                     'name': event.name,
@@ -539,6 +543,7 @@ class Clipper(NavigationListener):
                     'history': history,
                     'hist_idx': hist_idx,
                     'location': Location(self.instr_data[hist_idx].lat, self.instr_data[hist_idx].lon),
+                    'overlay_fps': overlay_fps,
                 }
                 race_events.append(race_event)
 
