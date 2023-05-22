@@ -24,7 +24,7 @@ class ClipEvent:
             'name': self.name,
             'utc_from': self.utc_from.isoformat(),
             'utc_to': self.utc_to.isoformat(),
-            'utc_gun': None if self.utc_gun is None else self.utc_to.isoformat()
+            'utc_gun': None if self.utc_gun is None else self.utc_gun.isoformat()
         }
 
     @classmethod

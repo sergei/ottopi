@@ -67,6 +67,7 @@ class ClipEditor:
         if is_race_start:
             self.gun_label.grid(column=7, row=0, sticky=W)
             self.set_gun_button.grid(column=8, row=0, sticky=W)
+            self.sv_utc_gun.set(self.event.utc_gun.strftime("%H:%M:%S"))
         else:
             self.gun_label.grid_forget()
             self.set_gun_button.grid_forget()
@@ -97,6 +98,12 @@ class ClipEditor:
         self.slider.grid(column=0, row=0, sticky=W)
         self.slider.setValueChageCallback(lambda vals: self.on_time_change(vals))
         is_race_start = event.utc_gun is not None
+
+        if is_race_start:
+            self.event_type_combo.set(EVT_TYPE_NAME_RACE_START)
+        else:
+            self.event_type_combo.set(EVT_TYPE_NAME_NORMAL)
+
         self.show_hide_start_info(is_race_start)
 
         self.is_hidden = False
@@ -105,7 +112,10 @@ class ClipEditor:
         self.event.name = self.sv_clip_name.get()
         self.event.utc_from = self.utc_from
         self.event.utc_to = self.utc_to
-        self.event.utc_gun = self.utc_gun
+        if self.event_type_combo.get() == EVT_TYPE_NAME_RACE_START:
+            self.event.utc_gun = self.event.utc_gun
+        else:
+            self.event.utc_gun = None
         self.on_save_clip(self.event)
 
     def delete_clip(self):
@@ -129,5 +139,8 @@ class ClipEditor:
         self.on_in_out_change(self.utc_from, self.utc_to, in_changed)
 
     def set_utc(self, utc: datetime):
-        self.utc_gun = utc
-        self.sv_utc_gun.set(utc.strftime("%H:%M:%S"))
+        if self.event_type_combo.get() == EVT_TYPE_NAME_RACE_START:
+            self.utc_gun = utc
+            self.sv_utc_gun.set(utc.strftime("%H:%M:%S"))
+        else:
+            self.utc_gun = None
