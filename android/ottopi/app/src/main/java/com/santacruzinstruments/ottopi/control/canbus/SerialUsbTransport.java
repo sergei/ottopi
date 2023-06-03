@@ -24,14 +24,7 @@ import java.util.Objects;
 
 import timber.log.Timber;
 
-public class SerialUsbTransportTask implements SerialInputOutputManager.Listener, CanBusWriter {
-
-    public interface UsbConnectionListener {
-        void OnConnectionStatus(boolean connected);
-        void onFrameReceived(int addrPri, byte[]  data);
-        void onTick();
-    }
-
+public class SerialUsbTransport implements SerialInputOutputManager.Listener, CanBusWriter {
     private boolean bKeepRunning = true;
     private UsbDeviceConnection usbConnection;
     private final UsbSerialProber usbDefaultProber = UsbSerialProber.getDefaultProber();
@@ -42,7 +35,7 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
 
     private static final String INTENT_ACTION_GRANT_USB = APPLICATION_ID + "INTENT_ACTION_GRANT_USB";
     private static final String INTENT_ACTION_DISCONNECT = APPLICATION_ID + "INTENT_ACTION_DISCONNECT";
-    private final UsbConnectionListener usbConnectionListener;
+    private final N2KConnectionListener usbConnectionListener;
     private final UsbManager usbManager;
     private UsbSerialPort usbSerialPort;
     private final PendingIntent usbPermissionIntent;
@@ -59,7 +52,7 @@ public class SerialUsbTransportTask implements SerialInputOutputManager.Listener
 
     private String rawString = "";
 
-    public SerialUsbTransportTask(Context context, UsbConnectionListener usbConnectionListener) {
+    public SerialUsbTransport(Context context, N2KConnectionListener usbConnectionListener) {
         this.context = context;
         this.usbConnectionListener = usbConnectionListener;
         usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);

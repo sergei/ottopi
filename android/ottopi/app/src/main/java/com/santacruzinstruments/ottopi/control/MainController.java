@@ -22,8 +22,11 @@ import androidx.room.Room;
 
 import com.santacruzinstruments.N2KLib.N2KLib.N2KLib;
 import com.santacruzinstruments.ottopi.R;
-import com.santacruzinstruments.ottopi.control.canbus.BluetoothTransportTask;
-import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransportTask;
+import com.santacruzinstruments.ottopi.control.canbus.BluetoothTransport;
+import com.santacruzinstruments.ottopi.control.canbus.CanBusWriter;
+import com.santacruzinstruments.ottopi.control.canbus.N2KConnectionListener;
+import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransport;
+import com.santacruzinstruments.ottopi.control.canbus.UsbAccessoryTransport;
 import com.santacruzinstruments.ottopi.data.CalItem;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
 import com.santacruzinstruments.ottopi.data.DataReceptionStatus;
@@ -198,6 +201,13 @@ public class MainController {
         public void onUnknownMessage(String msg) {}
     }
 
+
+    enum N2KGateways {
+        USB_SERIAL,
+        USB_ACCESSORY,
+        BLUETOOTH,
+    }
+
     public static final String POLAR_FILE_NAME = "polars.pol";
     private static final String NMEA_FMT_STRING = "NET_NMEA:%s";
     private static final int NAV_DATA_TIMEOUT_MS = 5000;
@@ -233,30 +243,28 @@ public class MainController {
     private int epochCount = 0;
     private long lastNavEngOutRcvdAtMs = 0;
     private NetworkManager networkManager;
-    private UsbReader usbReader;
+    private UsbAccessoryTransport usbAccessoryTransport;
 
     // NMEA 2000 support
-    private SerialUsbTransportTask serialUsbTransportTask;
-    private CanFrameAssembler canFrameAssemblerUsb;
-    private CanFrameAssembler canFrameAssemblerBt;
+    private SerialUsbTransport serialUsbTransport;
     private InstrumentDataAssembler instrumentDataAssembler;
-
-    private BluetoothTransportTask bluetoothTransportTask;
-
+    private BluetoothTransport bluetoothTransport;
     private final Handler handler = new Handler(Looper.myLooper());
     private final BoatDataRepository boatDataRepository;
     private final GpxBuilder gpxBuilder = new GpxBuilder();
     private File detectedMarksGpxName;
     private RaceLogger raceLogger;
-
-    private N2KCalibrator n2KCalibratorUsb;
-    private N2KCalibrator n2KCalibratorBt;
+    private final CanFrameAssembler [] canFrameAssemblers = new CanFrameAssembler[N2KGateways.values().length];
+    private final N2KCalibrator [] n2KCalibrators = new N2KCalibrator[N2KGateways.values().length];
 
     @UiThread
     public MainController(Context ctx, ViewInterface viewInterface) {
         this.ctx = ctx;
         this.boatDataRepository = new BoatDataRepository(ctx);
         this.viewInterface = viewInterface;
+        canFrameAssemblers[N2KGateways.USB_SERIAL.ordinal()] = new CanFrameAssembler();
+        canFrameAssemblers[N2KGateways.USB_ACCESSORY.ordinal()] = new CanFrameAssembler();
+        canFrameAssemblers[N2KGateways.BLUETOOTH.ordinal()] = new CanFrameAssembler();
     }
 
     private void makeMarksGpxFileName() {
@@ -425,19 +433,19 @@ public class MainController {
             networkThread.join(1000);
         } catch (InterruptedException ignore) {}
 
-        usbReader.stop();
+        usbAccessoryTransport.stop();
         usbThread.interrupt();
         try {
             usbThread.join(1000);
         } catch (InterruptedException ignore) {}
 
-        serialUsbTransportTask.stop();
+        serialUsbTransport.stop();
         usbSerialThread.interrupt();
         try {
             usbSerialThread.join(1000);
         } catch (InterruptedException ignore) {}
 
-        bluetoothTransportTask.stop();
+        bluetoothTransport.stop();
         btThread.interrupt();
         try {
             btThread.join(1000);
@@ -571,13 +579,13 @@ public class MainController {
                             bKeepRunning = false;
                             break;
                         case setupUsbAccessory:
-                            usbReader.setAccessory((UsbAccessory)msg.arg);
+                            usbAccessoryTransport.setAccessory((UsbAccessory)msg.arg);
                             break;
                         case sendCal:
                             assert msg.arg != null;
                             CalItem calItem = (CalItem)msg.arg;
-                            n2KCalibratorUsb.sendCal(calItem.type, calItem.value);
-                            n2KCalibratorBt.sendCal(calItem.type, calItem.value);
+                            for ( int i=0; i < N2KGateways.values().length; i++)
+                                n2KCalibrators[i].sendCal(calItem.type, calItem.value);
                             break;
                     }
                 }
@@ -595,83 +603,54 @@ public class MainController {
         messageQueue.offer(new MainController.Message(id));
     }
 
-    private void usbAccessoryThread() {
-        usbReader =  new UsbReader(this.ctx, new UsbReader.UsbConnectionListener() {
+    private N2KConnectionListener makeN2KConnectionListener(final N2KGateways gateway){
+        final int gwIdx = gateway.ordinal();
+        return new N2KConnectionListener() {
             @Override
             public void OnConnectionStatus(boolean connected) {
-                Timber.d("USB Accessory %s", connected ? "Connected" : "Not connected");
-                viewInterface.onUsbConnect(connected);
+                Timber.d("%s %s", gateway.name(), connected ? "Connected" : "Not connected");
+                viewInterface.onN2KConnect(connected);
+                n2KCalibrators[gwIdx].OnConnectionStatus(connected);
             }
-
             @Override
-            public void onDataReceived(byte[] buff, int size) {
-                externalNmeaReader.read(buff, size);
+            public void onFrameReceived(int addrPri, byte[] data) {
+                canFrameAssemblers[gwIdx].setFrame(addrPri, data);
             }
-        });
-        usbReader.run();
+            @Override
+            public void onTick() {
+                n2KCalibrators[gwIdx].onTick();
+            }
+        };
+    }
+    private void setupCanFrameListeners(final N2KGateways gateway, final CanBusWriter canBusWriter) {
+        final int gwIdx = gateway.ordinal();
+
+        n2KCalibrators[gwIdx] = new N2KCalibrator(gateway.name(),
+                viewInterface, canFrameAssemblers[gwIdx],
+                canBusWriter, instrumentsCalibrator);
+        canFrameAssemblers[gwIdx].addN2kListener(instrumentDataAssembler);
+        canFrameAssemblers[gwIdx].addN2kListener(n2KCalibrators[gwIdx]);
+    }
+
+    private void usbAccessoryThread() {
+        N2KGateways gateway = N2KGateways.USB_ACCESSORY;
+        usbAccessoryTransport =  new UsbAccessoryTransport(this.ctx, makeN2KConnectionListener(gateway));
+        setupCanFrameListeners(gateway, usbAccessoryTransport);
+        usbAccessoryTransport.run();
     }
 
     private void serialUsbThread() {
-
-        canFrameAssemblerUsb = new CanFrameAssembler();
-
-        serialUsbTransportTask =  new SerialUsbTransportTask(this.ctx, new SerialUsbTransportTask.UsbConnectionListener() {
-            @Override
-            public void OnConnectionStatus(boolean connected) {
-                Timber.d("Serial USB %s", connected ? "Connected" : "Not connected");
-                viewInterface.onN2KConnect(connected);
-                n2KCalibratorUsb.OnConnectionStatus(connected);
-            }
-
-            @Override
-            public void onFrameReceived(int addrPri, byte[] data) {
-                canFrameAssemblerUsb.setFrame(addrPri, data);
-            }
-
-            @Override
-            public void onTick() {
-                n2KCalibratorUsb.onTick();
-            }
-        });
-
-        n2KCalibratorUsb = new N2KCalibrator(viewInterface, canFrameAssemblerUsb, serialUsbTransportTask, instrumentsCalibrator);
-
-        canFrameAssemblerUsb.addN2kListener(instrumentDataAssembler);
-        canFrameAssemblerUsb.addN2kListener(n2KCalibratorUsb);
-
-
-        serialUsbTransportTask.run();
+        N2KGateways gateway = N2KGateways.USB_SERIAL;
+        serialUsbTransport =  new SerialUsbTransport(this.ctx, makeN2KConnectionListener(gateway));
+        setupCanFrameListeners(gateway, serialUsbTransport);
+        serialUsbTransport.run();
     }
 
     private void bluetoothThread() {
-
-        canFrameAssemblerBt = new CanFrameAssembler();
-
-        bluetoothTransportTask = new BluetoothTransportTask (this.ctx, new BluetoothTransportTask.ConnectionListener() {
-            @Override
-            public void OnConnectionStatus(boolean connected) {
-                Timber.d("Bluetooth %s", connected ? "Connected" : "Not connected");
-                viewInterface.onN2KConnect(connected);
-                n2KCalibratorBt.OnConnectionStatus(connected);
-            }
-
-            @Override
-            public void onFrameReceived(int addrPri, byte[] data) {
-                canFrameAssemblerBt.setFrame(addrPri, data);
-            }
-
-            @Override
-            public void onTick() {
-                n2KCalibratorBt.onTick();
-            }
-        });
-
-        n2KCalibratorBt = new N2KCalibrator(viewInterface, canFrameAssemblerBt, bluetoothTransportTask, instrumentsCalibrator);
-
-        canFrameAssemblerBt.addN2kListener(instrumentDataAssembler);
-        canFrameAssemblerBt.addN2kListener(n2KCalibratorBt);
-
-        bluetoothTransportTask.run();
+        N2KGateways gateway = N2KGateways.BLUETOOTH;
+        bluetoothTransport = new BluetoothTransport(this.ctx, makeN2KConnectionListener(gateway));
+        setupCanFrameListeners(gateway, bluetoothTransport);
+        bluetoothTransport.run();
     }
 
     private void networkThread() {

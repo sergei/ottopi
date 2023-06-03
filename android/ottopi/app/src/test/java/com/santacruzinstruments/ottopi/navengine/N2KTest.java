@@ -20,7 +20,7 @@ import com.santacruzinstruments.N2KLib.N2KLib.N2KLib;
 import com.santacruzinstruments.N2KLib.N2KLib.N2KPacket;
 import com.santacruzinstruments.N2KLib.N2KLib.N2KTypeException;
 import com.santacruzinstruments.N2KLib.N2KMsgs.N2K;
-import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransportTask;
+import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransport;
 import com.santacruzinstruments.ottopi.navengine.nmea2000.CanFrameAssembler;
 import com.santacruzinstruments.ottopi.navengine.nmea2000.N2kListener;
 
@@ -137,7 +137,7 @@ public class N2KTest {
 
         List<String> generated = new LinkedList<>();
         for( byte[] data : frames){
-            String msg = SerialUsbTransportTask.formatYdnuRawString(canFrameAssembler.getCanAddr(), data);
+            String msg = SerialUsbTransport.formatYdnuRawString(canFrameAssembler.getCanAddr(), data);
             generated.add(msg);
         }
 
@@ -159,7 +159,7 @@ public class N2KTest {
 
         generated = new LinkedList<>();
         for( byte[] data : frames){
-            String msg = SerialUsbTransportTask.formatYdnuRawString(canFrameAssembler.getCanAddr(), data);
+            String msg = SerialUsbTransport.formatYdnuRawString(canFrameAssembler.getCanAddr(), data);
             generated.add(msg);
         }
 
@@ -281,5 +281,11 @@ I (323450) mhu2nmea_ESP32N2kStream: 323121 : Pri:2 PGN:130900 Source:15 Dest:255
 
     }
 
+    @Test
+    public void calEncodingTest() {
 
+        // Need to create N2KLib() so some internal statics are initialized
+        new N2KLib(null, Objects.requireNonNull(getClass().getClassLoader()).getResourceAsStream("pgns.json"));
+        N2KPacket p = makeGroupRequestPacket(SciWindCalibration_pgn);
+    }
 }

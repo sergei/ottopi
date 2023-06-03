@@ -19,31 +19,23 @@ import java.util.UUID;
 
 import timber.log.Timber;
 
-public class BluetoothTransportTask implements CanBusWriter, SlipPacket.SlipListener, SlipPacket.SlipWriter {
+public class BluetoothTransport implements CanBusWriter, SlipPacket.SlipListener, SlipPacket.SlipWriter {
 
     private  BluetoothSocket bluetoothSocket;
     private boolean isConnected = false;
-
-    public interface ConnectionListener {
-        void OnConnectionStatus(boolean connected);
-
-        void onFrameReceived(int addrPri, byte[] data);
-
-        void onTick();
-    }
 
     private static final String N2K_DEVICE_NAME = "N2kSerialPort";
     final UUID sppUuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private final Context context;
-    private final ConnectionListener connectionListener;
+    private final N2KConnectionListener connectionListener;
     private boolean bKeepRunning = true;
     BluetoothAdapter btAdapter = null;
     SlipPacket slipPacket = new SlipPacket(this, this);
 
 
-    public BluetoothTransportTask(Context context, ConnectionListener connectionListener) {
+    public BluetoothTransport(Context context, N2KConnectionListener connectionListener) {
         this.context = context;
         this.connectionListener = connectionListener;
     }
@@ -182,7 +174,7 @@ public class BluetoothTransportTask implements CanBusWriter, SlipPacket.SlipList
         // data is the rest of the packet
         data = new byte[len];
         System.arraycopy(packet, 5, data, 0, len);
-        String ydnuMsg = SerialUsbTransportTask.formatYdnuRawString(can_id, data);
+        String ydnuMsg = SerialUsbTransport.formatYdnuRawString(can_id, data);
         Timber.d("BT_N2K,%d,[%s R %s]", len,
                 TIME_FORMAT.format(new Date()),
                 ydnuMsg.substring(0, ydnuMsg.length()-2));

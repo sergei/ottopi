@@ -1,4 +1,4 @@
-package com.santacruzinstruments.ottopi.control;
+package com.santacruzinstruments.ottopi.control.canbus;
 
 import static java.lang.Thread.sleep;
 
@@ -15,20 +15,19 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import timber.log.Timber;
 
-public class UsbReader {
+public class UsbAccessoryTransport implements CanBusWriter, SlipPacket.SlipListener, SlipPacket.SlipWriter {
 
     private final PendingIntent permissionIntent;
 
-    public interface UsbConnectionListener {
-        void OnConnectionStatus(boolean connected);
-        void onDataReceived(byte[]  buff, int size);
-    }
-
     private static final String ACTION_USB_PERMISSION =
             "com.santacruzinstruments.ottopi.USB_PERMISSION";
+    static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private final UsbManager usbManager;
     private boolean bKeepRunning = true;
@@ -67,8 +66,8 @@ public class UsbReader {
                 if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                     if(accessory != null){
                         Timber.d("Permission granted for accessory %s", accessory.getDescription());
-                        UsbReader.this.permissionForAccessory = accessory;
-                        UsbReader.this.permissionGranted = true;
+                        UsbAccessoryTransport.this.permissionForAccessory = accessory;
+                        UsbAccessoryTransport.this.permissionGranted = true;
                     }else{
                         Timber.d("Hmm, permission granted, but no accessory is specified");
                     }
@@ -80,8 +79,8 @@ public class UsbReader {
                 UsbAccessory accessory = intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
                 if (accessory != null) {
                     Timber.d("Attached accessory %s", accessory.getDescription());
-                    UsbReader.this.connectionWithAccessory = accessory;
-                    UsbReader.this.accessoryConnected = true;
+                    UsbAccessoryTransport.this.connectionWithAccessory = accessory;
+                    UsbAccessoryTransport.this.accessoryConnected = true;
                 }else{
                     Timber.d("Hmm, accessory attached, but null is specified");
                 }
@@ -92,10 +91,12 @@ public class UsbReader {
         }
     };
 
-    private final UsbConnectionListener usbConnectionListener;
+    private final N2KConnectionListener connectionListener;
 
-    UsbReader(Context context, UsbConnectionListener usbConnectionListener){
-        this.usbConnectionListener = usbConnectionListener;
+    SlipPacket slipPacket = new SlipPacket(this, this);
+
+    public UsbAccessoryTransport(Context context, N2KConnectionListener usbConnectionListener){
+        this.connectionListener = usbConnectionListener;
 
         usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
 
@@ -110,11 +111,12 @@ public class UsbReader {
     }
 
     @SuppressWarnings("BusyWait")
-    void run(){
+    public void run(){
         Timber.d("Starting USB thread");
 
         byte[] buffer = new byte[BUFFER_SIZE];
 
+        long lastTickMs = System.currentTimeMillis();
         while (bKeepRunning){
 
             if( accessoryDisconnected ){
@@ -159,10 +161,10 @@ public class UsbReader {
                     break;
                 case OPENING:
                     if ( openAccessory(activeAccessory) ){
-                        boolean ok = SetConfig(4800,(byte)8,(byte)1,(byte)0,(byte)0);
+                        boolean ok = SetConfig(115200,(byte)8,(byte)1,(byte)0,(byte)0);
                         if ( ok ) {
                             usbState = UsbState.READING;
-                            usbConnectionListener.OnConnectionStatus(true);
+                            connectionListener.OnConnectionStatus(true);
                         }else{
                             Timber.d("Failed to configure USB accessory, closing it");
                             closeAccessory();
@@ -180,7 +182,9 @@ public class UsbReader {
                 case READING:
                     try {
                         int readCount = inputStream.read(buffer,0,BUFFER_SIZE);
-                        usbConnectionListener.onDataReceived(buffer, readCount);
+                        for ( int i=0; i<readCount; i++) {
+                            slipPacket.onSlipByteReceived(buffer[i]);
+                        }
                     } catch (IOException e) {
                         Timber.d("Failed to read from USB accessory, closing it %s", e.getMessage());
                         closeAccessory();
@@ -189,7 +193,11 @@ public class UsbReader {
                     }
                     break;
             }
-
+            long now = System.currentTimeMillis();
+            if( now - lastTickMs > 1000){
+                lastTickMs = now;
+                connectionListener.onTick();
+            }
         }
 
         Timber.d("USB thread finished");
@@ -255,7 +263,7 @@ public class UsbReader {
 
         activeAccessory = null;
 
-        usbConnectionListener.OnConnectionStatus(false);
+        connectionListener.OnConnectionStatus(false);
     }
 
     private boolean openAccessory(UsbAccessory accessory) {
@@ -319,6 +327,59 @@ public class UsbReader {
 
         /*send the UART configuration packet*/
         return SendPacket((int)8);
+    }
+
+    @Override
+    public void onPacketReceived(byte[] packet, int l) {
+        int can_id;
+        byte[] data;
+        // can_id is first four bytes of packet
+        can_id = (packet[0] & 0xff) << 24 |
+                (packet[1] & 0xff) << 16 |
+                (packet[2] & 0xff) << 8 |
+                (packet[3] & 0xff);
+        // len is the fifth byte of packet
+        int len = packet[4] & 0xff;
+        // data is the rest of the packet
+        data = new byte[len];
+        System.arraycopy(packet, 5, data, 0, len);
+        String ydnuMsg = SerialUsbTransport.formatYdnuRawString(can_id, data);
+        Timber.d("USBA_N2K,%d,[%s R %s]", len,
+                TIME_FORMAT.format(new Date()),
+                ydnuMsg.substring(0, ydnuMsg.length()-2));
+        connectionListener.onFrameReceived(can_id, data);
+    }
+
+    @Override
+    public void sendCanFrame(int canAddr, byte[] data) {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        // First four bytes off buffer is canAddr in network byte order
+        buffer[0] = (byte) ((canAddr >> 24) & 0xff);
+        buffer[1] = (byte) ((canAddr >> 16) & 0xff);
+        buffer[2] = (byte) ((canAddr >> 8) & 0xff);
+        buffer[3] = (byte) (canAddr & 0xff);
+        // Then one byte of data length
+        buffer[4] = (byte) (data.length & 0xff);
+        // Then the data
+        System.arraycopy(data, 0, buffer, 5, data.length);
+        int len = data.length + 5;
+        slipPacket.encodeAndSendPacket(buffer, len);
+    }
+
+    @Override
+    public void write(byte[] packet, int len) {
+        if(outputStream != null){
+            try {
+                outputStream.write(packet, 0,len);
+            } catch (IOException e) {
+                closeAccessory();
+                try {sleep(1000);} catch (InterruptedException ignore) {}
+                usbState = UsbState.DISCOVERING;
+                connectionListener.OnConnectionStatus(false);
+            }
+        }else{
+            Timber.v("No open stream to send %d bytes to USB", len);
+        }
     }
 
 }

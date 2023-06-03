@@ -27,6 +27,7 @@ import timber.log.Timber;
 public class N2KCalibrator implements N2kListener {
     public final static int SCI_MFG_CODE = 2020;  // # Our mfg code.
     public final static int SCI_INDUSTRY_CODE = 4;  // Marine industry
+    private final String gatewayName;
     private final ViewInterface listener;
     private final CanBusWriter canBusWriter;
     private final CanFrameAssembler canFrameAssembler;
@@ -38,8 +39,9 @@ public class N2KCalibrator implements N2kListener {
     boolean imuCalReceived = false;
     private byte imuCalDest = 0;  // Address of device where to send IMU calibration
     private boolean isConnected = false;
-    public N2KCalibrator(ViewInterface calListener,
+    public N2KCalibrator(String gatewayName, ViewInterface calListener,
                          CanFrameAssembler canFrameAssembler, CanBusWriter canBusWriter, InstrCalibratorListener instrCalibratorListener) {
+        this.gatewayName  =  gatewayName;
         this.listener = calListener;
         this.canFrameAssembler = canFrameAssembler;
         this.canBusWriter = canBusWriter;
@@ -131,17 +133,17 @@ public class N2KCalibrator implements N2kListener {
         if ( this.isConnected ){
 
             if( !mhuCalReceived){
-                Timber.d("Requesting MHU calibration");
+                Timber.d("Requesting MHU calibration from %s", gatewayName);
                 requestCurrentCal(SciWindCalibration_pgn);
             }
 
             if ( ! speedCalReceived ){
-                Timber.d("Requesting SPEED calibration");
+                Timber.d("Requesting SPEED calibration from %s", gatewayName);
                 requestCurrentCal(SciWaterCalibration_pgn);
             }
 
             if ( ! imuCalReceived ){
-                Timber.d("Requesting IMU calibration");
+                Timber.d("Requesting IMU calibration from %s", gatewayName);
                 requestCurrentCal(SciImuCalibration_pgn);
             }
         }
@@ -259,7 +261,7 @@ public class N2KCalibrator implements N2kListener {
     }
 
     private void sendPacket(N2KPacket p) {
-        Timber.d("Sending %s", p.toString());
+        Timber.d("%s, sending %s", gatewayName, p.toString());
         List<byte[]> frames = canFrameAssembler.makeCanFrames(p);
         for(byte[] data: frames){
             canBusWriter.sendCanFrame(canFrameAssembler.getCanAddr(), data);
