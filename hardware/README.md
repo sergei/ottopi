@@ -17,8 +17,13 @@
   - [Python library](https://github.com/pimoroni/icm20948-python)    
 
 ## RS-232 Board
-- [AB Electronics  Serial Pi Plus RS232 Expansion board](https://www.abelectronics.co.uk/p/51/serial-pi-plus)
-  - [Schematic](schematic-serial-pi-plus.pdf) 
+  [SparkFun Transceiver Breakout - MAX3232](https://www.sparkfun.com/products/11189)
+  T1IN (TTL IN)    - GPIO 14, RPI PIN 8  (UART0 TXD)
+  R1OUT(TTL OUT)   - GPIO 15, RPI PIN 10 (UART0 RXD)
+  R1IN (RS232 IN)  - NMEA IN
+  T1OUT(RS232 OUT) - NMEA OUT
+  GND              - RPI PIN 6 
+  3.3V - 5.5V      - RPI PIN 4
 
 ## Audio jack
 - A - Tip (Right audio) - US-CAB-73 Red 
@@ -65,15 +70,4 @@ describing wiring of the ACP remote controller
   
   Dirk
 ```
-
-## GybeTime raspberry Pi HAT
-
-- [Schematic](gybetime_schem.pdf) 
-- [PCB overview](gybetime_pcb.png) 
-- [PCB gerber files](gybetime-gerber)
-
-This board has two functions:
-
-- Convert 12V boat power to 5V Raspberry Pi
-- Convert +- 12V Boat NMEA to CMOS level Raspberry Pi RS-232 
 

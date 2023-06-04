@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/android/ottopi/app/src/main/java/com/santacruzinstruments/N2KLib" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/imu/micropython-fusion" vcs="Git" />
   </component>
 </project>
