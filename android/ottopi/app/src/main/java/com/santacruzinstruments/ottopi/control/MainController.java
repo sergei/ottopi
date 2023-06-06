@@ -26,6 +26,7 @@ import com.santacruzinstruments.ottopi.control.canbus.BluetoothTransport;
 import com.santacruzinstruments.ottopi.control.canbus.CanBusWriter;
 import com.santacruzinstruments.ottopi.control.canbus.N2KConnectionListener;
 import com.santacruzinstruments.ottopi.control.canbus.SerialUsbTransport;
+import com.santacruzinstruments.ottopi.control.canbus.UdpTransport;
 import com.santacruzinstruments.ottopi.control.canbus.UsbAccessoryTransport;
 import com.santacruzinstruments.ottopi.data.CalItem;
 import com.santacruzinstruments.ottopi.data.ConnectionState;
@@ -206,6 +207,7 @@ public class MainController {
         USB_SERIAL,
         USB_ACCESSORY,
         BLUETOOTH,
+        UDP,
     }
 
     public static final String POLAR_FILE_NAME = "polars.pol";
@@ -243,12 +245,14 @@ public class MainController {
     private int epochCount = 0;
     private long lastNavEngOutRcvdAtMs = 0;
     private NetworkManager networkManager;
-    private UsbAccessoryTransport usbAccessoryTransport;
 
     // NMEA 2000 support
-    private SerialUsbTransport serialUsbTransport;
     private InstrumentDataAssembler instrumentDataAssembler;
+    private UsbAccessoryTransport usbAccessoryTransport;
+    private SerialUsbTransport serialUsbTransport;
     private BluetoothTransport bluetoothTransport;
+    private UdpTransport udpTransport;
+
     private final Handler handler = new Handler(Looper.myLooper());
     private final BoatDataRepository boatDataRepository;
     private final GpxBuilder gpxBuilder = new GpxBuilder();
@@ -262,9 +266,11 @@ public class MainController {
         this.ctx = ctx;
         this.boatDataRepository = new BoatDataRepository(ctx);
         this.viewInterface = viewInterface;
-        canFrameAssemblers[N2KGateways.USB_SERIAL.ordinal()] = new CanFrameAssembler();
-        canFrameAssemblers[N2KGateways.USB_ACCESSORY.ordinal()] = new CanFrameAssembler();
-        canFrameAssemblers[N2KGateways.BLUETOOTH.ordinal()] = new CanFrameAssembler();
+
+        for( int i = 0; i < N2KGateways.values().length; i++){
+            canFrameAssemblers[i] = new CanFrameAssembler();
+        }
+
     }
 
     private void makeMarksGpxFileName() {
@@ -397,25 +403,30 @@ public class MainController {
         // Finally start heartbeat
         startHeartbeat();
 
-        // Now start network thread
+        // Start network thread
         Thread networkThread = new Thread(this::networkThread);
         networkThread.setName("NMEA Network");
         networkThread.start();
 
-        // Now start usb accessory thread to read NME0183 from FTDI chip
+        // Start usb accessory thread to read NME0183 from FTDI chip
         Thread usbThread = new Thread(this::usbAccessoryThread);
         usbThread.setName("USB Accessory");
         usbThread.start();
 
-        // Now start USB serial thread to read from NMEA200 Gateway
+        // Start USB serial thread to read from NMEA200 Gateway
         Thread usbSerialThread = new Thread(this::serialUsbThread);
         usbSerialThread.setName("Serial USB");
         usbSerialThread.start();
 
-        // Now start USB serial thread to read from NMEA200 Gateway
+        // Start USB serial thread to read from NMEA200 Gateway
         Thread btThread = new Thread(this::bluetoothThread);
         btThread.setName("Bluetooth");
         btThread.start();
+
+        // Start UDP thread to read from NMEA200 Gateway
+        Thread udpThread = new Thread(this::udpTransportThread);
+        udpThread.setName("UDP");
+        udpThread.start();
 
         // NMEA looper
         Looper.prepare();
@@ -449,6 +460,12 @@ public class MainController {
         btThread.interrupt();
         try {
             btThread.join(1000);
+        } catch (InterruptedException ignore) {}
+
+        udpTransport.stop();
+        udpThread.interrupt();
+        try {
+            udpThread.join(1000);
         } catch (InterruptedException ignore) {}
 
     }
@@ -651,6 +668,13 @@ public class MainController {
         bluetoothTransport = new BluetoothTransport(this.ctx, makeN2KConnectionListener(gateway));
         setupCanFrameListeners(gateway, bluetoothTransport);
         bluetoothTransport.run();
+    }
+
+    private void udpTransportThread() {
+        N2KGateways gateway = N2KGateways.UDP;
+        udpTransport = new UdpTransport(this.ctx, makeN2KConnectionListener(gateway));
+        setupCanFrameListeners(gateway, udpTransport);
+        udpTransport.run();
     }
 
     private void networkThread() {
