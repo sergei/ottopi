@@ -21,11 +21,7 @@ def get_clip_size(mp4_name):
     return clip.size[0], clip.size[1]
 
 
-def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cache):
-
-    # Read the cached race file
-    with open(events_json_name, 'rt') as f:
-        race_events = json.load(f)
+def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
 
     # race_events = race_events[0:1]
 
@@ -69,15 +65,19 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
         evt['polar_images'] = []
         evt['timer_images'] = []
         file_name = f'chapter_{evt_idx:04d}.png'
-        summary_maker.prepare_data(evt)
-        event_title_png = summary_maker.make_chapter_png(evt, file_name, width, height)
+        have_wind_data = summary_maker.prepare_data(evt)
+        event_title_png = summary_maker.make_chapter_png(have_wind_data, evt, file_name, width, height)
         evt['event_title_png'] = event_title_png
-        polar_maker.set_history(evt['name'], evt['history'])
 
+        if have_wind_data:
+            polar_maker.set_history(evt['name'], evt['history'])
         gun_utc = evt.get('gun', None)
         for epoch_idx, epoch in enumerate(evt['history']):
-            file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
-            thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
+            if have_wind_data:
+                file_name = f'thumb_{evt_idx:04d}_{epoch_idx:04d}.png'
+                thumb_png_name = summary_maker.make_thumbnail(file_name, epoch_idx, epoch, thumb_width, overlay_height)
+            else:
+                thumb_png_name = None
 
             file_name = f'polar_{evt_idx:04d}_{epoch_idx:04d}.png'
             if polar_maker.is_available():
@@ -97,6 +97,7 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
 
     # Create separate event clips
     max_evt = 999
+    video_only = False
     for evt_idx, evt in enumerate(race_events):
         evt_clip_name = work_dir + os.sep + base_name + os.sep + f'clip_evt_{evt_idx:04d}.mp4'
         if not os.path.isfile(evt_clip_name) or ignore_cache:
@@ -111,12 +112,25 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
                 camera_clip = VideoFileClip(name).subclip(in_time, out_time)
                 camera_clips.append(camera_clip)
 
-            if len(camera_clips) > 0:
+            if video_only:
+                background_clip = concatenate_videoclips(camera_clips)
+                clips = [background_clip]
+                composite_clip = CompositeVideoClip(clips)
+                composite_clip.write_videofile(evt_clip_name)
+                # Close unused clips
+                composite_clip.close()
+                background_clip.close()
+                for c in camera_clips:
+                    c.close()
+                print(f'{evt_clip_name} created')
+                evt['composite_clip'] = evt_clip_name
+
+            elif len(camera_clips) > 0:
                 title_duration = 4
                 event_title_clip = ImageClip(evt['event_title_png'], duration=title_duration)
 
                 background_clip = concatenate_videoclips(camera_clips)
-                overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=1)
+                overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=evt['overlay_fps'])
                 overlay_x = 0
                 overlay_y = height - overlay_clip.size[1]
 
@@ -128,12 +142,12 @@ def make_video(work_dir, base_name, events_json_name, gopro, polars, ignore_cach
 
                 # Polar for tacks and gybes
                 if evt['polar_images'][0] is not None:
-                    polar_clip = ImageSequenceClip(evt['polar_images'], fps=1)
+                    polar_clip = ImageSequenceClip(evt['polar_images'], fps=evt['overlay_fps'])
                     clips.append(polar_clip.set_position(('right', 'top')))
 
                 # Timer for the start
                 if len(evt['timer_images']) > 0:
-                    timer_clip = ImageSequenceClip(evt['timer_images'], fps=1)
+                    timer_clip = ImageSequenceClip(evt['timer_images'], fps=evt['overlay_fps'])
                     clips.append(timer_clip.set_position(('left', 'top')))
 
                 # Title goes the last on top of everything
