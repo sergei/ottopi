@@ -137,4 +137,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.1'
 
+    // USB Serial for Android
+    implementation 'com.github.mik3y:usb-serial-for-android:3.4.6'
+
 }
