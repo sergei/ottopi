@@ -72,6 +72,10 @@ class Clipper(NavigationListener):
         self.clip_is_being_edited = False
         self.n2k_epoch = []
         self.n2k_bcaster = N2kBroadcaster()
+        self.n2k_bcaster.start_udp_thread()
+        self.start_time = None
+        self.current_track_idx = 0
+        self.current_track_utc = None
 
     def read_project(self):
         self.sv_go_pro_dir.set(self.project.get(GOPRO, 'dir'))
@@ -291,7 +295,7 @@ class Clipper(NavigationListener):
         self.map_view.show_clip_in_out(utc_in, utc_out)
         utc = utc_in if in_changed else utc_out
 
-        ii = self.find_track_point(utc)
+        ii, _, _ = self.find_track_point(utc)
         if ii is not None:
             self.map_view.show_boat(ii)
 
@@ -332,14 +336,18 @@ class Clipper(NavigationListener):
     def on_video_utc_change(self, utc):
         self.slider_utc = utc
         self.main_time_slider.set_utc(utc)
-        ii = self.find_track_point(utc)
+        ii, prev_idx, curr_idx = self.find_track_point(utc)
         if ii is not None:
-            self.n2k_bcaster.send_epoch(ii.n2k_epoch)
+            print(f'UTC: {ii.utc}, prev_idx: {prev_idx}, curr_idx: {curr_idx}')
+            if 0 < curr_idx - prev_idx < 10:
+                for instr_data in self.instr_data[prev_idx:curr_idx]:
+                    self.n2k_bcaster.send_epoch(instr_data.n2k_epoch)
+
             self.map_view.show_boat(ii)
 
     def on_main_time_slider_change(self, utc):
         self.slider_utc = utc
-        ii = self.find_track_point(utc)
+        ii, _, _ = self.find_track_point(utc)
         if ii is not None:
             self.map_view.show_boat(ii)
 
@@ -450,11 +458,26 @@ class Clipper(NavigationListener):
 
     def find_track_point(self, utc: datetime):
         result = None
-        for ii in self.instr_data:
-            if ii.utc >= utc:
-                return ii
+        if self.current_track_utc is None:
+            self.current_track_utc = self.instr_data[0].utc
 
-        return result
+        prev_idx = self.current_track_idx
+        if utc > self.current_track_utc:  # Going forward
+            for idx in range(self.current_track_idx, len(self.instr_data)):
+                if self.instr_data[idx].utc >= utc:
+                    result = self.instr_data[idx]
+                    self.current_track_idx = idx
+                    self.current_track_utc = result.utc
+                    break
+        else:  # Going backwards
+            for idx in range(self.current_track_idx, -1, -1):
+                if self.instr_data[idx].utc <= utc:
+                    result = self.instr_data[idx]
+                    self.current_track_idx = idx
+                    self.current_track_utc = result.utc
+                    break
+
+        return result, prev_idx, self.current_track_idx
 
     def locate_event_with_utc(self, utc: datetime):
         for event in self.current_race.events:
@@ -575,16 +598,22 @@ class Clipper(NavigationListener):
             return nmea
         return None
 
-    @staticmethod
-    def extract_n2k_from_log_line(log_line):
+    def extract_n2k_from_log_line(self, log_line):
         idx = log_line.find(N2K_PREFIX)
         if idx > 0:
             s = log_line[idx + N2K_PREFIX_LEN:].strip()
             idx = s.find("[")
             if idx > 0:
-                s = s[idx:-1]
+                s = s[idx+1:-1]
                 t = s.split(' ')
+                time = datetime.datetime.strptime(t[0], '%H:%M:%S.%f')
+                if self.start_time is None:
+                    self.start_time = time
+
+                dt_ms = int((time - self.start_time).total_seconds() * 1000)
+
                 s = ' '.join(t[2:])
-                return s
+
+                return [dt_ms, s]
 
         return None
