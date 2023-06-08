@@ -54,6 +54,7 @@ def decode_project(d):
                 ii.tws = h['tws']
                 ii.sow = h['sow']
                 ii.hdg = h['hdg']
+                ii.n2k_epoch = h['n2k_epoch']
                 ii_list.append(ii)
             d[k] = ii_list
         elif 'events' in k:

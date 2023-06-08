@@ -35,19 +35,19 @@ class MainTimeSlider:
         buttons_frame = ttk.Frame(top, padding="3 3 12 12")
         buttons_frame.grid(column=0, row=1, sticky='nwes')
         ttk.Button(buttons_frame, text="<<", command=lambda: self.on_button_click(-60)).grid(column=0, row=0, sticky=W)
-        ttk.Button(buttons_frame, text="<", command=lambda: self.on_button_click(-1)).grid(column=1, row=0, sticky=W)
+        ttk.Button(buttons_frame, text="<", command=lambda: self.on_button_click(-1))  .grid(column=1, row=0, sticky=W)
 
         ttk.Button(buttons_frame, textvariable=self.sv_utc_time,
                    command=lambda: self.on_play_pause()).grid(column=2, row=0, sticky=W)
 
-        ttk.Button(buttons_frame, text=">", command=lambda: self.on_button_click(1)).grid(column=3, row=0, sticky=W)
+        ttk.Button(buttons_frame, text=">", command=lambda: self.on_button_click(1))  .grid(column=3, row=0, sticky=W)
         ttk.Button(buttons_frame, text=">>", command=lambda: self.on_button_click(60)).grid(column=4, row=0, sticky=W)
 
-        ttk.Entry(buttons_frame, textvariable=self.sv_race_name).grid(column=5, row=0, sticky=W)
-        ttk.Button(buttons_frame, text="Save name", command=self.on_save).grid(column=6, row=0, sticky=W)
-        ttk.Button(buttons_frame, text="Split", command=self.on_split).grid(column=7, row=0, sticky=W)
-        ttk.Button(buttons_frame, text="Join with previous", command=self.on_join).grid(column=8, row=0, sticky=W)
-        ttk.Button(buttons_frame, text="Delete", command=self.on_delete).grid(column=9, row=0, sticky=W)
+        ttk.Entry(buttons_frame, textvariable=self.sv_race_name)                  .grid(column=0, row=1, sticky=W)
+        ttk.Button(buttons_frame, text="Save name", command=self.on_save)         .grid(column=1, row=1, sticky=W)
+        ttk.Button(buttons_frame, text="Split", command=self.on_split)            .grid(column=2, row=1, sticky=W)
+        ttk.Button(buttons_frame, text="Join with previous", command=self.on_join).grid(column=3, row=1, sticky=W)
+        ttk.Button(buttons_frame, text="Delete", command=self.on_delete)          .grid(column=4, row=1, sticky=W)
 
     def on_save(self):
         self.on_save_race(self.race.uuid, self.sv_race_name.get())

@@ -24,7 +24,7 @@ def main(args):
     log_list += sorted(glob.glob(args.replay_dir + os.sep + '*-log.txt'))
     log_list += sorted(glob.glob(args.replay_dir + os.sep + '*.log'))
 
-    # Create broadcast UPD socket on port 2020
+    # Create broadcast UPD socket
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)

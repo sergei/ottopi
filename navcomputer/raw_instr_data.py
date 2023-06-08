@@ -1,6 +1,6 @@
 class RawInstrData:
     def __init__(self, t=0, utc=None, lat=None, lon=None, sog=None, cog=None, awa=None, aws=None, twa=None, tws=None,
-                 sow=None, hdg=None):
+                 sow=None, hdg=None, n2k_epoch=None):
         self.t = t
         # GPS stuff
         self.utc = utc
@@ -15,7 +15,9 @@ class RawInstrData:
         self.tws = tws  # True wind speed KTS
         self.sow = sow  # Speed over water KTS
         self.hdg = hdg  # Boat heading (magnetic degrees)
+        self.n2k_epoch = n2k_epoch
 
     def to_dict(self):
         return {'utc': self.utc.isoformat(), 'lat': self.lat, 'lon': self.lon, 'sog': self.sog, 'cog': self.cog,
-                'awa': self.awa, 'aws': self.aws, 'twa': self.twa, 'tws': self.tws, 'sow': self.sow, 'hdg': self.hdg, }
+                'awa': self.awa, 'aws': self.aws, 'twa': self.twa, 'tws': self.tws, 'sow': self.sow, 'hdg': self.hdg,
+                'n2k_epoch': self.n2k_epoch}
