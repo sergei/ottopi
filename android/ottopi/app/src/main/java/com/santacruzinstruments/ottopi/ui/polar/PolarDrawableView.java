@@ -132,7 +132,6 @@ public class PolarDrawableView extends View {
         axisMajorLabelPaint.setTypeface(Typeface.DEFAULT);
         axisMajorLabelPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 32, getResources().getDisplayMetrics()));
 
-
         polarCurvePaint.setColor(a.getColor(R.styleable.PolarDrawableView_polar_curve_color, Color.GRAY));
         polarCurvePaint.setStrokeWidth(a.getFloat(R.styleable.PolarDrawableView_polar_curve_width, 6.f));
         polarCurvePaint.setStyle(Paint.Style.STROKE);
@@ -289,7 +288,7 @@ public class PolarDrawableView extends View {
             String text = String.format(Locale.getDefault(),"%d", speed);
 
             Paint textPaint = isTargetSpeed ?  axisMajorLabelPaint : axisLabelPaint;
-            final float textX = x0 + textDirectionX *  (pixInKtsScale * speed ) + textPaint.getTextSize();
+            final float textX = x0 + textDirectionX *  (pixInKtsScale * speed );
             final float textY = y0 + textDirectionY *  (pixInKtsScale * speed ) + textPaint.getTextSize();
             canvas.drawText (text, textX, textY,  textPaint);
         }
@@ -499,10 +498,11 @@ public class PolarDrawableView extends View {
 
         isMarkValid = out.watm.isValid();
         if ( isMarkValid ) {
+            Angle watm = new Angle(out.twa.toDegrees() - out.atm.toDegrees());
 
-            markPoint.x = polarX( - out.watm.toDegrees(), maxSpeed);
-            markPoint.y = polarY( - out.watm.toDegrees(), maxSpeed);
-            markAngle = - (float) out.watm.toDegrees();
+            markPoint.x = polarX( - watm.toDegrees(), maxSpeed);
+            markPoint.y = polarY( - watm.toDegrees(), maxSpeed);
+            markAngle = - (float) watm.toDegrees();
         }
 
         medianPortTwa = out.medianPortTwa;

@@ -64,8 +64,10 @@
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">
                 <map>
+                  <entry key="21052587" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="RaceQs_API_28" value="120" />
+                  <entry key="TRIPLTEK&#10; T7121" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
@@ -90,8 +92,10 @@
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">
                 <map>
+                  <entry key="21052587" value="120" />
                   <entry key="Duration" value="90" />
                   <entry key="RaceQs_API_28" value="120" />
+                  <entry key="TRIPLTEK&#10; T7121" value="120" />
                   <entry key="Tests" value="360" />
                 </map>
               </option>
