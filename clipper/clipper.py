@@ -12,6 +12,7 @@ from gopro import GoPro
 from gui.clip_editor import ClipEditor
 from gui.clip_event import ClipEvent
 from gui.events_table import EventsTable
+from gui.instruments_view import InstrumentsView
 from gui.main_time_slider import MainTimeSlider
 from gui.map_view import MapView
 from gui.race_info import RaceInfo
@@ -76,6 +77,7 @@ class Clipper(NavigationListener):
         self.start_time = None
         self.current_track_idx = 0
         self.current_track_utc = None
+        self.instruments_view = None
 
     def read_project(self):
         self.sv_go_pro_dir.set(self.project.get(GOPRO, 'dir'))
@@ -285,6 +287,11 @@ class Clipper(NavigationListener):
 
         self.video_player = VideoPlayer(video_frame, video_width, video_height, self.on_video_utc_change)
 
+        # Instruments frame
+        instruments_frame = ttk.Frame(displays_frame)
+        instruments_frame.grid(column=2, row=1)
+        self.instruments_view = InstrumentsView(instruments_frame)
+
         self.root.mainloop()
 
     def on_play_pause(self):
@@ -340,8 +347,9 @@ class Clipper(NavigationListener):
         if ii is not None:
             print(f'UTC: {ii.utc}, prev_idx: {prev_idx}, curr_idx: {curr_idx}')
             if 0 < curr_idx - prev_idx < 10:
+                self.n2k_bcaster.send_epoch(self.instr_data[prev_idx:curr_idx])
                 for instr_data in self.instr_data[prev_idx:curr_idx]:
-                    self.n2k_bcaster.send_epoch(instr_data.n2k_epoch)
+                    self.instruments_view.set_instr_data(instr_data)
 
             self.map_view.show_boat(ii)
 
