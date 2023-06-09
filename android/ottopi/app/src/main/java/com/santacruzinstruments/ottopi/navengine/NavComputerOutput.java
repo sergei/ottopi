@@ -33,14 +33,6 @@ public class NavComputerOutput {
 	final public String nextDestName;
 	/** TWA from current mark to the next mark*/
 	final public Angle nextLegTwa;
-	/**
-	 * Wind Angle to mark - Angle between wind direction and bearing to the mark
-	 *    0 - Mark is directly upwind
-	 * - 90 - Mark is port beam reach
-	 *   90 - Marks is on starboard beam reach
-	 *  180 - Mark is directly down wind
-	 */
-	final public Angle watm;
 
 	/** Median true wind angle on port tack (either current or previous ) */
 	final public Angle medianPortTwa;
@@ -65,7 +57,6 @@ public class NavComputerOutput {
 				",dtm," + dtm +
 				",nextDestName," + nextDestName +
 				",nextLegTwa," + nextLegTwa +
-				",watm," + watm +
 				",medianPortTwa," + medianPortTwa +
 				",portTwaIqr," + portTwaIqr +
 				",medianStbdTwa," + medianStbdTwa +
@@ -84,7 +75,6 @@ public class NavComputerOutput {
 		dtm = builder.dtm;
 		nextDestName = builder.nextDestName;
 		nextLegTwa = builder.nextLegTwa;
-		watm = builder.watm;
 		medianPortTwa = builder.medianPortTwa;
 		portTwaIqr = builder.portTwaIqr;
 		medianStbdTwa = builder.medianStbdTwa;
@@ -106,7 +96,6 @@ public class NavComputerOutput {
 		public Distance dtm = Distance.INVALID;
 		public String nextDestName = "";
 		public Angle nextLegTwa = Angle.INVALID;
-		public Angle watm = Angle.INVALID;
 		public Angle medianPortTwa = Angle.INVALID;
 		public Angle portTwaIqr = Angle.INVALID;
 		public Angle medianStbdTwa = Angle.INVALID;
@@ -139,8 +128,6 @@ public class NavComputerOutput {
 		  { nextDestName = val; return this; }
 		public Builder nextLegTwa(Angle val)
 		  { nextLegTwa = val; return this; }
-		public Builder watm(Angle val)
-		  { watm = val; return this; }
 		public Builder medianPortTwa(Angle val)
 		  { medianPortTwa = val; return this; }
 		public Builder portTwaIqr(Angle val)

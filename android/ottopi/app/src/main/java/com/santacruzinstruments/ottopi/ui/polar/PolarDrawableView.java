@@ -496,7 +496,7 @@ public class PolarDrawableView extends View {
         downWindVmgPts[2] = polarX(angle, maxSpeed); // x
         downWindVmgPts[3] = - polarY(angle, maxSpeed); // y
 
-        isMarkValid = out.watm.isValid();
+        isMarkValid = out.atm.isValid();
         if ( isMarkValid ) {
             Angle watm = new Angle(out.twa.toDegrees() - out.atm.toDegrees());
 

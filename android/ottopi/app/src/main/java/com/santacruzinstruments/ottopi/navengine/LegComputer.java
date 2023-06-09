@@ -4,7 +4,6 @@ import com.santacruzinstruments.ottopi.navengine.geo.Angle;
 import com.santacruzinstruments.ottopi.navengine.geo.Direction;
 import com.santacruzinstruments.ottopi.navengine.geo.Distance;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
-import com.santacruzinstruments.ottopi.navengine.geo.Geodesy;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
 public class LegComputer {
@@ -21,15 +20,6 @@ public class LegComputer {
      */
     public Angle nextLegTwa = Angle.INVALID;
 
-    /**
-    * Wind Angle to mark - Angle between wind direction and bearing to the mark
-    *    0 - Mark is directly upwind
-    * - 90 - Mark is port beam reach
-    *   90 - Marks is on starboard beam reach
-    *  180 - Mark is directly down wind
-     */
-    public Angle watm = Angle.INVALID;
-
     RoutePoint dest = RoutePoint.INVALID;
     RoutePoint nextDest = RoutePoint.INVALID;
 
@@ -42,7 +32,6 @@ public class LegComputer {
         atm = Angle.INVALID;
         dtm = Distance.INVALID;
         nextLegTwa = Angle.INVALID;
-        watm = Angle.INVALID;
 
         if ( loc.isValid() ) {
             if ( dest.loc.isValid()){
@@ -56,11 +45,6 @@ public class LegComputer {
                     nextDestName = nextDest.name;
                     Direction legDir = dest.loc.bearingTo(nextDest.loc);
                     nextLegTwa = Direction.angleBetween(legDir, twd);
-                }
-
-                // Compute mark wind angle
-                if (twd.isValid()){
-                    watm = Direction.angleBetween(btm, twd);
                 }
 
             }

@@ -46,7 +46,6 @@ public class NavComputer implements InstrumentInputListener {
 				.dtm(legComputer.dtm)
 				.nextDestName(legComputer.nextDestName)
 				.nextLegTwa(legComputer.nextLegTwa)
-				.watm(legComputer.watm)
 
 				.medianPortTwa(windStats.getMedianPortTwa())
 				.portTwaIqr(windStats.getPortTwaIqr())

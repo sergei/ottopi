@@ -51,7 +51,6 @@ public class LegComputerTest extends TestCase {
 
     public final void testTacking() {
         LegComputer legComputer = new LegComputer();
-        assertFalse(legComputer.watm.isValid());
 
         RoutePoint dest = new RoutePoint.Builder().loc(new GeoLoc( 37, -122)).name("dest")
                 .type(RoutePoint.Type.ROUNDING).leaveTo(RoutePoint.LeaveTo.PORT).build();
@@ -65,33 +64,17 @@ public class LegComputerTest extends TestCase {
         GeoLoc boat = new GeoLoc( 36, -122);
         legComputer.update(boat, mag, twd);
 
-        assertTrue(legComputer.watm.isValid());
-        assertEquals(0, legComputer.watm.toDegrees(), 1);
-
         // Now place boat, so mark is on port beam reach
         boat = new GeoLoc( 37, -123);
         legComputer.update(boat, mag, twd);
-
-        assertTrue(legComputer.watm.isValid());
-        assertEquals(-90, legComputer.watm.toDegrees(), 1);
 
         // Now place boat, so mark is on starboard beam reach
         boat = new GeoLoc( 37, -121);
         legComputer.update(boat, mag, twd);
 
-        assertTrue(legComputer.watm.isValid());
-        assertEquals(90, legComputer.watm.toDegrees(), 1);
-
         // Now place boat, so mark is DDW
         boat = new GeoLoc( 38, -122);
         legComputer.update(boat, mag, twd);
-
-        assertTrue(legComputer.watm.isValid());
-        if ( legComputer.watm.toDegrees() > 0)
-            assertEquals(180, legComputer.watm.toDegrees(), 1);
-        else
-            assertEquals(-180, legComputer.watm.toDegrees(), 1);
-
 
     }
 

@@ -97,7 +97,7 @@ public class NavFragmentTest {
         final Speed sow;
         final Angle twa;
         final Speed tws;
-        final Angle watm;
+        final Angle atm;
         final Angle medianPortTwa;
         final Angle portIqr;
         final Angle medianStbdTwa;
@@ -108,19 +108,19 @@ public class NavFragmentTest {
             this.sow = sow;
             this.twa = twa;
             this.tws = tws;
-            this.watm = Angle.INVALID;
+            this.atm = Angle.INVALID;
             this.medianPortTwa = Angle.INVALID;
             this.portIqr = Angle.INVALID;
             this.medianStbdTwa = Angle.INVALID;
             this.stbdIqr = Angle.INVALID;
         }
 
-        History(Speed sow, Angle twa, Speed tws, Angle watm,
+        History(Speed sow, Angle twa, Speed tws, Angle atm,
                 Angle medianPortTwa, Angle portIqr, Angle medianStbdTwa, Angle stbdIqr) {
             this.sow = sow;
             this.twa = twa;
             this.tws = tws;
-            this.watm = watm;
+            this.atm = atm;
             this.medianPortTwa = medianPortTwa;
             this.portIqr = portIqr;
             this.medianStbdTwa = medianStbdTwa;
@@ -382,7 +382,7 @@ public class NavFragmentTest {
             NavComputerOutput out = new NavComputerOutput.Builder(ii)
                     .tws(h.tws)
                     .twa(h.twa)
-                    .watm(h.watm)
+                    .atm(h.atm)
                     .medianPortTwa(h.medianPortTwa)
                     .portTwaIqr(h.portIqr)
                     .medianStbdTwa(h.medianStbdTwa)
