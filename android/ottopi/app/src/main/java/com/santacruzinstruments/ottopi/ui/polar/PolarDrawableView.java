@@ -19,6 +19,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.R;
+import com.santacruzinstruments.ottopi.navengine.LowPassSpeedFilter;
 import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
 import com.santacruzinstruments.ottopi.navengine.Targets;
 import com.santacruzinstruments.ottopi.navengine.geo.Angle;
@@ -100,6 +101,8 @@ public class PolarDrawableView extends View {
     private static final int HISTORY_LEN = 10;
     private final LinkedList<HistoryEntry> history = new LinkedList<>();
     private boolean hasValidInput = false;
+
+    LowPassSpeedFilter twsFilter = new LowPassSpeedFilter(0.01);
 
     public PolarDrawableView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -425,14 +428,14 @@ public class PolarDrawableView extends View {
             return;
         }
 
-        final Speed tws = out.tws;
-
-        if ( !tws.isValid() || !out.ii.sow.isValid()) {
+        if ( !out.tws.isValid() || !out.ii.sow.isValid()) {
             this.invalidate();
             return;
         }
 
         hasValidInput = true;
+
+        Speed filteredTws = twsFilter.filter(out.ii.utc, out.tws);
 
         if ( history.size() == HISTORY_LEN){
             history.removeFirst();
@@ -444,19 +447,19 @@ public class PolarDrawableView extends View {
             maxSpeed = Math.max(h.speed, maxSpeed);
 
         // Polar curve
-        createPolarCurve(tws);
+        createPolarCurve(filteredTws);
 
         double angle;
         // Target lines
 
-        Targets upwWindTargets = polarTable.getTargets(tws, PolarTable.PointOfSail.UPWIND);
+        Targets upwWindTargets = polarTable.getTargets(filteredTws, PolarTable.PointOfSail.UPWIND);
         maxSpeed = Math.max(upwWindTargets.bsp.getKnots(), maxSpeed);
         targetUpwindSpeed = (float) upwWindTargets.bsp.getKnots();
-        Targets downWindTargets = polarTable.getTargets(tws, PolarTable.PointOfSail.DOWNWIND);
+        Targets downWindTargets = polarTable.getTargets(filteredTws, PolarTable.PointOfSail.DOWNWIND);
         maxSpeed = Math.max(downWindTargets.bsp.getKnots(), maxSpeed);
         targetDownwindSpeed = (float) downWindTargets.bsp.getKnots();
         // Quantize max speed
-        maxSpeed = Math.round(maxSpeed + 0.5);
+        maxSpeed = (int)(Math.round(maxSpeed / 2 + 0.5) * 2);
 
         // Upwind target angle line
         angle = upwWindTargets.twa.toDegrees();
