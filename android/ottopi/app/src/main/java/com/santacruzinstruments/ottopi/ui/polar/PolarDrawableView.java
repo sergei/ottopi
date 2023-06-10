@@ -347,8 +347,8 @@ public class PolarDrawableView extends View {
     }
 
     private void drawTwaStats(Canvas canvas, Angle twaIqr, Angle medianTwa, Paint twaStatsPaint) {
-        if (twaIqr.isValid()) {
-            final float startAngle = 270 + (float) (medianTwa.toDegrees() + twaIqr.toDegrees() / 2);
+        if (twaIqr.isValid(true)) {
+            final float startAngle = 270 + (float) (medianTwa.toDegrees() - twaIqr.toDegrees() / 2);
             final float sweepAngle = (float) twaIqr.toDegrees();
             canvas.drawArc(twaStatsArgBounds, startAngle, sweepAngle, false, twaStatsPaint);
         }

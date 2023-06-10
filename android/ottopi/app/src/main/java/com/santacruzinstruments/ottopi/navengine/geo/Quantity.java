@@ -15,6 +15,7 @@ public abstract class Quantity {
 		mIsValid = isValid;
 	}
 	public boolean isValid() {return mIsValid && getAgeMs() < MAX_AGE_MS;}
+	public boolean isValid(boolean ignoreAge) {return mIsValid && ((getAgeMs() < MAX_AGE_MS) || ignoreAge) ;}
 
 	public long getAgeMs() { return ClockProvider.getClock().millis() - mCreatedAt; }
 	

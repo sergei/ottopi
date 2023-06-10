@@ -33,7 +33,7 @@ public class Angle extends Quantity{
 	public String toString() {
 		if ( mIsValid )
 		{
-			return String.format("%03.0f", Math.abs(mAngle));
+			return String.format("%03.0f", mAngle);
 		}
 		else
 		{
