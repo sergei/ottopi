@@ -7,8 +7,6 @@ import static androidx.test.espresso.contrib.DrawerMatchers.isClosed;
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withTagValue;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -122,6 +120,16 @@ public class CalibrationFragmentTest {
     public void isConnected() {
         fakeNavManager.setN2KConnect(true);
 
+        final int [] portAwaHist = new int[20];
+        final int [] stbdAwaHist = new int[20];
+        final int [] spdHist = new int[20];
+        float[] magDevDeg = new float[360];
+
+        for (int i = 0; i < portAwaHist.length; i++) {
+            portAwaHist[i] = 0;
+            stbdAwaHist[i] = 0;
+        }
+
         // Let's say
         // SOW reads 6.3 kts
         // current calibration is -10% ( so uncalibrated value is 7.0 kts)
@@ -132,10 +140,11 @@ public class CalibrationFragmentTest {
                 true,
                 5,       // AWAp - AWAs
                 0.95,   // SOW / SOG
-                0,
-                0,
-                true, -10,
-                true, 8);
+                true,
+                -10,
+                true, 8,
+                portAwaHist, stbdAwaHist, 1, 1, spdHist, 20, magDevDeg);
+
         fakeNavManager.setCalibrationData(calibrationData);
         fakeNavManager.setRcvdInstrCalibr(MeasuredDataType.SPD, -10);
         fakeNavManager.setRcvdInstrValue(MeasuredDataType.SPD, 6.3);

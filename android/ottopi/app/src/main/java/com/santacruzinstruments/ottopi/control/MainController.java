@@ -111,8 +111,6 @@ public class MainController {
         ,refreshPolarTable
         ,stopAll
         ,toggleCalibration
-        ,setCurrentLogCalValue
-        ,setCurrentAwaBiasValue
         ,setNextMark
         ,setPrevMark
         ,setupUsbAccessory
@@ -363,15 +361,6 @@ public class MainController {
         }
         this.viewInterface.onSailingStateChange(sailingState);
 
-        // Read calibration data
-        double currentLogCal = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) instrumentsCalibrator.getCurrentLogCal());
-        instrumentsCalibrator.setCurrentLogCal(currentLogCal);
-        double currentMisaligned = prefs.getFloat(ctx.getString(R.string.pref_key_current_log_cal), (float) instrumentsCalibrator.getCurrentMisaligned());
-        instrumentsCalibrator.setCurrentMisaligned(currentMisaligned);
-
-        // Update view interface
-        this.viewInterface.setCurrentLogCal(currentLogCal);
-        this.viewInterface.setCurrentMisaligned(currentMisaligned);
         this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
 
         // Read polar table
@@ -578,18 +567,6 @@ public class MainController {
                             break;
                         case toggleCalibration:
                             instrumentsCalibrator.toggle();
-                            this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
-                            break;
-                        case setCurrentLogCalValue:
-                            assert msg.arg != null;
-                            instrumentsCalibrator.setCurrentLogCal((double) msg.arg);
-                            this.viewInterface.setCurrentLogCal((double) msg.arg);
-                            this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
-                            break;
-                        case setCurrentAwaBiasValue:
-                            assert msg.arg != null;
-                            instrumentsCalibrator.setCurrentMisaligned((double) msg.arg);
-                            this.viewInterface.setCurrentMisaligned((double) msg.arg);
                             this.viewInterface.setCalibrationData(instrumentsCalibrator.getCalibrationData());
                             break;
                         case stopAll:

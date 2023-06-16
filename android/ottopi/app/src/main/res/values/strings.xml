@@ -16,8 +16,6 @@
     <string name="pref_key_instr_ssid">INSTR_SSID</string>
     <string name="pref_key_instr_host">INSTR_HOST</string>
     <string name="pref_key_instr_port">INSTR_PORT</string>
-    <string name="pref_key_current_log_cal">pref_key_current_log_cal</string>
-    <string name="pref_key_current_misaligned">pref_key_current_misaligned</string>
 
     <string name="click_here_to_set_time">Set start time …</string>
     <string name="left_sign">&#9664;</string>
@@ -92,5 +90,6 @@
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
     <string name="cal_angle">%d</string>
+    <string name="awa_bias">AWAp - AWAs=%.0fº</string>
 
 </resources>

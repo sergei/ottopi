@@ -41,8 +41,6 @@ public interface ViewInterface {
     void onRcbMarkChange(boolean isValid);
 
     void setCalibrationData(CalibrationData calibrationData);
-    void setCurrentLogCal(double currentLogCal);
-    void setCurrentMisaligned(double currentMisaligned);
 
     void setLoggingTag(String loggingTag);
     void onUsbConnect(boolean connected);

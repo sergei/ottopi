@@ -192,16 +192,6 @@ public class UiCtrlManager implements CtrlInterface {
     }
 
     @Override
-    public void setCurrentLogCalValue(double value) {
-        mainController.offer(MainController.MessageId.setCurrentLogCalValue, value);
-    }
-
-    @Override
-    public void setCurrentAwaBiasValue(double value) {
-        mainController.offer(MainController.MessageId.setCurrentAwaBiasValue, value);
-    }
-
-    @Override
     public void setNextMark() {
         mainController.offer(MainController.MessageId.setNextMark);
     }

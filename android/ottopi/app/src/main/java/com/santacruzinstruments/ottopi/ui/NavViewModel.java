@@ -300,22 +300,6 @@ public class NavViewModel extends ViewModel implements ViewInterface {
         return calibrationData;
     }
 
-    @Override
-    public void setCurrentLogCal(double currentLogCal) {
-        this.currentLogCal.postValue(currentLogCal);
-    }
-    public MutableLiveData<Double> getCurrentLogCal() {
-        return currentLogCal;
-    }
-
-    @Override
-    public void setCurrentMisaligned(double currentMisaligned) {
-        this.currentMisaligned.postValue(currentMisaligned);
-    }
-    public  MutableLiveData<Double>  getCurrentMisaligned() {
-        return currentMisaligned;
-    }
-
     public MutableLiveData<KeyMapper.CurrentScreen> getCurrentScreen() {
         return currentScreen;
     }

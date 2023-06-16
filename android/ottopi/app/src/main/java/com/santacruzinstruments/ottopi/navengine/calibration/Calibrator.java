@@ -9,19 +9,54 @@ import java.util.LinkedList;
 public class Calibrator implements InstrCalibratorListener {
     private static final double MIN_SPEED = 3.;
     private final static int MAX_SIZE = 600*5;
+    private static final int AWA_HIST_SIZE = 60;
+
+    private static final int SPD_HIST_SIZE = 40;
+    private static final int DEV_TABLE_SIZE = 360;
     private final LinkedList<Double> deltaSpeeds = new LinkedList<>();
     private final LinkedList<Double> portAwas = new LinkedList<>();
     private final LinkedList<Double> stbdAwas = new LinkedList<>();
+
+    private final int [] portAwaHist = new int[AWA_HIST_SIZE];
+    private int partAwaCount = 0;
+    private final int [] stbdAwaHist = new int[AWA_HIST_SIZE];
+    private int stbdAwaCount = 0;
+
+    private final int [] spdHist = new int[SPD_HIST_SIZE];
+    private int spdHistCount = 0;
+
+    private final float [] magDevDeg = new float[DEV_TABLE_SIZE];
+    private final int [] magDevCount = new int[DEV_TABLE_SIZE];
+
     private boolean isActive=false;
 
-    private double currentLogCal = 6.25;
-    private double currentMisaligned = 0;
-
     private boolean gotCurrentSowCal = false;
-    private double currentSowCalPerc = 0;
+    private double currentSowCalPerc = 1;
 
     private boolean gotCurrentAwaCal = false;
-    private double currentAwaCalDeg = 0;
+    private double currentAwaCalDeg = 1;
+
+    public Calibrator(){
+        clearArrays();
+    }
+
+    private void clearArrays() {
+        for (int i = 0; i < AWA_HIST_SIZE; i++) {
+            portAwaHist[i] = 0;
+            stbdAwaHist[i] = 0;
+        }
+        partAwaCount = 1; // Avoid divide by zero downstream
+        stbdAwaCount = 1;
+        for (int i = 0; i < SPD_HIST_SIZE; i++) {
+            spdHist[i] = 0;
+        }
+        spdHistCount = 1; // Avoid divide by zero downstream
+
+        for (int i = 0; i < DEV_TABLE_SIZE; i++) {
+            magDevDeg[i] = Float.NaN;
+            magDevCount[i] = 0;
+        }
+    }
 
     @Override
     public void setCurrentSowCalPerc(double currentSowCalPerc) {
@@ -37,6 +72,7 @@ public class Calibrator implements InstrCalibratorListener {
 
     public void toggle(){
         if ( !isActive ){
+            clearArrays();
             deltaSpeeds.clear();
             portAwas.clear();
             stbdAwas.clear();
@@ -55,15 +91,49 @@ public class Calibrator implements InstrCalibratorListener {
                     && ii.sow.getKnots() > MIN_SPEED && ii.sog.getKnots() > MIN_SPEED){
                 double delta = ii.sow.getKnots() / ii.sog.getKnots();
                 insertSorted(this.deltaSpeeds, delta);
+
+                int index = (int) ((delta - 1 ) * 100 + 0.5) + SPD_HIST_SIZE/2;
+                if( index >=0 && index < SPD_HIST_SIZE){
+                    spdHist[index]++;
+                    spdHistCount++;
+                }
+
+                if ( ii.cog.isValid() && ii.mag.isValid() ){
+                    float dev = (float)(ii.cog.toDegrees() - ii.mag.toDegrees());
+                    if ( dev < -180 )
+                        dev += 360;
+                    if ( dev >= 180 )
+                        dev -= 360;
+                    int i = (int) ( ii.mag.toDegrees() + 0.5) % DEV_TABLE_SIZE;
+                    // Compute average deviation
+                    if ( magDevCount[i] == 0){
+                        magDevDeg[i] = dev;
+                    }else{
+                        magDevDeg[i] = (magDevDeg[i] * magDevCount[i] + dev) / (magDevCount[i] + 1);
+                    }
+                    magDevCount[i]++;
+                }
             }
+
             if ( ii.awa.isValid()){
                 double angle = ii.awa.toDegrees();
                 if( angle < 0 ){
                     angle = - angle;
                     insertSorted(this.portAwas, angle);
+                    int index = (int) (angle + 0.5);
+                    if ( index < AWA_HIST_SIZE) {
+                        portAwaHist[index]++;
+                        partAwaCount++;
+                    }
                 }else{
                     insertSorted(this.stbdAwas, angle);
+                    int index = (int) (angle + 0.5);
+                    if ( index < AWA_HIST_SIZE) {
+                        stbdAwaHist[index]++;
+                        stbdAwaCount++;
+                    }
                 }
+
             }
 
             if ( this.deltaSpeeds.size() >= MAX_SIZE
@@ -81,11 +151,12 @@ public class Calibrator implements InstrCalibratorListener {
                 isAwaBiaValid(),
                 getPortBias(),
                 getSowBiasRatio(),
-                currentLogCal * getSowBiasRatio(),
-                currentMisaligned + getPortBias(),
                 isSowCalValid(), getSowCalPerc(),
-                isAwaCalValid(), getAwaCalDeg()
-        );
+                isAwaCalValid(), getAwaCalDeg(),
+                portAwaHist, stbdAwaHist,
+                partAwaCount, stbdAwaCount,
+                spdHist, spdHistCount,
+                magDevDeg);
     }
 
     private double getAwaCalDeg() {
@@ -117,23 +188,6 @@ public class Calibrator implements InstrCalibratorListener {
             return 0;
         }
     }
-
-    public double getCurrentLogCal() {
-        return currentLogCal;
-    }
-
-    public double getCurrentMisaligned() {
-        return currentMisaligned;
-    }
-
-    public void setCurrentLogCal(double currentLogCal) {
-        this.currentLogCal = currentLogCal;
-    }
-
-    public void setCurrentMisaligned(double currentMisaligned) {
-        this.currentMisaligned = currentMisaligned;
-    }
-
 
     private boolean isSpeedBiasValid(){
         return !deltaSpeeds.isEmpty();

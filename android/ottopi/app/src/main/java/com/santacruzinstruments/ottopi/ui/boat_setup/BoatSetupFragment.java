@@ -1,5 +1,6 @@
 package com.santacruzinstruments.ottopi.ui.boat_setup;
 
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,12 +12,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.ScatterChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.ScatterData;
+import com.github.mikephil.charting.data.ScatterDataSet;
 import com.santacruzinstruments.ottopi.R;
+import com.santacruzinstruments.ottopi.data.CalibrationData;
 import com.santacruzinstruments.ottopi.databinding.FragmentBoatSetupBinding;
 import com.santacruzinstruments.ottopi.navengine.geo.Speed;
 import com.santacruzinstruments.ottopi.ui.NavViewModel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -147,28 +163,6 @@ public class BoatSetupFragment extends Fragment {
 
         binding.startCalibrationButton.setOnClickListener(view -> navViewModel.ctrl().toggleCalibration());
 
-        // Current speed calibration adjustment
-        binding.currentLogCalSlider.addOnChangeListener((slider, value, fromUser) -> {
-            if ( fromUser ){
-                navViewModel.ctrl().setCurrentLogCalValue(value);
-            }
-        });
-        navViewModel.getCurrentLogCal().observe(getViewLifecycleOwner(), v -> {
-            binding.currentLogCalLabel.setText(requireContext().getString(R.string.current_log_cal, v));
-            binding.currentLogCalSlider.setValue(v.floatValue());
-        });
-
-        // Current wind calibration adjustment
-        binding.currentAwaBiasSlider.addOnChangeListener((slider, value, fromUser) -> {
-            if ( fromUser ){
-                navViewModel.ctrl().setCurrentAwaBiasValue(value);
-            }
-        });
-        navViewModel.getCurrentMisaligned().observe(getViewLifecycleOwner(), v -> {
-            binding.currentAwaBiasLabel.setText(requireContext().getString(R.string.current_offset, (int)v.doubleValue()));
-            binding.currentAwaBiasSlider.setValue(v.floatValue());
-        });
-
         navViewModel.getCalibrationData().observe(getViewLifecycleOwner(), calibrationData -> {
             // Start / Stop
             if ( calibrationData.isActive ){
@@ -177,29 +171,141 @@ public class BoatSetupFragment extends Fragment {
                 binding.startCalibrationButton.setText(R.string.start_calibration);
             }
 
-            // Speed calibration
-            if( calibrationData.isSpeedValid ) {
-                final int sowPerc = (int) (calibrationData.sowRatio * 100) - 100;
-                binding.speedBias.setText(requireContext().getString(R.string.speed_bias_value, sowPerc));
-                binding.suggestedLogCal.setText(requireContext().getString(R.string.suggested_log_cal, calibrationData.logCalValue));
-            } else {
-                binding.speedBias.setText(R.string.speed_bias_invalid);
-                binding.suggestedLogCal.setText(R.string.suggested_log_cal_not_valid);
-            }
+            plotAwaChart(calibrationData);
+            plotSpdChart(calibrationData);
+            plotDeviationChart(calibrationData);
 
-            // Wind angle calibration
-            if( calibrationData.isAwaValid ) {
-                final int awaBias = (int) (calibrationData.awaBias);
-                binding.awaBias.setText(requireContext().getString(R.string.awa_port_awa_stbd, awaBias));
-                final int misalignmentValue = (int) Math.round(calibrationData.misalignmentValue);
-                binding.suggestedAwaBiasLabel.setText(requireContext().getString(R.string.suggested_offset, misalignmentValue));
-            } else {
-                binding.awaBias.setText(R.string.awa_port_awa_stbd_not_valid);
-                binding.suggestedAwaBiasLabel.setText(R.string.suggested_offset_not_valid);
-            }
         });
-
     }
 
+    private void plotAwaChart(CalibrationData calibrationData) {
+
+        List<BarEntry> portEntries = new ArrayList<>();
+        List<BarEntry> stbdEntries = new ArrayList<>();
+
+        for (int i = 0; i < calibrationData.portAwaHist.length; i++) {
+            // turn your data into Entry objects
+            portEntries.add(new BarEntry(i, (calibrationData.portAwaHist[i] / (float)calibrationData.portAwaCount) * 100.f));
+            stbdEntries.add(new BarEntry(i+0.25f, calibrationData.stbdAwaHist[i] / (float)calibrationData.stbdAwaCount * 100.f));
+        }
+
+        BarDataSet portDataSet = new BarDataSet(portEntries, "Port"); // add entries to dataset
+        portDataSet.setColor(Color.RED);
+        portDataSet.setDrawValues(false);
+
+        BarDataSet stbdDataSet = new BarDataSet(stbdEntries, "Stbd"); // add entries to dataset
+        stbdDataSet.setColor(Color.GREEN);
+        stbdDataSet.setDrawValues(false);
+
+
+        BarData awaData = new BarData();
+        awaData.addDataSet(portDataSet);
+        awaData.addDataSet(stbdDataSet);
+        awaData.setBarWidth(0.25f);
+
+        BarChart chart = binding.awaChart;
+
+        chart.setData(awaData);
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setTextColor(Color.WHITE);
+        YAxis yAxis = chart.getAxisLeft();
+        yAxis.setDrawLabels(false);
+        yAxis.setDrawGridLines(false);
+        yAxis.setDrawZeroLine(true);
+        Legend legend = chart.getLegend();
+        legend.setEnabled(false);
+
+        yAxis = chart.getAxisRight();
+        yAxis.setDrawLabels(false);
+
+        chart.getDescription().setEnabled(false);
+        chart.invalidate(); // refresh
+
+        TextView awaOffsetText = binding.awaBiasTextLabel;
+        if ( calibrationData.isAwaValid ){
+            awaOffsetText.setText(String.format(Locale.getDefault(), getString(R.string.awa_bias), calibrationData.awaBias));
+        }
+    }
+
+    private void plotSpdChart(CalibrationData calibrationData) {
+
+        List<BarEntry> spdEntries = new ArrayList<>();
+
+        for (int i = 0; i < calibrationData.spdHist.length; i++) {
+            // turn your data into Entry objects
+            spdEntries.add(new BarEntry(i - calibrationData.spdHist.length/2.f, (calibrationData.spdHist[i] / (float)calibrationData.spdHistCount) * 100.f));
+        }
+
+        BarDataSet dataSet = new BarDataSet(spdEntries, "Speed"); // add entries to dataset
+        dataSet.setColor(Color.BLUE);
+        dataSet.setDrawValues(false);
+
+        BarData spdData = new BarData();
+        spdData.addDataSet(dataSet);
+        spdData.setBarWidth(0.25f);
+
+        BarChart chart = binding.spdChart;
+
+        chart.setData(spdData);
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setTextColor(Color.WHITE);
+        YAxis yAxis = chart.getAxisLeft();
+        yAxis.setDrawLabels(false);
+        yAxis.setDrawGridLines(false);
+        yAxis.setDrawZeroLine(true);
+
+        yAxis = chart.getAxisRight();
+        yAxis.setDrawLabels(false);
+
+        Legend legend = chart.getLegend();
+        legend.setEnabled(false);
+
+        chart.getDescription().setEnabled(false);
+        chart.invalidate(); // refresh
+
+        TextView spdBiasText = binding.spdBiasTextLabel;
+        if ( calibrationData.isSpeedValid ){
+            spdBiasText.setText(String.format(Locale.getDefault(),
+                    getString(R.string.speed_bias_value),
+                    (int)Math.round(calibrationData.sowRatio)));
+        }
+    }
+
+    private void plotDeviationChart(CalibrationData calibrationData) {
+
+        List<Entry> spdEntries = new ArrayList<>();
+
+        for (int i = 0; i < calibrationData.magDevDeg.length; i++) {
+            // turn your data into Entry objects
+            spdEntries.add(new Entry(i, calibrationData.magDevDeg[i]));
+        }
+
+        ScatterDataSet dataSet = new ScatterDataSet(spdEntries, "Deviation"); // add entries to dataset
+        dataSet.setColor(Color.BLUE);
+        dataSet.setDrawValues(false);
+
+        ScatterData spdData = new ScatterData();
+        spdData.addDataSet(dataSet);
+
+        ScatterChart chart = binding.deviationChart;
+
+        chart.setData(spdData);
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setTextColor(Color.WHITE);
+        YAxis yAxis = chart.getAxisLeft();
+        yAxis.setTextColor(Color.WHITE);
+        yAxis.setDrawGridLines(false);
+        yAxis.setDrawZeroLine(true);
+
+        yAxis = chart.getAxisRight();
+        yAxis.setDrawLabels(false);
+
+        Legend legend = chart.getLegend();
+        legend.setEnabled(false);
+
+        chart.getDescription().setEnabled(false);
+        chart.invalidate(); // refresh
+
+    }
 
 }

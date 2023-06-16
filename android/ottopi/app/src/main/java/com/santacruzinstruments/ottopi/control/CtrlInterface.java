@@ -37,8 +37,6 @@ public interface CtrlInterface {
     void setUseInternalGps(boolean use);
     void stopAll();
     void toggleCalibration();
-    void setCurrentLogCalValue(double value);
-    void setCurrentAwaBiasValue(double value);
     void setNextMark();
     void setPrevMark();
     void setupUsbAccessory(UsbAccessory accessory);

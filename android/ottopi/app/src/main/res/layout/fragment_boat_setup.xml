@@ -117,105 +117,6 @@
             android:importantForAutofill="no"
             tools:ignore="LabelFor" />
 
-        <TextView
-            android:id="@+id/speedBias"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:layout_marginStart="16dp"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toTopOf="parent"
-            android:text="@string/speed_bias_value"
-            />
-
-        <TextView
-            android:id="@+id/currentLogCalLabel"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/current_log_cal"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toBottomOf="@id/speedBias"
-            />
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/currentLogCalSlider"
-            style="@style/CalibrationSlider"
-            android:valueFrom="4"
-            android:valueTo="8"
-            android:stepSize="0.01"
-             android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/currentLogCalLabel"
-            />
-
-        <TextView
-            android:id="@+id/suggestedLogCal"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/suggested_log_cal"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toBottomOf="@id/currentLogCalSlider"
-            />
-
-        <TextView
-            android:id="@+id/awaBias"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="16dp"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toBottomOf="@id/suggestedLogCal"
-            android:text="@string/awa_port_awa_stbd"
-            />
-
-        <TextView
-            android:id="@+id/currentAwaBiasLabel"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/current_offset"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toBottomOf="@id/awaBias"
-            />
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/currentAwaBiasSlider"
-            style="@style/CalibrationSlider"
-            android:valueFrom="-20"
-            android:valueTo="20"
-            android:stepSize="1"
-            android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/currentAwaBiasLabel"
-            />
-
-        <TextView
-            android:id="@+id/suggestedAwaBiasLabel"
-            style="@style/RaceSetupText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/suggested_offset"
-            app:layout_constraintStart_toEndOf="@id/guideline"
-            app:layout_constraintTop_toBottomOf="@id/currentAwaBiasSlider"
-            />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/startCalibrationButton"
@@ -224,10 +125,55 @@
             android:layout_alignParentEnd="true"
             android:layout_marginTop="24dp"
             android:text="@string/start_calibration"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/polarView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/currentAwaBiasSlider"
             />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/awaChart"
+            android:layout_width="300dp"
+            android:layout_height="120dp"
+            app:layout_constraintStart_toEndOf="@id/hostNameTextView"
+            app:layout_constraintTop_toBottomOf="@id/ssid_list"
+            />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/spdChart"
+            android:layout_width="200dp"
+            android:layout_height="120dp"
+            app:layout_constraintStart_toEndOf="@id/awaChart"
+            app:layout_constraintTop_toBottomOf="@id/startCalibrationButton"
+            />
+
+        <TextView
+            android:id="@+id/awaBiasTextLabel"
+            style="@style/RaceSetupText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/awaChart"
+            app:layout_constraintStart_toEndOf="@id/polarView"
+            android:layout_marginStart="8dp"
+            />
+
+        <TextView
+            android:id="@+id/spdBiasTextLabel"
+            style="@style/RaceSetupText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/awaChart"
+            app:layout_constraintStart_toStartOf="@id/spdChart"
+            android:layout_marginStart="8dp"
+            />
+
+        <com.github.mikephil.charting.charts.ScatterChart
+            android:id="@+id/deviationChart"
+            android:layout_width="500dp"
+            android:layout_height="120dp"
+            app:layout_constraintStart_toEndOf="@id/hostNameTextView"
+            app:layout_constraintTop_toBottomOf="@id/awaBiasTextLabel"
+            />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
