@@ -47,6 +47,7 @@ import com.santacruzinstruments.ottopi.navengine.NavComputer;
 import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
 import com.santacruzinstruments.ottopi.navengine.StartLineComputer;
 import com.santacruzinstruments.ottopi.navengine.calibration.Calibrator;
+import com.santacruzinstruments.ottopi.navengine.geo.Direction;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
 import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;
 import com.santacruzinstruments.ottopi.navengine.nmea0183.NmeaEpochAssembler;
@@ -239,6 +240,8 @@ public class MainController {
     private GpxCollection gpxCollection;
     private RaceRouteDao raceRouteDao;
     private GeoLoc lastKnownLoc = GeoLoc.INVALID;
+
+    private Direction lastKnownTwd = Direction.INVALID;
     private UtcTime lastKnownUtc = UtcTime.INVALID;
     private int epochCount = 0;
     private long lastNavEngOutRcvdAtMs = 0;
@@ -969,8 +972,27 @@ public class MainController {
 
                     updateStartFinishRpt(rpt);
 
+                    if ( this.startType == StartType.RABBIT && leaveTo == RoutePoint.LeaveTo.PORT) {
+                        GeoLoc rabbitLoc = NavComputer.computeRabbitLoc(lastKnownLoc, lastKnownTwd);
+                        if ( rabbitLoc.isValid()){
+                            RoutePoint rabbitRpt = new RoutePoint.Builder()
+                                    .loc(rabbitLoc)
+                                    .name("Rabbit")
+                                    .type(START)
+                                    .leaveTo(RoutePoint.LeaveTo.STARBOARD)
+                                    .time(lastKnownUtc)
+                                    .build();
+
+                            updateStartFinishRpt(rabbitRpt);
+                            this.viewInterface.onRcbMarkChange(true);
+                        }
+                    }
+
+
             if ( leaveTo == RoutePoint.LeaveTo.PORT)
                 this.viewInterface.onPinMarkChange(true);
+
+
             if ( leaveTo == RoutePoint.LeaveTo.STARBOARD)
                 this.viewInterface.onRcbMarkChange(true);
         }
@@ -1005,6 +1027,7 @@ public class MainController {
             doNavComputerOutput(nout);
             // Invalidate last known location
             lastKnownLoc = GeoLoc.INVALID;
+            lastKnownTwd = Direction.INVALID;
         }
 
         // Update race timer
@@ -1026,9 +1049,13 @@ public class MainController {
         if ( nout.ii.loc.isValid() ){
             lastKnownLoc = nout.ii.loc;
         }
+        if ( nout.twd.isValid()) {
+            lastKnownTwd = nout.twd;
+        }
         lastKnownUtc = nout.ii.utc;
 
-        StartLineInfo  startLineInfo = startLineComputer.updateStartLineInfo(nout.ii.loc, nout.twd);
+        boolean computeFavoredEnd = startType != StartType.RABBIT;
+        StartLineInfo  startLineInfo = startLineComputer.updateStartLineInfo(nout.ii.loc, nout.twd, computeFavoredEnd);
 
         routeManager.onNavComputerOutput(nout);
 

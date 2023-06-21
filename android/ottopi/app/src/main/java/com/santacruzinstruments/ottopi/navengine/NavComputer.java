@@ -4,9 +4,14 @@ import static com.santacruzinstruments.ottopi.navengine.Const.MAG_FILTER_CONST;
 
 import java.util.LinkedList;
 
+import com.santacruzinstruments.ottopi.navengine.geo.Angle;
 import com.santacruzinstruments.ottopi.navengine.geo.Direction;
 import com.santacruzinstruments.ottopi.navengine.geo.DirectionSmoother;
+import com.santacruzinstruments.ottopi.navengine.geo.Distance;
+import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
+
+import timber.log.Timber;
 
 public class NavComputer implements InstrumentInputListener {
 
@@ -62,5 +67,16 @@ public class NavComputer implements InstrumentInputListener {
 	public void setDestinations(RoutePoint dest, RoutePoint nextDest){
 		legComputer.setDestinations(dest, nextDest);
 	}
+
+	// Compute the location of the rabbit boat, assuming it will sail for a minute on a port tack
+	public static GeoLoc computeRabbitLoc(GeoLoc pinLoc, Direction twd) {
+		Angle rabbitTwa = new Angle(45 );
+		Direction rabbitDir = twd.addAngle(rabbitTwa);
+		Distance startLineLen = new Distance(100. /1852.);  // 100 meters
+		GeoLoc rabbitLoc =  pinLoc.project(startLineLen, rabbitDir);
+		Timber.d("Pin %s, twd %s, rabbitLoc %s", pinLoc, twd, rabbitLoc);
+		return rabbitLoc;
+	}
+
 
 }

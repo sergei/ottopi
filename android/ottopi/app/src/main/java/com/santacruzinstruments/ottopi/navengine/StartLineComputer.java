@@ -47,7 +47,7 @@ public class StartLineComputer {
         return startLineInfo;
     }
 
-    public StartLineInfo updateStartLineInfo(GeoLoc loc, Direction twd){
+    public StartLineInfo updateStartLineInfo(GeoLoc loc, Direction twd, boolean computeFavoredEnd){
 
         if( loc.isValid() && startLineInfo.pin.isValid() && startLineInfo.rcb.isValid() ){
             Coordinate pt = loc.toCoordinate();
@@ -58,7 +58,7 @@ public class StartLineComputer {
             startLineInfo.distToLine = Distance.INVALID;
         }
 
-        if ( twd.isValid() && startLineNormal.isValid()) {
+        if ( computeFavoredEnd && twd.isValid() && startLineNormal.isValid()) {
             startLineInfo.pinFavoredBy = Direction.angleBetween(twd, startLineNormal);
 
             // Check if we are OCS

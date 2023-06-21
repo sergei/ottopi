@@ -58,12 +58,22 @@ public class StartFragment extends Fragment {
 
         // Either race state or start type has changed
         navViewModel.getRaceTypeAndState().observe(getViewLifecycleOwner(), raceTypeState -> {
+
+            if ( raceTypeState.startType == StartType.RABBIT){
+                binding.committeeStartButton.setVisibility(View.INVISIBLE);
+                binding.rabbitImageView.setVisibility(View.VISIBLE);
+            }else{
+                binding.committeeStartButton.setVisibility(View.VISIBLE);
+                binding.rabbitImageView.setVisibility(View.INVISIBLE);
+            }
+
             // If we are already racing, or start type is not configured go to main screen
             if (raceTypeState.startType == StartType.NO_START || raceTypeState.state == SailingState.RACING) {
                 Timber.d("Go to main screen");
                 NavDirections action = StartFragmentDirections.actionStartFragmentToNavFragment();
                 Navigation.findNavController(binding.getRoot()).navigate(action);
             }
+
         });
 
         navViewModel.getSecondsToStart().observe(getViewLifecycleOwner(), secondsToStart ->

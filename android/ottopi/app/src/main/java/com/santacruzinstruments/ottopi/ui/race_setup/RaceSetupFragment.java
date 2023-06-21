@@ -220,6 +220,10 @@ public class RaceSetupFragment extends Fragment {
                     startTypeName = getResources().getString(R.string.cruising);
                     binding.startAtButton.setVisibility(View.GONE);
                     break;
+                case RABBIT:
+                    startTypeName = getResources().getString(R.string.rabbit);
+                    binding.startAtButton.setVisibility(View.GONE);
+                    break;
             }
             binding.raceTypeText.setText(startTypeName, false);
         });
@@ -235,6 +239,9 @@ public class RaceSetupFragment extends Fragment {
             }else if (raceType.equals(getResources().getString(R.string.cruising))){
                 navViewModel.onStartType(StartType.NO_START);
                 navViewModel.ctrl().setStartType(StartType.NO_START);
+            }else if (raceType.equals(getResources().getString(R.string.rabbit))){
+                navViewModel.onStartType(StartType.RABBIT);
+                navViewModel.ctrl().setStartType(StartType.RABBIT);
             }
         });
 

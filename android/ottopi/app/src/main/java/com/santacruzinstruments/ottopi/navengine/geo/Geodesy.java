@@ -87,5 +87,11 @@ public class Geodesy {
 		
 		return new Coordinate(u1[0], v1[0]);
 	}
-	
+
+	final GeoLoc toGeoLoc(Coordinate c)
+	{
+		map.map_to_geo((float)c.x, (float)c.y, u1, v1);
+
+		return new GeoLoc(u1[0], v1[0]);
+	}
 }

@@ -4,5 +4,6 @@
         <item>@string/countdown</item>
         <item>@string/cruising</item>
         <item>@string/start_at</item>
+        <item>@string/rabbit</item>
     </string-array>
 </resources>

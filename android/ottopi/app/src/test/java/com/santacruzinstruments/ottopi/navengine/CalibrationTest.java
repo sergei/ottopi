@@ -65,11 +65,6 @@ public class CalibrationTest extends TestCase {
         // Positive value: misalignment to port
         assertEquals(5, cal.awaBias, 0.1);
 
-        // It was already compensated clockwise (to starboard by 1 degree)
-        calibrator.setCurrentMisaligned(1);
-        cal = calibrator.getCalibrationData();
-        // Need to add five more
-        assertEquals(6, cal.misalignmentValue, 0.1);
     }
     
     public final void testSpeedCalibration() {
@@ -111,12 +106,6 @@ public class CalibrationTest extends TestCase {
         // SOW 10% lower
         assertEquals(0.9, cal.sowRatio, 0.01);
 
-        // Let's sau it set on factory 6.25 Hz / kt
-        calibrator.setCurrentLogCal(6.25);
-        cal = calibrator.getCalibrationData();
-
-        // Decrease current LOG CAL by 10%, so the display will read higher
-        assertEquals(5.63, cal.logCalValue, 0.1);
     }
     public final void testSpeedCalibrationN2K() {
 

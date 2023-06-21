@@ -20,7 +20,7 @@ public class GeoLoc implements Serializable {
 
 	public final double lat;
 	public final double lon;
-	
+
 	public GeoLoc(double lat_, double lon_) {
 		lat = lat_;
 		lon = lon_;
@@ -55,6 +55,24 @@ public class GeoLoc implements Serializable {
 			return Geodesy.geodesyFactory(this).toCoordinate(this);
 		}else{
 			return new Coordinate();
+		}
+	}
+
+	public final GeoLoc project(Distance dist, Direction bearing)
+	{
+		if (isValid() && dist.isValid(true) && bearing.isValid(true))
+		{
+			Coordinate c1 = toCoordinate();
+			double distMeters = dist.toMeters();
+			double trueBearingDeg = MagDecl.getInstance().fromMagToTrue(bearing.toDegrees());
+			double trueBearingRad = Math.toRadians(trueBearingDeg);
+			double angle = Math.PI/2 - trueBearingRad;  // Align zero angle with east ( X axis )
+			Coordinate c2 = org.locationtech.jts.algorithm.Angle.project(c1, angle, distMeters);
+			return Geodesy.geodesyFactory(this).toGeoLoc(c2);
+		}
+		else
+		{
+			return INVALID;
 		}
 	}
 
