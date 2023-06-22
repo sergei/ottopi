@@ -1056,6 +1056,9 @@ public class MainController {
 
         boolean computeFavoredEnd = startType != StartType.RABBIT;
         StartLineInfo  startLineInfo = startLineComputer.updateStartLineInfo(nout.ii.loc, nout.twd, computeFavoredEnd);
+        if ( sailingState == SailingState.PREPARATORY ) {
+            Timber.d("%s", startLineInfo);
+        }
 
         routeManager.onNavComputerOutput(nout);
 

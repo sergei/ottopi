@@ -8,10 +8,8 @@ import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
 import com.santacruzinstruments.ottopi.navengine.route.Route;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
-import org.locationtech.jts.algorithm.distance.DistanceToPoint;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineSegment;
-import org.locationtech.jts.algorithm.distance.PointPairDistance;
 
 
 public class StartLineComputer {
@@ -50,26 +48,46 @@ public class StartLineComputer {
     public StartLineInfo updateStartLineInfo(GeoLoc loc, Direction twd, boolean computeFavoredEnd){
 
         if( loc.isValid() && startLineInfo.pin.isValid() && startLineInfo.rcb.isValid() ){
-            Coordinate pt = loc.toCoordinate();
-            PointPairDistance pointPairDistance = new PointPairDistance();
-            DistanceToPoint.computeDistance(startLine, pt, pointPairDistance);
-            startLineInfo.distToLine = new Distance(pointPairDistance.getDistance() / 1852.);
+            Coordinate boat = loc.toCoordinate();
+            Coordinate pin = startLineInfo.pin.toCoordinate();
+            Coordinate rcb = startLineInfo.rcb.toCoordinate();
+            double distMeters = org.locationtech.jts.algorithm.Distance.pointToLinePerpendicular(boat, pin, rcb);
+            startLineInfo.distToLine = new Distance(distMeters / 1852.);
         }else{
             startLineInfo.distToLine = Distance.INVALID;
         }
 
-        if ( computeFavoredEnd && twd.isValid() && startLineNormal.isValid()) {
-            startLineInfo.pinFavoredBy = Direction.angleBetween(twd, startLineNormal);
+        if ( twd.isValid() ) {
+
+            if ( computeFavoredEnd && startLineNormal.isValid() ){
+                startLineInfo.pinFavoredBy = Direction.angleBetween(twd, startLineNormal);
+            } else {
+                startLineInfo.pinFavoredBy = Angle.INVALID;
+            }
 
             // Check if we are OCS
             if(loc.isValid()){
-                Direction boatDir = loc.bearingTo(startLineInfo.rcb);
-                Angle a = Direction.angleBetween(twd, boatDir);
-                // If absolute angle less than 90, then we are downwind of RCB
-                startLineInfo.isOcs = Math.abs(a.toDegrees()) > 90;
+                Coordinate boat = loc.toCoordinate();
+                // Find projec tion of the boat to the start line
+                Coordinate proj = startLine.project(boat);
+                // Segment between the projection and the boat
+                LineSegment norm = new LineSegment(proj, boat);
+                // Find angle from the projection to the boat
+                double normAngle = norm.angle();
+                double windAngle = Math.PI/2 - twd.toRadians();
+                double angleToWind = normAngle - windAngle;
+                if( angleToWind > Math.PI)
+                    angleToWind -= 2*Math.PI;
+                else if (angleToWind < -Math.PI)
+                    angleToWind += 2*Math.PI;
+                // We are OCS if the boat is upwind of the start line
+                startLineInfo.isOcs = (angleToWind >= -Math.PI / 2) && (angleToWind <= Math.PI / 2);
+            }else{
+                startLineInfo.isOcs = false;
             }
         }else{
             startLineInfo.pinFavoredBy = Angle.INVALID;
+            startLineInfo.isOcs = false;
         }
 
         return startLineInfo;

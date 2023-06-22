@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.santacruzinstruments.ottopi.data.StartLineInfo;
+import com.santacruzinstruments.ottopi.navengine.geo.ClockProvider;
 import com.santacruzinstruments.ottopi.navengine.geo.Direction;
 import com.santacruzinstruments.ottopi.navengine.geo.Distance;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
@@ -13,6 +14,10 @@ import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 import junit.framework.TestCase;
 
 import org.junit.BeforeClass;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
 import timber.log.Timber;
 
@@ -112,6 +117,45 @@ public class StartLineComputerTest extends TestCase {
         Direction twd = new Direction(270 - 14);
         rabbitLoc = NavComputer.computeRabbitLoc(pinLoc, twd);
         Timber.d("Pin %s, rabbitDir %s, rabbitLoc %s", pinLoc, rabbitDir, rabbitLoc);
+    }
+
+    public final void testDistanceToRabbitLine(){
+        Instant now = Instant.ofEpochMilli(1624365735681L);
+        ClockProvider.setsClock(Clock.fixed(now, ZoneId.of("UTC")));
+
+
+        // 2023/06/22 12:22:15.681 MSG,onNavComputerOutput,NavComputerOutput,ii,utc,01:12:46,loc,36.95275,-121.99639,cog,311,sog,5.5,mag,289,sow,5.3,awa,-23,aws,16.6,tws,11.8,twa,-33,twd,252,sot,1.6,destName,Schuyler,atm,-67,dtm,1.2,nextDestName,HARBOR,nextLegTwa,-144,medianPortTwa,-35,portTwaIqr,008,medianStbdTwa,103,stbdTwaIqr,083
+        GeoLoc pinLoc = new GeoLoc(  36.9509354, -121.99406429999999);
+        GeoLoc rabbitLoc = new GeoLoc(  36.951480865478516, -121.99494934082031);
+        // Now set the boat position
+        GeoLoc boat = new GeoLoc( 36.95275, -121.99639);
+        Direction twd = new Direction(252);
+
+        StartLineComputer startLineComputer = new StartLineComputer();
+        Route route = new Route();
+
+        RoutePoint pin = new RoutePoint.Builder().loc(pinLoc).name("PIN")
+                .type(RoutePoint.Type.START).leaveTo(RoutePoint.LeaveTo.PORT).build();
+        RoutePoint rcb = new RoutePoint.Builder().loc(rabbitLoc).name("Rabbit")
+                .type(RoutePoint.Type.START).leaveTo(RoutePoint.LeaveTo.STARBOARD).build();
+        route.addRpt(pin);
+        route.addRpt(rcb);
+
+        StartLineInfo  si = startLineComputer.setRoute(route);
+        assertTrue(si.pin.isValid());
+        assertTrue(si.rcb.isValid());
+
+        si = startLineComputer.updateStartLineInfo(boat, twd, true);
+        assertTrue(si.distToLine.isValid());
+        assertEquals(33., si.distToLine.toMeters(), 1.);
+        assertTrue(si.pinFavoredBy.isValid());
+        assertFalse(si.isOcs);
+
+
+        GeoLoc ocsBoat = new GeoLoc(  36.951084, -121.994605);
+        si = startLineComputer.updateStartLineInfo(ocsBoat, twd, true);
+        assertTrue(si.isOcs);
+
     }
 
 }

@@ -1,5 +1,9 @@
 package com.santacruzinstruments.ottopi.navengine.geo;
 
+import androidx.annotation.NonNull;
+
+import java.util.Locale;
+
 public class Distance extends Quantity {
 	private final double mDist;
 	private final static String INVALID_VALUE = "--.-";
@@ -26,10 +30,14 @@ public class Distance extends Quantity {
 		mDist = distNm;
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		if (mIsValid) {
-				return String.format("%2.1f", mDist);
+			if ( mDist > 0.5 )
+				return String.format(Locale.getDefault(), "%2.1f", mDist);
+			else
+				return String.format(Locale.getDefault(), "%.0f m", toMeters());
 		} else {
 			return INVALID_VALUE;
 		}
