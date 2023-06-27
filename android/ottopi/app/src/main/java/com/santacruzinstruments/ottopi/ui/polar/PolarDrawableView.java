@@ -19,7 +19,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.santacruzinstruments.ottopi.R;
-import com.santacruzinstruments.ottopi.navengine.LowPassSpeedFilter;
+import com.santacruzinstruments.ottopi.navengine.geo.LowPassSpeedFilter;
 import com.santacruzinstruments.ottopi.navengine.NavComputerOutput;
 import com.santacruzinstruments.ottopi.navengine.Targets;
 import com.santacruzinstruments.ottopi.navengine.geo.Angle;
@@ -37,7 +37,6 @@ public class PolarDrawableView extends View {
     private final float currentPointRadius;
     private final float markWidth;
     private final int axisColor;
-    private final int axisTargetColor;
 
     private static class HistoryEntry {
         final double speed;
@@ -98,7 +97,7 @@ public class PolarDrawableView extends View {
 
     private ZoomLevel zoomLevel = ZoomLevel.FULL;
 
-    private static final int HISTORY_LEN = 10;
+    private static final int HISTORY_LEN = 30;
     private final LinkedList<HistoryEntry> history = new LinkedList<>();
     private boolean hasValidInput = false;
 
@@ -113,7 +112,7 @@ public class PolarDrawableView extends View {
         final DashPathEffect dashPathEffect = new DashPathEffect(new float[]{20, 20}, 0);
 
         axisColor = a.getColor(R.styleable.PolarDrawableView_axis_color, Color.GRAY);
-        axisTargetColor = a.getColor(R.styleable.PolarDrawableView_axis_target_color, Color.WHITE);
+        int axisTargetColor = a.getColor(R.styleable.PolarDrawableView_axis_target_color, Color.WHITE);
 
         axisMajorPaint.setStyle(Paint.Style.STROKE);
         axisMajorPaint.setColor(axisColor);
@@ -284,9 +283,8 @@ public class PolarDrawableView extends View {
             final boolean isTargetSpeed = speed == targetSpeed;
             final boolean isMinorAxis = (speed % 2) != 0;
 
-            int color = isTargetSpeed ? axisTargetColor : axisColor;
             Paint axisPaint = isMinorAxis ? axisMinorPaint : axisMajorPaint;
-            axisPaint.setColor(color);
+            axisPaint.setColor(axisColor);
             canvas.drawCircle(x0, y0, pixInKtsScale * speed, axisPaint);
             String text = String.format(Locale.getDefault(),"%d", speed);
 

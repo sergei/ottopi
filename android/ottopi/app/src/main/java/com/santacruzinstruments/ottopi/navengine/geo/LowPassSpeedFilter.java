@@ -1,4 +1,4 @@
-package com.santacruzinstruments.ottopi.navengine;
+package com.santacruzinstruments.ottopi.navengine.geo;
 
 import com.santacruzinstruments.ottopi.navengine.geo.Speed;
 import com.santacruzinstruments.ottopi.navengine.geo.UtcTime;

@@ -57,7 +57,7 @@ public class StartLineComputer {
             startLineInfo.distToLine = Distance.INVALID;
         }
 
-        if ( twd.isValid() ) {
+        if ( twd.isValid() && loc.isValid() && startLineInfo.pin.isValid() && startLineInfo.rcb.isValid()) {
 
             if ( computeFavoredEnd && startLineNormal.isValid() ){
                 startLineInfo.pinFavoredBy = Direction.angleBetween(twd, startLineNormal);
