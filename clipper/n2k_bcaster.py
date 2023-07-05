@@ -24,8 +24,12 @@ class N2kBroadcaster:
             instr_data_epoch = self.q.get()
             n2k_msgs = []
             for instr_data in instr_data_epoch:
-                for n2k_msg in instr_data.n2k_epoch:
-                    n2k_msgs.append(n2k_msg)
+                if instr_data.n2k_epoch is not None:
+                    for n2k_msg in instr_data.n2k_epoch:
+                        n2k_msgs.append(n2k_msg)
+
+            if len(n2k_msgs) == 0:
+                continue
 
             dt = 0.8 / len(n2k_msgs)  # We have one second to send these messages, but let's use only 800ms
             for n2k_msg in n2k_msgs:

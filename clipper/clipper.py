@@ -348,10 +348,9 @@ class Clipper(NavigationListener):
             print(f'UTC: {ii.utc}, prev_idx: {prev_idx}, curr_idx: {curr_idx}')
             if 0 < curr_idx - prev_idx < 10:
                 self.n2k_bcaster.send_epoch(self.instr_data[prev_idx:curr_idx])
-                for instr_data in self.instr_data[prev_idx:curr_idx]:
-                    self.instruments_view.set_instr_data(instr_data)
 
             self.map_view.show_boat(ii)
+            self.instruments_view.set_instr_data(ii)
 
     def on_main_time_slider_change(self, utc):
         self.slider_utc = utc
@@ -426,6 +425,8 @@ class Clipper(NavigationListener):
                 if n2k is not None:
                     self.n2k_epoch.append(n2k)
 
+        self.instr_data = self.merge_instr_data()
+
         events_recorder.finalize()
         events = []
         for e in events_recorder.events:
@@ -465,6 +466,7 @@ class Clipper(NavigationListener):
             self.video_player.play_video_at_utc(self.current_race.utc_from)
 
     def find_track_point(self, utc: datetime):
+        print(f'find_track_point: utc: {utc} self.current_track_utc = {self.current_track_utc} self.current_track_idx = {self.current_track_idx}')
         result = None
         if self.current_track_utc is None:
             self.current_track_utc = self.instr_data[0].utc
@@ -485,6 +487,7 @@ class Clipper(NavigationListener):
                     self.current_track_utc = result.utc
                     break
 
+        print(f'find_track_point: utc: {utc} ii.utc = {result.utc} {prev_idx} -> {self.current_track_idx}')
         return result, prev_idx, self.current_track_idx
 
     def locate_event_with_utc(self, utc: datetime):
@@ -604,6 +607,8 @@ class Clipper(NavigationListener):
         if idx > 0:
             nmea = log_line[idx + NMEA_0183_PREFIX_LEN:]
             return nmea
+        elif log_line[0] == '$' and log_line.strip()[-3] == '*':
+            return log_line
         return None
 
     def extract_n2k_from_log_line(self, log_line):
@@ -625,3 +630,23 @@ class Clipper(NavigationListener):
                 return [dt_ms, s]
 
         return None
+
+    def merge_instr_data(self):
+        """ Merge instrument data with GOPRO data"""
+        merged_data = []
+        j = 0
+        for i in range(len(self.gopro.instr_data) - 1):
+            epoch_start = self.gopro.instr_data[i].utc
+            epoch_end = self.gopro.instr_data[i+1].utc
+            # Find all instrument data between these two epochs
+            found = False
+            while j < len(self.instr_data) and self.instr_data[j].utc < epoch_end:
+                if self.instr_data[j].utc >= epoch_start:
+                    merged_data.append(self.instr_data[j])
+                    found = True
+                j += 1
+            # If nothing found put the GOPRO data
+            if not found:
+                merged_data.append(self.gopro.instr_data[i])
+
+        return merged_data

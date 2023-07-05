@@ -115,7 +115,7 @@ def main(args):
             else:
                 f = open(log, 'rt')
             print('Replaying {}'.format(log))
-            print('Press SPACE to pause, q to quit, right to skip one minute, page down to skip 10 minutes')
+            print('Press p to pause, q to quit, right to skip one minute, page down to skip 10 minutes')
             while True:
                 if not paused:
                     line = f.readline()
@@ -159,16 +159,16 @@ def main(args):
                 if event is not None:
                     # print('Received event {}'.format(event))
                     if isinstance(event, keyboard.Events.Release):
-                        if event.key == keyboard.Key.space:  # Pause
-                            paused = not paused
-                            print('Paused') if paused else print('Resumed')
-                        elif event.key == keyboard.Key.right:  # skip 1 minute
+                        if event.key == keyboard.Key.right:  # skip 1 minute
                             skip_to_ts = msg_time_stamp + 60
                         elif event.key == keyboard.Key.page_down:  # skip 10 minutes
                             skip_to_ts = msg_time_stamp + 600
                         elif isinstance(event.key, KeyCode) and event.key.char is not None:  # Quit
                             if event.key.char == 'q':
                                 break
+                            if event.key.char == 'p':  # Pause
+                                paused = not paused
+                                print('Paused') if paused else print('Resumed')
 
     if http_thr is not None:
         print('Stopping http server')

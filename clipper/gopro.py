@@ -1,12 +1,16 @@
 import argparse
 import csv
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
 import subprocess
 from functools import reduce
+from json import JSONEncoder
+from gpxpy.geo import Location
 
 import pytz
+
+from raw_instr_data import RawInstrData
 
 GOPRO_GPMF_BIN = '../gopro_gpmf/cmake-build-debug/gopro_gpmf'
 
@@ -21,10 +25,55 @@ def to_timestamp(start_utc):
     return start_utc.timestamp() if start_utc is not None else None
 
 
+class GoProCacheEncoder(JSONEncoder):
+    # Override the default method
+    def default(self, obj):
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        elif isinstance(obj, Location):
+            if obj.elevation is None:
+                return {'lat': obj.latitude, 'lon': obj.longitude}
+            else:
+                return {'lat': obj.latitude, 'lon': obj.longitude, 'alt': obj.elevation}
+        elif isinstance(obj, RawInstrData):
+            return obj.to_dict()
+        raise TypeError("Type %s not serializable" % type(obj))
+
+
+def decode_gopro_cache(d):
+    for k in d:
+        if k == 'start_utc' or k == 'stop_utc':
+            if d[k] is None:
+                d[k] = None
+        elif 'utc' in k:
+                d[k] = datetime.fromisoformat(d[k])
+        elif 'instr_data' in k:
+            ii_list = []
+            for h in d[k]:
+                ii = RawInstrData()
+                ii.utc = h['utc']
+                ii.lat = h['lat']
+                ii.lon = h['lon']
+                ii.sog = h['sog']
+                ii.cog = h['cog']
+                ii.awa = h['awa']
+                ii.aws = h['aws']
+                ii.twa = h['twa']
+                ii.tws = h['tws']
+                ii.sow = h['sow']
+                ii.hdg = h['hdg']
+                ii.n2k_epoch = h['n2k_epoch']
+                ii_list.append(ii)
+            d[k] = ii_list
+
+    return d
+
+
 class GoPro:
     def __init__(self, sd_card_dir, work_dir):
         cache_dir = work_dir + os.sep + 'gopro'
         os.makedirs(cache_dir, exist_ok=True)
+        self.instr_data = []
 
         # Build the list of clips
         clips = []
@@ -47,22 +96,26 @@ class GoPro:
             if os.path.isfile(clip_cache_name):
                 print(f'Reading GOPRO clip info from cache {clip_cache_name}')
                 with open(clip_cache_name, 'r') as f:
-                    cache = json.load(f)
+                    cache = json.load(f, object_hook=decode_gopro_cache)
                     start_utc = from_timestamp(cache['start_utc'])
                     stop_utc = from_timestamp(cache['stop_utc'])
+                    instr_data = cache['instr_data']
             else:
                 print(f'Scanning {clip_name}')
-                [start_utc, stop_utc] = self.extract_sensor_data(clip_name, clip_nmea_name)
+                [start_utc, stop_utc, instr_data] = self.extract_sensor_data(clip_name, clip_nmea_name)
+                self.instr_data.append(instr_data)
                 cache = {
                     'start_utc': to_timestamp(start_utc),
-                    'stop_utc': to_timestamp(stop_utc)
+                    'stop_utc': to_timestamp(stop_utc),
+                    'instr_data': instr_data
                 }
                 with open(clip_cache_name, 'w') as f:
-                    json.dump(cache, f)
+                    json.dump(cache, f, indent=4, cls=GoProCacheEncoder)
 
             if start_utc is not None:
                 clip['start_utc'] = start_utc
                 clip['stop_utc'] = stop_utc
+                clip['instr_data'] = instr_data
                 self.clips.append(clip)
                 print(f'{clip["name"]} {start_utc} {stop_utc}')
             else:
@@ -83,15 +136,16 @@ class GoPro:
         print(f'Creating GOPRO NMEA file {gopro_nmea_file}')
         with open(gopro_nmea_file, 'w') as nmea_file:
             for clip in clips:
-                with open(clip['clip_nmea_name'],'r') as clip_nmea:
+                self.instr_data += clip['instr_data']
+                with open(clip['clip_nmea_name'], 'r') as clip_nmea:
                     for line in clip_nmea:
                         nmea_file.write(line)
 
         print(f'Done with GOPRO processing')
 
-
     @staticmethod
     def extract_sensor_data(mp4_name, clip_nmea_name):
+        instr_data = []
         cmd = [GOPRO_GPMF_BIN, mp4_name]
         result = subprocess.run(cmd, stdout=subprocess.PIPE)
         start_utc = None
@@ -105,13 +159,13 @@ class GoPro:
                 for row in reader:
                     utc = timezone.localize(datetime.fromisoformat(row['utc']))
                     if row['fix_valid'] == 'True':
-                        lat = float(row['lat'])
-                        lat_sign = 'N' if lat > 0 else 'S'
-                        lat = abs(lat)
+                        signed_lat = float(row['lat'])
+                        lat_sign = 'N' if signed_lat > 0 else 'S'
+                        lat = abs(signed_lat)
                         lat_min = (lat - int(lat)) * 60
-                        lon = float(row['lon'])
-                        lon_sign = 'E' if lon > 0 else 'W'
-                        lon = abs(lon)
+                        signed_lon = float(row['lon'])
+                        lon_sign = 'E' if signed_lon > 0 else 'W'
+                        lon = abs(signed_lon)
                         lon_min = (lon - int(lon)) * 60
                         sog = float(row['sog_ms']) * 3600. / 1852.
                         if 0 <= lat <= 90 and 0 <= lon <= 180:
@@ -119,6 +173,9 @@ class GoPro:
                                   f'A,{int(lat):02d}{lat_min:08.5f},{lat_sign},'\
                                   f'{int(lon):03d}{lon_min:08.5f},{lon_sign},'\
                                   f'{sog:.1f},,{utc.day:02d}{utc.month:02d}{utc.year % 100:02d},'
+
+                            ii = RawInstrData(0, utc, signed_lat, signed_lon, sog)
+                            instr_data.append(ii)
                         else:
                             print('GPRO GPMF bug')
 
@@ -137,7 +194,7 @@ class GoPro:
                     nmea = f'{rmc}*{cc:02X}\r\n'
                     nmea_file.write(nmea)
 
-        return start_utc, stop_utc
+        return start_utc, stop_utc, instr_data
 
     def get_clips_for_time_interval(self, start_utc, stop_utc):
         # Find the clip containing the start of interval

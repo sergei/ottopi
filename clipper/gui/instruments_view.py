@@ -34,12 +34,12 @@ class InstrumentsView:
         ttk.Label(top, textvariable=self.tws).grid(column=7, row=1, sticky=W)
 
     def set_instr_data(self, instr_data: RawInstrData):
-        self.sog.set(f'{instr_data.sog:.1f}')
-        self.cog.set(f'{instr_data.cog:.1f}')
-        self.hdg.set(f'{instr_data.hdg:.1f}')
-        self.sow.set(f'{instr_data.sow:.1f}')
-        self.awa.set(f'{instr_data.awa:.1f}')
-        self.aws.set(f'{instr_data.aws:.1f}')
-        self.twa.set(f'{instr_data.twa:.1f}')
-        self.tws.set(f'{instr_data.tws:.1f}')
+        self.sog.set(f'{instr_data.sog:.1f}') if instr_data.sog is not None else self.sog.set('---')
+        self.cog.set(f'{instr_data.cog:.1f}') if instr_data.cog is not None else self.cog.set('---')
+        self.hdg.set(f'{instr_data.hdg:.1f}') if instr_data.hdg is not None else self.hdg.set('---')
+        self.sow.set(f'{instr_data.sow:.1f}') if instr_data.sow is not None else self.sow.set('---')
+        self.awa.set(f'{instr_data.awa:.1f}') if instr_data.awa is not None else self.awa.set('---')
+        self.aws.set(f'{instr_data.aws:.1f}') if instr_data.aws is not None else self.aws.set('---')
+        self.twa.set(f'{instr_data.twa:.1f}') if instr_data.twa is not None else self.twa.set('---')
+        self.tws.set(f'{instr_data.tws:.1f}') if instr_data.tws is not None else self.tws.set('---')
 
