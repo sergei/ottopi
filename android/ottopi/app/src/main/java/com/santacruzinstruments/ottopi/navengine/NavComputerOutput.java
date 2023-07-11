@@ -52,6 +52,7 @@ public class NavComputerOutput {
 				",twa," + twa +
 				",twd," + twd +
 				",sot," + sot +
+				",dot," + dot +
 				",destName," + destName +
 				",atm," + atm +
 				",dtm," + dtm +

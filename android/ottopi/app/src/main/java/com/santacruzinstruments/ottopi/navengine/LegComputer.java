@@ -6,6 +6,8 @@ import com.santacruzinstruments.ottopi.navengine.geo.Distance;
 import com.santacruzinstruments.ottopi.navengine.geo.GeoLoc;
 import com.santacruzinstruments.ottopi.navengine.route.RoutePoint;
 
+import timber.log.Timber;
+
 public class LegComputer {
     /** Destination name */
     public String destName = "";
@@ -46,9 +48,9 @@ public class LegComputer {
                     Direction legDir = dest.loc.bearingTo(nextDest.loc);
                     nextLegTwa = Direction.angleBetween(legDir, twd);
                 }
-
+                Timber.d("LegComputer.update,dest.loc,%s,boat_loc,%s,destName,%s,hdg,%s,btm,%s,atm,%s,dtm,%s,nextDestName,%s,next_dest.loc,%s,nextLegTwa,%s",
+                        dest.loc, loc, destName,  hdg, btm, atm, dtm, nextDestName, nextDest.loc, nextLegTwa);
             }
         }
     }
-
 }

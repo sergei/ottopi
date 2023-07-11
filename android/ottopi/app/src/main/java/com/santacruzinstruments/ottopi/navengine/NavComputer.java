@@ -39,6 +39,8 @@ public class NavComputer implements InstrumentInputListener {
 	
 	@Override
 	public void onInstrumentInput(InstrumentInput ii) {
+		Timber.d("onInstrumentInput: %s", ii);
+
 		// Filter apparent wind
 		apparentWindFilter.filter(ii.utc, ii.aws, ii.awa);
 		// Filter boat speed

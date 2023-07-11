@@ -1,7 +1,6 @@
 package com.santacruzinstruments.ottopi.utils;
 
 import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbDevice;
 
 import com.santacruzinstruments.ottopi.control.CtrlInterface;
 import com.santacruzinstruments.ottopi.data.CalibrationData;
@@ -137,16 +136,6 @@ public class FakeCtrlManager implements CtrlInterface {
 
     @Override
     public void toggleCalibration() {
-
-    }
-
-    @Override
-    public void setCurrentLogCalValue(double value) {
-
-    }
-
-    @Override
-    public void setCurrentAwaBiasValue(double value) {
 
     }
 
