@@ -588,8 +588,8 @@ class Navigator:
         return tws, math.degrees(twa_rad)
 
     def validate_data(self, raw_instr_data):
-        # Javelin has the water speed sensor that always reads zero. Invalidate it if see the discrepancy with GPS SOG
-        if raw_instr_data.sow is not None:
+        # Javelin has the water speed sensor that always reads zero. Invalidate it if the discrepancy with GPS SOG
+        if raw_instr_data.sow is not None and raw_instr_data.sog is not None:
             if raw_instr_data.sow == 0 and raw_instr_data.sog > BROKEN_SOW_SPD_THR:
                 self.sow_broken_cnt += 1
 

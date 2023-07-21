@@ -54,7 +54,7 @@ class SummaryMaker:
             plt.grid(visible=True, which='both')
             # make these tick labels invisible
             plt.tick_params('x', labelbottom=False)
-            max_angle = np.round(np.max(np.abs(self.twa) / 10) + 1) * 10
+            max_angle = np.round(np.nanmax(np.abs(self.twa) / 10) + 1) * 10
             plt.ylim(0, max_angle)
         plt.ylabel('TWA', fontdict=label_font)
 
@@ -65,7 +65,7 @@ class SummaryMaker:
             plt.grid(visible=True, which='both')
             # make these tick labels invisible
             plt.tick_params('x', labelbottom=False)
-            plt.ylim(0, np.round(np.max(np.abs(self.spd) + 1)))
+            plt.ylim(0, np.round(np.nanmax(np.abs(self.spd) + 1)))
         plt.ylabel('SPD', fontdict=label_font)
 
         plt.subplot(3, 1, 3)
@@ -73,7 +73,7 @@ class SummaryMaker:
             plt.axhline(y=self.target_vmg, linestyle='--')
             plt.plot(self.t, self.vmg, color='darkred')
             plt.grid(visible=True, which='both')
-            plt.ylim(0, np.round(np.max(np.abs(self.vmg) + 1)))
+            plt.ylim(0, np.round(np.nanmax(np.abs(self.vmg) + 1)))
         plt.ylabel('VMG', fontdict=label_font)
 
         plt.savefig(png_name, dpi=dpi)
@@ -98,7 +98,7 @@ class SummaryMaker:
         plt.plot(self.t, self.vmg, color='darkred')
 
         plt.axis('off')
-        maxy = np.round(np.max(np.abs(self.vmg) + 1))
+        maxy = np.round(np.nanmax(np.abs(self.vmg) + 1))
         plt.ylim(0, maxy)
 
         if t <= 0:
@@ -130,7 +130,11 @@ class SummaryMaker:
             print('No wind data summary should be omitted')
             return False
         else:
-            mean_tws = np.mean(tws)
+            self.spd = np.array(self.spd, dtype=float)
+            self.twa = np.array(self.twa, dtype=float)
+            self.spd = np.array(self.spd, dtype=float)
+            tws = np.array(tws, dtype=float)
+            mean_tws = np.nanmean(tws)
             self.target_spd, self.target_twa = self.polars.get_targets(mean_tws, self.twa[0])
             self.target_vmg = abs(self.target_spd * math.radians(self.target_twa))
             self.vmg = np.abs(np.array(self.spd) * np.cos(np.array(self.twa) * np.pi / 180))

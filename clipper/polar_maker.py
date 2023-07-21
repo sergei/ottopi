@@ -137,7 +137,7 @@ class PolarMaker:
         for epoch in epochs:
             twa = epoch['twa']
             sow = epoch['sow']
-            if sow is not None:
+            if sow is not None and epoch['tws'] is not None:
                 self.max_speed = int(max(sow, self.max_speed) + 0.5)
                 self.min_speed = int(min(sow, self.min_speed))
                 tws_sum += epoch['tws']

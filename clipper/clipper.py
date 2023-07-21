@@ -17,11 +17,12 @@ from gui.main_time_slider import MainTimeSlider
 from gui.map_view import MapView
 from gui.race_info import RaceInfo
 from gui.video_player import VideoPlayer
+from n2k.ydvr_instr_data import YdvrDecoder
 from n2k_bcaster import N2kBroadcaster
 from navigator import Navigator
 from navigator_listener import NavigationListener
 from nmeaparser import NmeaParser
-from project import Project, COMMON, GOPRO, NMEA
+from project import Project, COMMON, GOPRO, NMEA, N2K
 from race_events_recorder import RaceEventsRecorder
 from raw_instr_data import RawInstrData
 from video_maker import make_video
@@ -46,6 +47,7 @@ class Clipper(NavigationListener):
     races: list[RaceInfo]
     current_race: [RaceInfo]
     instr_data: list[RawInstrData]
+    n2k_instr_data: list[RawInstrData]
 
     def __init__(self, work_dir):
         super().__init__()
@@ -63,9 +65,11 @@ class Clipper(NavigationListener):
         self.project = Project()
         self.sv_go_pro_dir = StringVar()
         self.sv_nmea_file_name = StringVar()
+        self.sv_nmea_2000_dir_name = StringVar()
         self.polar_file_sv = StringVar()
         self.map_view = None
         self.instr_data = []
+        self.n2k_instr_data = []
         self.gen_evt_button = None
         self.main_time_slider = None
         self.clip_editor = None
@@ -87,6 +91,11 @@ class Clipper(NavigationListener):
 
         self.instr_data = self.project.get(COMMON, 'instr_data')
         self.races = self.project.get(COMMON, 'races')
+
+        # N2K
+        self.sv_nmea_2000_dir_name.set(self.project.get(N2K, 'dir'))
+        self.n2k_instr_data = self.project.get(N2K, 'instr_data')
+
         if self.races is None:
             self.races = []
             self.current_race = None
@@ -118,7 +127,7 @@ class Clipper(NavigationListener):
             self.project.save(file_name)
             self.on_project_change()
 
-    def set_nmea_folder(self):
+    def set_nmea_0183_file(self):
         file_name = filedialog.askopenfilename()
         if file_name is None:
             return
@@ -126,6 +135,20 @@ class Clipper(NavigationListener):
         self.project.set(NMEA, 'dir', file_name)
         self.on_project_change()
         self.sv_nmea_file_name.set(file_name)
+
+    def set_nmea_2000_folder(self):
+        initial_dir = self.project.get(N2K, 'dir')
+
+        dir_name = filedialog.askdirectory(initialdir=initial_dir)
+        if len(dir_name) == 0:
+            return
+
+        self.project.set(N2K, 'dir', dir_name)
+        self.sv_nmea_2000_dir_name.set(dir_name)
+        self.n2k_instr_data = YdvrDecoder().ydvr_to_ii(dir_name)
+        if len(self.n2k_instr_data) > 0:
+            self.project.set(N2K, 'instr_data', self.n2k_instr_data)
+            self.on_project_change()
 
     def read_clips(self):
         initial_dir = self.project.get(GOPRO, 'dir')
@@ -174,7 +197,8 @@ class Clipper(NavigationListener):
         self.menu_file.entryconfigure(PRODUCE_ENTRY, state=NORMAL)
 
         self.root.title(title)
-        if self.sv_go_pro_dir.get() != "" and self.sv_nmea_file_name.get() != "" and self.polar_file_sv != "":
+        have_nmea_data = self.sv_nmea_file_name.get() != "" or self.sv_nmea_2000_dir_name.get() != ""
+        if self.sv_go_pro_dir.get() != "" and have_nmea_data and self.polar_file_sv != "":
             self.gen_evt_button['state'] = NORMAL
 
     def start(self):
@@ -245,15 +269,21 @@ class Clipper(NavigationListener):
 
         # NMEA folder
         self.sv_nmea_file_name.set(self.project.get(NMEA, 'dir'))
-        ttk.Button(files_frame, text="Open Logs",
-                   command=self.set_nmea_folder).grid(column=1, row=0, sticky=W)
+        ttk.Button(files_frame, text="NMEA0183 Log",
+                   command=self.set_nmea_0183_file).grid(column=1, row=0, sticky=W)
         ttk.Label(files_frame, textvariable=self.sv_nmea_file_name).grid(column=1, row=2, sticky=W)
+
+        # NMEA 2000 folder
+        self.sv_nmea_2000_dir_name.set(self.project.get(NMEA, 'dir_n2k'))
+        ttk.Button(files_frame, text="NMEA 2000 Folder",
+                   command=self.set_nmea_2000_folder).grid(column=2, row=0, sticky=W)
+        ttk.Label(files_frame, textvariable=self.sv_nmea_2000_dir_name).grid(column=2, row=2, sticky=W)
 
         # Polar file
         self.polar_file_sv.set(self.project.get(COMMON, 'polar_file'))
         ttk.Button(files_frame, text="Set polar name",
-                   command=self.set_polar_name).grid(column=2, row=0, sticky=W)
-        ttk.Label(files_frame, textvariable=self.polar_file_sv).grid(column=2, row=2, sticky=W)
+                   command=self.set_polar_name).grid(column=3, row=0, sticky=W)
+        ttk.Label(files_frame, textvariable=self.polar_file_sv).grid(column=3, row=2, sticky=W)
 
         # Events table
         self.events_table = EventsTable(events_frame,
@@ -415,15 +445,24 @@ class Clipper(NavigationListener):
 
         self.instr_data = []
         self.n2k_epoch = []
-        print(f'Reading log  {log_file_name}')
-        with open(log_file_name, 'r') as f:
-            for log_line in f:
-                nmea = self.extract_nmea_from_log_line(log_line)
-                if nmea is not None:
-                    nmea_parser.set_nmea_sentence(nmea)
-                n2k = self.extract_n2k_from_log_line(log_line)
-                if n2k is not None:
-                    self.n2k_epoch.append(n2k)
+
+        if len(self.n2k_instr_data) == 0:
+            print(f'Reading NMEA0183 log  {log_file_name}')
+            with open(log_file_name, 'r') as f:
+                for log_line in f:
+                    nmea = self.extract_nmea_from_log_line(log_line)
+                    if nmea is not None:
+                        nmea_parser.set_nmea_sentence(nmea)
+                    n2k = self.extract_n2k_from_log_line(log_line)
+                    if n2k is not None:
+                        self.n2k_epoch.append(n2k)
+        else:
+            print(f'Processing NMEA2000 based data')
+            for ii in self.n2k_instr_data:
+                if self.gopro.start_time_utc <= ii.utc <= self.gopro.finish_time_utc:
+                    # print(f'generate_events: {ii.to_dict()}')
+                    navigator.set_raw_instr_data(ii)
+                    self.instr_data.append(ii)
 
         self.instr_data = self.merge_instr_data()
 
@@ -582,7 +621,7 @@ class Clipper(NavigationListener):
                 duration = int((event.utc_to - event.utc_from).total_seconds())
                 half_span = duration // 2
                 utc = event.utc_from + datetime.timedelta(seconds=half_span)
-                overlay_fps = len(history) // duration
+                overlay_fps = round(len(history) / duration)
 
                 race_event = {
                     'name': event.name,
@@ -638,12 +677,13 @@ class Clipper(NavigationListener):
         for i in range(len(self.gopro.instr_data) - 1):
             epoch_start = self.gopro.instr_data[i].utc
             epoch_end = self.gopro.instr_data[i+1].utc
-            # Find all instrument data between these two epochs
+            # Find instrument data between these two epochs ( no more than one)
             found = False
             while j < len(self.instr_data) and self.instr_data[j].utc < epoch_end:
                 if self.instr_data[j].utc >= epoch_start:
                     merged_data.append(self.instr_data[j])
                     found = True
+                    break
                 j += 1
             # If nothing found put the GOPRO data
             if not found:

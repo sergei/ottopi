@@ -10,6 +10,7 @@ from raw_instr_data import RawInstrData
 COMMON = 'common'
 GOPRO = 'gopro'
 NMEA = 'nmea'
+N2K = 'n2k'
 
 
 class ProjectEncoder(JSONEncoder):
@@ -81,6 +82,7 @@ class Project:
             COMMON: {'polar_file': "", 'events': [], 'instr_data': []},
             GOPRO: {'dir': "", 'utc': None},
             NMEA: {'dir': "", 'utc': None},
+            N2K: {'dir': "", 'instr_data': []},
         }
 
     def set(self, section, key, val):
