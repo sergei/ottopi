@@ -1,14 +1,13 @@
 import csv
-import json
 import os
 import time
 from datetime import datetime
 
-from moviepy.video.VideoClip import ImageClip
+from moviepy.video.VideoClip import ImageClip, ColorClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
-from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.editor import VideoFileClip
 
 from polar_maker import PolarMaker
 from summary_maker import SummaryMaker
@@ -96,6 +95,7 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
                 evt['timer_images'].append(timer_png_name)
 
     # Create separate event clips
+
     max_evt = 999
     video_only = False
     for evt_idx, evt in enumerate(race_events):
@@ -104,12 +104,20 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
             print(f'Creating {evt_clip_name} ...')
 
             camera_clips = []
-
+            rotated_clip_detected = False
             for go_pro_clip in evt['go_pro_clips']:
                 name = go_pro_clip['name']
                 in_time = 0 if go_pro_clip['in_time'] is None else go_pro_clip['in_time']
                 out_time = go_pro_clip['out_time']
                 camera_clip = VideoFileClip(name).subclip(in_time, out_time)
+                if camera_clip.rotation in (90, 270):
+                    rotated_clip_detected = True
+                    new_height = height
+                    new_width = int(new_height * (height / width))
+                    print(f'Resize clip to  w={new_width} h={new_height}')
+                    camera_clip = camera_clip.resize((new_width, new_height))
+                    camera_clip.rotation = 0
+                    print('Clip resized')
                 camera_clips.append(camera_clip)
 
             if video_only:
@@ -129,14 +137,22 @@ def make_video(work_dir, base_name, race_events, gopro, polars, ignore_cache):
                 title_duration = 4
                 event_title_clip = ImageClip(evt['event_title_png'], duration=title_duration)
 
-                background_clip = concatenate_videoclips(camera_clips)
+                background_clip = concatenate_videoclips(camera_clips, method="compose")
+
                 overlay_clip = ImageSequenceClip(evt['overlay_images'], fps=evt['overlay_fps'])
                 overlay_x = 0
                 overlay_y = height - overlay_clip.size[1]
 
-                clips = [background_clip,
-                         overlay_clip.set_position((overlay_x, overlay_y))
-                         ]
+                clips = []
+                if rotated_clip_detected:
+                    background_image_clip = ColorClip((width, height), color=(0, 0, 0),
+                                                      duration=background_clip.duration)
+                    clips = [background_image_clip]
+
+                clips += [
+                    background_clip.set_position(("center", "top")),
+                    overlay_clip.set_position((overlay_x, overlay_y))
+                    ]
 
                 # Optional overlays
 

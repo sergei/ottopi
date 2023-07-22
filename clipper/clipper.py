@@ -460,7 +460,6 @@ class Clipper(NavigationListener):
             print(f'Processing NMEA2000 based data')
             for ii in self.n2k_instr_data:
                 if self.gopro.start_time_utc <= ii.utc <= self.gopro.finish_time_utc:
-                    # print(f'generate_events: {ii.to_dict()}')
                     navigator.set_raw_instr_data(ii)
                     self.instr_data.append(ii)
 
@@ -505,7 +504,6 @@ class Clipper(NavigationListener):
             self.video_player.play_video_at_utc(self.current_race.utc_from)
 
     def find_track_point(self, utc: datetime):
-        print(f'find_track_point: utc: {utc} self.current_track_utc = {self.current_track_utc} self.current_track_idx = {self.current_track_idx}')
         result = None
         if self.current_track_utc is None:
             self.current_track_utc = self.instr_data[0].utc
