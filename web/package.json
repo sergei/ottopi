@@ -12,7 +12,7 @@
     "axios": "^0.21.1",
     "fontsource-roboto": "^4.0.0",
     "moment": "^2.29.1",
-    "moment-timezone": "^0.5.33",
+    "moment-timezone": "^0.5.35",
     "react": "^17.0.1",
     "react-compound-timer": "^1.2.0",
     "react-dom": "^17.0.1",
